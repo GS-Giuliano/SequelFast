@@ -1,0 +1,87 @@
+<RCC>
+    <qresource prefix="/icons">
+        <file>resources/add square.svg</file>
+        <file>resources/archive tick.svg</file>
+        <file>resources/arrow square.svg</file>
+        <file>resources/arrow square down.svg</file>
+        <file>resources/arrow square left.svg</file>
+        <file>resources/arrow square right.svg</file>
+        <file>resources/autobrightness.svg</file>
+        <file>resources/box.svg</file>
+        <file>resources/box 2.svg</file>
+        <file>resources/bubble.svg</file>
+        <file>resources/clock.svg</file>
+        <file>resources/close square.svg</file>
+        <file>resources/cloud connection.svg</file>
+        <file>resources/cloud sunny.svg</file>
+        <file>resources/code.svg</file>
+        <file>resources/convert d.svg</file>
+        <file>resources/copy.svg</file>
+        <file>resources/danger.svg</file>
+        <file>resources/data.svg</file>
+        <file>resources/diagram.svg</file>
+        <file>resources/electricity.svg</file>
+        <file>resources/element.svg</file>
+        <file>resources/export.svg</file>
+        <file>resources/filter.svg</file>
+        <file>resources/filter remove.svg</file>
+        <file>resources/filter square.svg</file>
+        <file>resources/filter tick.svg</file>
+        <file>resources/forbidden.svg</file>
+        <file>resources/forward item.svg</file>
+        <file>resources/frame.svg</file>
+        <file>resources/frame 2.svg</file>
+        <file>resources/graph.svg</file>
+        <file>resources/grid.svg</file>
+        <file>resources/health.svg</file>
+        <file>resources/heart circle.svg</file>
+        <file>resources/heart tick.svg</file>
+        <file>resources/hierarchy.svg</file>
+        <file>resources/information.svg</file>
+        <file>resources/kanban.svg</file>
+        <file>resources/layer.svg</file>
+        <file>resources/link.svg</file>
+        <file>resources/link square.svg</file>
+        <file>resources/location.svg</file>
+        <file>resources/lock.svg</file>
+        <file>resources/login.svg</file>
+        <file>resources/lovely.svg</file>
+        <file>resources/magic star.svg</file>
+        <file>resources/menu.svg</file>
+        <file>resources/microscope.svg</file>
+        <file>resources/more square.svg</file>
+        <file>resources/path.svg</file>
+        <file>resources/presention chart.svg</file>
+        <file>resources/profile.svg</file>
+        <file>resources/profile user.svg</file>
+        <file>resources/radar.svg</file>
+        <file>resources/receipt.svg</file>
+        <file>resources/refresh square.svg</file>
+        <file>resources/rotate left.svg</file>
+        <file>resources/save.svg</file>
+        <file>resources/scan barcode.svg</file>
+        <file>resources/scanning.svg</file>
+        <file>resources/search normal.svg</file>
+        <file>resources/setting.svg</file>
+        <file>resources/setting (1).svg</file>
+        <file>resources/shapes.svg</file>
+        <file>resources/share.svg</file>
+        <file>resources/shield search.svg</file>
+        <file>resources/square.svg</file>
+        <file>resources/star.svg</file>
+        <file>resources/star 2.svg</file>
+        <file>resources/tag cross.svg</file>
+        <file>resources/task.svg</file>
+        <file>resources/textalign left.svg</file>
+        <file>resources/tick circle.svg</file>
+        <file>resources/tick square.svg</file>
+        <file>resources/trade.svg</file>
+        <file>resources/transaction minus.svg</file>
+        <file>resources/trash.svg</file>
+        <file>resources/trend up.svg</file>
+        <file>resources/triangle.svg</file>
+        <file>resources/trush square.svg</file>
+        <file>resources/user square.svg</file>
+        <file>resources/verify.svg</file>
+    </qresource>
+</RCC>
