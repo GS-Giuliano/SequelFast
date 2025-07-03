@@ -83,5 +83,21 @@
         <file>resources/trush square.svg</file>
         <file>resources/user square.svg</file>
         <file>resources/verify.svg</file>
+        <file>resources/archive.svg</file>
+        <file>resources/brush.svg</file>
+        <file>resources/colorfilter.svg</file>
+        <file>resources/flash circle.svg</file>
+        <file>resources/grid edit.svg</file>
+        <file>resources/message text.svg</file>
+        <file>resources/minus square.svg</file>
+        <file>resources/refresh circle.svg</file>
+        <file>resources/search zoom-2.svg</file>
+        <file>resources/search zoom.svg</file>
+        <file>resources/format square.svg</file>
+        <file>resources/size.svg</file>
+        <file>resources/cloud add.svg</file>
+        <file>resources/cloud.svg</file>
+        <file>resources/cloud connection 2.svg</file>
+        <file>resources/box 3.svg</file>
     </qresource>
 </RCC>

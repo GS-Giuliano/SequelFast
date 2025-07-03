@@ -13,6 +13,21 @@
 #include <QJsonValue>
 
 QJsonArray connections;
+
+QJsonArray colors = QJsonArray{
+    QJsonObject{{"name", "white"},  {"rgb", "#FFFFFF"}},
+    QJsonObject{{"name", "brown"},  {"rgb", "#EDBB99"}},
+    QJsonObject{{"name", "red"},    {"rgb", "#FFBAAB"}},
+    QJsonObject{{"name", "purple"}, {"rgb", "#EBCAFF"}},
+    QJsonObject{{"name", "blue"},   {"rgb", "#CBE8FF"}},
+    QJsonObject{{"name", "green"},  {"rgb", "#DBFBD6"}},
+    QJsonObject{{"name", "yellow"}, {"rgb", "#FCF3CF"}},
+    QJsonObject{{"name", "orange"}, {"rgb", "#FFE6BA"}},
+    QJsonObject{{"name", "grey"},   {"rgb", "#D7DBDD"}}
+};
+
+
+
 QSqlDatabase dbPreferences;
 QSqlDatabase dbMysql;
 QString dbPath = "preferences.db";
@@ -20,6 +35,13 @@ QString dbPath = "preferences.db";
 QString actual_host = "";
 QString actual_schema = "";
 QString actual_table = "";
+QString actual_color = "";
+
+int pref_sql_limit = 100;
+int pref_table_row_height = 40;
+int pref_table_font_size = 10;
+int pref_sql_font_size = 12;
+
 
 void openPreferences()
 {
@@ -55,20 +77,6 @@ void openPreferences()
         qCritical() << "Erro ao criar a tabela 'conns':" << query.lastError().text();
         dbPreferences.close();
     } else {
-        // QString createTableSql = "CREATE TABLE IF NOT EXISTS filters ("
-        //                          "id INTEGER PRIMARY KEY AUTOINCREMENT,"
-        //                          "name TEXT NULL,"
-        //                          "schema TEXT NULL,"
-        //                          "table TEXT NULL,"
-        //                          "schemas TEXT NULL,"
-        //                          "tables TEXT NULL"
-        //                          ")";
-        // if (!query.exec(createTableSql)) {
-        //     qCritical() << "Erro ao criar a tabela 'conns':" << query.lastError().text();
-        //     dbPreferences.close();
-        // } else {
-        // }
-
         if (!query.exec("SELECT COUNT(id) ttl FROM conns")) {
             qCritical() << "Erro ao consultar dados:" << query.lastError().text();
         } else {
@@ -91,6 +99,40 @@ void openPreferences()
                 }
             }
         }
+        QString createTableSql = "CREATE TABLE IF NOT EXISTS prefs ("
+                                 "id INTEGER PRIMARY KEY AUTOINCREMENT,"
+                                 "name TEXT NULL,"
+                                 "value TEXT NULL,"
+                                 "type TEXT NULL"
+                                 ")";
+        if (!query.exec(createTableSql)) {
+            qCritical() << "Erro ao criar a tabela 'pref':" << query.lastError().text();
+            dbPreferences.close();
+        } else {
+            if (!query.exec("SELECT COUNT(id) ttl FROM prefs")) {
+                qCritical() << "Erro ao consultar dados:" << query.lastError().text();
+            } else {
+                while (query.next()) {
+                    int id = query.value("ttl").toInt();
+                    if (id == 0)
+                    {
+                        if (!query.exec(QString("INSERT INTO prefs (name, type, value) VALUES ('sql_limit', 'int', '100')"))) {
+                            qWarning() << "Erro ao inserir host:" << query.lastError().text();
+                        }
+                        if (!query.exec(QString("INSERT INTO prefs (name, type, value) VALUES ('table_row_height', 'int', '40')"))) {
+                            qWarning() << "Erro ao inserir host:" << query.lastError().text();
+                        }
+                        if (!query.exec(QString("INSERT INTO prefs (name, type, value) VALUES ('table_font_size', 'int', '10')"))) {
+                            qWarning() << "Erro ao inserir host:" << query.lastError().text();
+                        }
+                        if (!query.exec(QString("INSERT INTO prefs (name, type, value) VALUES ('sql_font_size', 'int', '12')"))) {
+                            qWarning() << "Erro ao inserir host:" << query.lastError().text();
+                        }
+                    }
+                }
+            }
+        }
+
     }
 
     if (!query.exec("SELECT * FROM conns")) {
@@ -124,6 +166,142 @@ void openPreferences()
     dbPreferences.close();
 }
 
+void updateIntPreference(QString name, int value)
+{
+    QSqlQuery query(QSqlDatabase::database("pref_connection"));
+    if (!query.exec("SELECT name FROM prefs WHERE name = '" + name + "'")) {
+        qCritical() << "Erro ao consultar dados:" << query.lastError().text();
+    } else {
+        if (query.last())
+        {
+            QString updateSql = "UPDATE prefs SET type  = :type, value = :value WHERE name =:name";
+            query.prepare(updateSql); // Prepara a consulta para inserção segura (evita SQL injection)
+
+            query.bindValue(":name", name);
+            query.bindValue(":type", "int");
+            query.bindValue(":value", value);
+
+            if (!query.exec()) {
+                qWarning() << "Erro ao inserir host:" << query.lastError().text();
+            }
+
+        } else {
+            QString insertSql = "INSERT INTO prefs (name, type, value) VALUES (:name, :type, :value)";
+            query.prepare(insertSql); // Prepara a consulta para inserção segura (evita SQL injection)
+
+            query.bindValue(":name", name);
+            query.bindValue(":type", "int");
+            query.bindValue(":value", value);
+
+            if (!query.exec()) {
+                qWarning() << "Erro ao inserir host:" << query.lastError().text();
+            }
+        }
+    }
+}
+
+int getIntPreference(QString name)
+{
+    int value = 0;
+    QSqlQuery query(QSqlDatabase::database("pref_connection"));
+
+    query.prepare("SELECT value FROM prefs WHERE name = :name");
+    query.bindValue(":name", name);
+
+    if (!query.exec()) {
+        qCritical() << "Erro ao consultar dados:" << query.lastError().text();
+        return value;
+    }
+
+    // Verifica se retornou algum resultado
+    if (query.next()) {
+        value = query.value(0).toInt();
+    } else {
+        qDebug() << "Preferência não encontrada para:" << name;
+    }
+    return(value);
+}
+
+QString getStringPreference(QString name)
+{
+    QString value = "";
+    QSqlQuery query(QSqlDatabase::database("pref_connection"));
+
+    query.prepare("SELECT value FROM prefs WHERE name = :name");
+    query.bindValue(":name", name);
+
+    if (!query.exec()) {
+        qCritical() << "Erro ao consultar dados:" << query.lastError().text();
+        return value;
+    }
+
+    if (query.next()) {
+        value = query.value(0).toString();
+    } else {
+        qDebug() << "Preferência não encontrada para:" << name;
+    }
+    return(value);
+}
+
+QString setStringPreference(QString name, QString value)
+{
+    QSqlQuery query(QSqlDatabase::database("pref_connection"));
+
+    query.prepare("SELECT value FROM prefs WHERE name = :name");
+    query.bindValue(":name", name);
+
+    if (!query.exec()) {
+        qCritical() << "Erro ao consultar dados:" << query.lastError().text();
+        return value;
+    }
+
+    if (query.next()) {
+        QString updateSql = "UPDATE prefs SET value = :value WHERE name = :name";
+        query.prepare(updateSql);
+
+        query.bindValue(":name", name);
+        query.bindValue(":value", value);
+
+        if (!query.exec()) {
+            qWarning() << "Erro ao inserir host:" << query.lastError().text();
+        }
+    } else {
+        qDebug() << "Preferência não encontrada para:" << name;
+        QString insertSql = "INSERT INTO prefs (name, type, value) VALUES (:name, 'string', :value)";
+        query.prepare(insertSql);
+
+        query.bindValue(":name", name);
+        query.bindValue(":value", value);
+
+        if (!query.exec()) {
+            qWarning() << "Erro ao inserir host:" << query.lastError().text();
+        }
+
+    }
+    return(value);
+}
+
+
+void getPreferences()
+{
+    pref_sql_limit = getIntPreference("sql_limit");
+    pref_table_row_height = getIntPreference("table_row_height");
+    pref_table_font_size = getIntPreference("table_font_size");
+    pref_sql_font_size = getIntPreference("sql_font_size");
+
+    // qDebug() << "pref_sql_limit " << pref_sql_limit ;
+    // qDebug() << "pref_table_row_height " << pref_table_row_height ;
+    // qDebug() << "pref_table_font_size " << pref_table_font_size ;
+    // qDebug() << "pref_sql_font_size " << pref_sql_font_size ;
+}
+
+void updatePreferences()
+{
+    updateIntPreference("sql_limit", pref_sql_limit);
+    updateIntPreference("table_row_height", pref_table_row_height);
+    updateIntPreference("table_font_size", pref_table_font_size);
+    updateIntPreference("sql_font_size", pref_sql_font_size);
+}
 
 bool addConnection(QString name)
 {
@@ -218,4 +396,15 @@ QJsonObject getConnection(QString selectedHost)
         }
     }
     return(item);
+}
+
+QString getRgbFromColorName(const QString &colorName)
+{
+    for (const QJsonValue &val : colors) {
+        QJsonObject obj = val.toObject();
+        if (obj["name"].toString() == colorName.toLower()) {
+            return obj["rgb"].toString();
+        }
+    }
+    return "#FFFFFF";
 }

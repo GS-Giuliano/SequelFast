@@ -22,6 +22,7 @@
 #include <functions.h>
 #include <connection.h>
 #include <sql.h>
+#include <structure.h>
 
 extern QJsonArray connections;
 extern QSqlDatabase dbPreferences;
@@ -30,6 +31,7 @@ extern QSqlDatabase dbMysql;
 extern QString actual_host;
 extern QString actual_schema;
 extern QString actual_table;
+extern QString actual_color;
 
 int newConnectionCount = 0;
 
@@ -43,7 +45,10 @@ MainWindow::MainWindow(QWidget *parent)
     openPreferences();
 
     ui->setupUi(this);
+
     refresh_connections();
+    getPreferences();
+
 }
 
 MainWindow::~MainWindow()
@@ -81,7 +86,6 @@ bool MainWindow::host_connect(QString selectedHost)
         ui->statusbar->showMessage("Host connected!");
         refresh_schemas(selectedHost);
     }
-    qDebug() << dbMysql.lastError();
     return(true);
 }
 
@@ -90,7 +94,14 @@ void MainWindow::refresh_connections() {
     ui->lineEditConns->setText("");
 
     QStandardItemModel *modelo = new QStandardItemModel(this);
-    QIcon iconeConexao(":/icons/resources/cloud sunny.svg");  // Ícone do arquivo de recursos .qrc
+
+    QIcon iconeConexao;
+    if (ui->buttonEditConns->isChecked())
+    {
+        iconeConexao = QIcon(":/icons/resources/cloud connection 2.svg");
+    } else {
+        iconeConexao = QIcon(":/icons/resources/cloud connection.svg");
+    }
 
     for (const QJsonValue &valor : connections) {
         if (valor.isObject()) {
@@ -101,15 +112,7 @@ void MainWindow::refresh_connections() {
             QStandardItem *linha = new QStandardItem(iconeConexao, nome);  // Ícone aplicado aqui
 
             // Define a cor de fundo com base no texto
-            if (corDeFundo == "blue")       linha->setBackground(QColor("#D6EAF8"));
-            else if (corDeFundo == "yellow")linha->setBackground(QColor("#FCF3CF"));
-            else if (corDeFundo == "orange")linha->setBackground(QColor("#FDEBD0"));
-            else if (corDeFundo == "red")   linha->setBackground(QColor("#FADBD8"));
-            else if (corDeFundo == "brown") linha->setBackground(QColor("#F6DDCC"));
-            else if (corDeFundo == "purple")linha->setBackground(QColor("#EBDEF0"));
-            else if (corDeFundo == "green") linha->setBackground(QColor("#D5F5E3"));
-            else if (corDeFundo == "grey")  linha->setBackground(QColor("#E5E8E8"));
-
+            linha->setBackground(QColor(getRgbFromColorName(corDeFundo)));
             modelo->appendRow(linha);
         }
     }
@@ -131,51 +134,6 @@ void MainWindow::refresh_connections() {
     ui->statusbar->showMessage("Connections updated");
 }
 
-
-// void MainWindow::refresh_connections() {
-//     ui->toolBoxLeft->setCurrentIndex(2);
-//     ui->lineEditConns->setText("");
-
-//     QStandardItemModel *modelo = new QStandardItemModel(this);
-
-//     for (const QJsonValue &valor : connections) {
-//         if (valor.isObject()) {
-//             QJsonObject item = valor.toObject();
-//             QString nome = item["name"].toString();
-//             QString corDeFundo = item["color"].toString().toLower();
-
-//             QStandardItem *linha = new QStandardItem(nome);
-//             // Define a cor de fundo com base no texto
-//             if (corDeFundo == "blue")       linha->setBackground(QColor("#D6EAF8"));
-//             else if (corDeFundo == "yellow")linha->setBackground(QColor("#FCF3CF"));
-//             else if (corDeFundo == "orange")linha->setBackground(QColor("#FDEBD0"));
-//             else if (corDeFundo == "red")   linha->setBackground(QColor("#FADBD8"));
-//             else if (corDeFundo == "brown") linha->setBackground(QColor("#F6DDCC"));
-//             else if (corDeFundo == "purple")linha->setBackground(QColor("#EBDEF0"));
-//             else if (corDeFundo == "green") linha->setBackground(QColor("#D5F5E3"));
-//             else if (corDeFundo == "grey")  linha->setBackground(QColor("#E5E8E8"));
-
-//             modelo->appendRow(linha);
-//         }
-//     }
-
-//     // Proxy de filtro
-//     QSortFilterProxyModel *proxy = new QSortFilterProxyModel(this);
-//     proxy->setSourceModel(modelo);
-//     proxy->setFilterCaseSensitivity(Qt::CaseInsensitive);
-
-//     ui->listViewConns->setModel(proxy);
-
-//     // Filtro no LineEdit
-//     connect(ui->lineEditConns, &QLineEdit::textChanged, this, [=](const QString &texto) {
-//         QString pattern = QString("(%1)").arg(texto);
-//         QRegularExpression re(pattern, QRegularExpression::CaseInsensitiveOption);
-//         proxy->setFilterRegularExpression(re);
-//     });
-//     ui->statusbar->showMessage("Connections updated");
-// }
-
-
 void MainWindow::refresh_schemas(QString selectedHost)
 {
     if (!dbMysql.open()) {
@@ -195,9 +153,18 @@ void MainWindow::refresh_schemas(QString selectedHost)
             int sel = -1;
             int cnt = 0;
 
-            QIcon iconeBanco1(":/icons/resources/box.svg");
-            QIcon iconeBanco2(":/icons/resources/box 2.svg");
+            QIcon iconeBanco1;
+            QIcon iconeBanco2;
+            if (ui->buttonEditSchemas->isChecked())
+            {
+                iconeBanco1 = QIcon(":/icons/resources/box.svg");
+                iconeBanco2 = QIcon(":/icons/resources/box 3.svg");
+            } else {
+                iconeBanco1 = QIcon(":/icons/resources/box.svg");
+                iconeBanco2 = QIcon(":/icons/resources/box 2.svg");
+            }
 
+            QString actual_first_schema = "";
             while (query.next()) {
                 QString name = query.value(0).toString();
                 if (name == "mysql" || name=="information_schema" || name=="performance_schema"  || name=="sys")
@@ -207,12 +174,22 @@ void MainWindow::refresh_schemas(QString selectedHost)
                 } else {
                     QStandardItem *linha = new QStandardItem(iconeBanco2, name);
                     modelo->appendRow(linha);
+                    if (actual_first_schema == "")
+                    {
+                        actual_first_schema = name;
+                        sel = cnt;
+                    }
                 }
 
                 if (item["schema"].toString() == name) {
                     sel = cnt;
                 }
                 cnt++;
+            }
+
+            if (item["schema"].toString() == "")
+            {
+                refresh_schema(actual_first_schema);
             }
 
             // Proxy de filtro
@@ -243,12 +220,12 @@ void MainWindow::refresh_schema(QString selectedSchema)
                                  QMessageBox::Ok
                                  );
     } else {
-        // Consulta SQL
         QSqlQuery query(QSqlDatabase::database("mysql_connection_"+actual_host));
 
         if (query.exec("USE "+selectedSchema)) {
             refresh_tables(actual_host);
             ui->toolBoxLeft->setCurrentIndex(0);
+            ui->buttonFilterTables->setChecked(false);
         }
     }
 }
@@ -259,7 +236,13 @@ void MainWindow::refresh_tables(QString selectedHost) {
         ui->lineEditTables->setText("");
 
         QStandardItemModel *modelo = new QStandardItemModel(this);
-        QIcon iconeTabela(":/icons/resources/copy.svg");  // <- Ícone a ser exibido
+        QIcon iconeTabela;
+        if (ui->buttonEditTables->isChecked())
+        {
+            iconeTabela = QIcon(":/icons/resources/size.svg");
+        } else {
+            iconeTabela = QIcon(":/icons/resources/copy.svg");
+        }
 
         int sel = -1;
         int cnt = 0;
@@ -306,7 +289,7 @@ void MainWindow::on_listViewConns_clicked(const QModelIndex &index)
 {
     actual_host = index.data(Qt::DisplayRole).toString();
 
-    if (ui->checkBoxConns->isChecked())
+    if (ui->buttonEditConns->isChecked())
     {
         if (index.isValid()) {
             Connection *janela = new Connection(actual_host, this);
@@ -320,7 +303,11 @@ void MainWindow::on_listViewConns_clicked(const QModelIndex &index)
         if (i.isValid()) {
             if (host_connect(actual_host))
             {
+                ui->buttonFilterSchemas->setChecked(false);
+                ui->buttonFilterTables->setChecked(false);
                 ui->toolBoxLeft->setCurrentIndex(1);
+                QJsonObject item = getConnection(actual_host);
+                actual_color = item["color"].toString();
             }
         }
     }
@@ -333,6 +320,61 @@ void MainWindow::on_listViewSchemas_clicked(const QModelIndex &index)
     refresh_schema(actual_schema);
 }
 
+void MainWindow::on_buttonFilterSchemas_clicked()
+{
+    QString pref_name = "fav_"+actual_host;
+
+    if (ui->buttonFilterSchemas->isChecked())
+    {
+        if (ui->lineEditSchemas->text() == "")
+        {
+            QString value = getStringPreference(pref_name);
+            if (value != "")
+            {
+                ui->lineEditSchemas->setText(value);
+            }
+        } else {
+            setStringPreference(pref_name, ui->lineEditSchemas->text());
+        }
+    } else {
+        ui->lineEditSchemas->setText("");
+    }
+}
+
+
+void MainWindow::on_buttonEditConns_clicked()
+{
+    refresh_connections();
+}
+
+
+void MainWindow::on_buttonEditTables_clicked()
+{
+    refresh_tables(actual_host);
+}
+
+
+void MainWindow::on_buttonEditSchemas_clicked()
+{
+    refresh_schemas(actual_host);
+}
+
+
+void MainWindow::on_buttonUpdateSchemas_clicked()
+{
+    refresh_schemas(actual_host);
+}
+
+
+void MainWindow::on_buttonUpdateTables_clicked()
+{
+    refresh_tables(actual_host);
+}
+
+void MainWindow::on_buttonNewConns_clicked()
+{
+    on_actionNew_connection_triggered();
+}
 
 void MainWindow::on_actionNew_connection_triggered()
 {
@@ -359,17 +401,6 @@ void MainWindow::on_actionNew_connection_triggered()
 }
 
 
-void MainWindow::on_buttonUpdateSchemas_clicked()
-{
-    refresh_schemas(actual_host);
-}
-
-
-void MainWindow::on_buttonUpdateTables_clicked()
-{
-    refresh_tables(actual_host);
-}
-
 void MainWindow::on_actionQuit_triggered()
 {
     dbMysql.close();
@@ -378,20 +409,24 @@ void MainWindow::on_actionQuit_triggered()
 }
 
 
-void MainWindow::on_buttonNewConns_clicked()
-{
-    on_actionNew_connection_triggered();
-}
-
-
 
 void MainWindow::on_listViewTables_clicked(const QModelIndex &index)
 {
     actual_table= index.data(Qt::DisplayRole).toString();
 
-    if (true)
+    if (ui->buttonEditTables->isChecked())
     {
-        Sql *form = new Sql(actual_host, actual_schema, actual_table);
+        Structure *form = new Structure(actual_host, actual_schema, actual_table);
+
+        QMdiSubWindow *sub = new QMdiSubWindow;
+        sub->setWidget(form);
+        sub->setAttribute(Qt::WA_DeleteOnClose);  // subjanela será destruída ao fechar
+        ui->mdiArea->addSubWindow(sub);
+        sub->resize(500, 360);
+        sub->showMaximized();
+
+    } else {
+        Sql *form = new Sql(actual_host, actual_schema, actual_table, actual_color);
 
         QMdiSubWindow *sub = new QMdiSubWindow;
         sub->setWidget(form);
@@ -418,4 +453,5 @@ void MainWindow::on_toolBoxLeft_currentChanged(int index)
         ui->listViewTables->setFocus();
     }
 }
+
 

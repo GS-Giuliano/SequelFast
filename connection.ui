@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>369</width>
-    <height>377</height>
+    <height>337</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -46,7 +46,7 @@
    <property name="geometry">
     <rect>
      <x>100</x>
-     <y>330</y>
+     <y>300</y>
      <width>81</width>
      <height>31</height>
     </rect>
@@ -66,7 +66,7 @@
    <property name="geometry">
     <rect>
      <x>190</x>
-     <y>330</y>
+     <y>300</y>
      <width>81</width>
      <height>31</height>
     </rect>
@@ -83,7 +83,7 @@
    <property name="geometry">
     <rect>
      <x>280</x>
-     <y>330</y>
+     <y>300</y>
      <width>81</width>
      <height>31</height>
     </rect>
@@ -99,139 +99,11 @@
     <bool>false</bool>
    </property>
   </widget>
-  <widget class="QRadioButton" name="radioButtonBlack">
-   <property name="geometry">
-    <rect>
-     <x>300</x>
-     <y>10</y>
-     <width>16</width>
-     <height>21</height>
-    </rect>
-   </property>
-   <property name="styleSheet">
-    <string notr="true">QRadioButton { borcolor: black;}</string>
-   </property>
-   <property name="text">
-    <string/>
-   </property>
-  </widget>
-  <widget class="QRadioButton" name="radioButtonRed">
-   <property name="geometry">
-    <rect>
-     <x>320</x>
-     <y>10</y>
-     <width>16</width>
-     <height>21</height>
-    </rect>
-   </property>
-   <property name="styleSheet">
-    <string notr="true">QRadioButton { color: red;}</string>
-   </property>
-   <property name="text">
-    <string/>
-   </property>
-  </widget>
-  <widget class="QRadioButton" name="radioButtonGreen">
-   <property name="geometry">
-    <rect>
-     <x>340</x>
-     <y>10</y>
-     <width>16</width>
-     <height>21</height>
-    </rect>
-   </property>
-   <property name="styleSheet">
-    <string notr="true">QRadioButton { color: green;}</string>
-   </property>
-   <property name="text">
-    <string/>
-   </property>
-  </widget>
-  <widget class="QRadioButton" name="radioButtonBlue">
-   <property name="geometry">
-    <rect>
-     <x>300</x>
-     <y>30</y>
-     <width>16</width>
-     <height>21</height>
-    </rect>
-   </property>
-   <property name="styleSheet">
-    <string notr="true">QRadioButton { color: blue;}</string>
-   </property>
-   <property name="text">
-    <string/>
-   </property>
-  </widget>
-  <widget class="QRadioButton" name="radioButtonPurple">
-   <property name="geometry">
-    <rect>
-     <x>320</x>
-     <y>30</y>
-     <width>16</width>
-     <height>21</height>
-    </rect>
-   </property>
-   <property name="styleSheet">
-    <string notr="true">QRadioButton { color: purple;}</string>
-   </property>
-   <property name="text">
-    <string/>
-   </property>
-  </widget>
-  <widget class="QRadioButton" name="radioButtonBrown">
-   <property name="geometry">
-    <rect>
-     <x>340</x>
-     <y>30</y>
-     <width>16</width>
-     <height>21</height>
-    </rect>
-   </property>
-   <property name="styleSheet">
-    <string notr="true">QRadioButton { color: brown;}</string>
-   </property>
-   <property name="text">
-    <string/>
-   </property>
-  </widget>
-  <widget class="QRadioButton" name="radioButtonOrange">
-   <property name="geometry">
-    <rect>
-     <x>300</x>
-     <y>50</y>
-     <width>16</width>
-     <height>21</height>
-    </rect>
-   </property>
-   <property name="styleSheet">
-    <string notr="true">QRadioButton { color: orange;}</string>
-   </property>
-   <property name="text">
-    <string/>
-   </property>
-  </widget>
-  <widget class="QRadioButton" name="radioButtonGrey">
-   <property name="geometry">
-    <rect>
-     <x>320</x>
-     <y>50</y>
-     <width>16</width>
-     <height>21</height>
-    </rect>
-   </property>
-   <property name="styleSheet">
-    <string notr="true">QRadioButton { color: grey;}</string>
-   </property>
-   <property name="text">
-    <string/>
-   </property>
-  </widget>
   <widget class="QTabWidget" name="tabWidget">
    <property name="geometry">
     <rect>
      <x>10</x>
-     <y>90</y>
+     <y>60</y>
      <width>351</width>
      <height>201</height>
     </rect>
@@ -591,7 +463,7 @@
    <property name="geometry">
     <rect>
      <x>10</x>
-     <y>330</y>
+     <y>300</y>
      <width>81</width>
      <height>31</height>
     </rect>
@@ -611,7 +483,7 @@
    <property name="geometry">
     <rect>
      <x>10</x>
-     <y>300</y>
+     <y>270</y>
      <width>351</width>
      <height>21</height>
     </rect>
@@ -647,14 +519,6 @@
   <tabstop>lineSSHuser</tabstop>
   <tabstop>lineSSHpass</tabstop>
   <tabstop>lineSSHkey</tabstop>
-  <tabstop>radioButtonBlack</tabstop>
-  <tabstop>radioButtonGreen</tabstop>
-  <tabstop>radioButtonBlue</tabstop>
-  <tabstop>radioButtonPurple</tabstop>
-  <tabstop>radioButtonOrange</tabstop>
-  <tabstop>radioButtonGrey</tabstop>
-  <tabstop>radioButtonBrown</tabstop>
-  <tabstop>radioButtonRed</tabstop>
  </tabstops>
  <resources>
   <include location="icons.qrc"/>

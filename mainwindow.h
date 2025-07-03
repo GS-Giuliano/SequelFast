@@ -44,6 +44,14 @@ private slots:
 
     void on_toolBoxLeft_currentChanged(int index);
 
+    void on_buttonFilterSchemas_clicked();
+
+    void on_buttonEditConns_clicked();
+
+    void on_buttonEditTables_clicked();
+
+    void on_buttonEditSchemas_clicked();
+
 private:
     Ui::MainWindow *ui;
 };

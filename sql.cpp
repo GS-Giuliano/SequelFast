@@ -26,7 +26,12 @@ QString sql_host;
 QString sql_schema;
 QString sql_table;
 
-Sql::Sql(const QString &host, const QString &schema, const QString &table, QWidget *parent)
+extern int pref_sql_limit;
+extern int pref_table_row_height;
+extern int pref_table_font_size;
+extern int pref_sql_font_size;
+
+Sql::Sql(const QString &host, const QString &schema, const QString &table, const QString &color, QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::Sql)
 {
@@ -36,9 +41,16 @@ Sql::Sql(const QString &host, const QString &schema, const QString &table, QWidg
 
     ui->setupUi(this);
 
+    setInterfaceSize(0);
+
     this->setWindowTitle(sql_schema+" • "+table);
+
+    QString style = "QTextEdit {background-color: " + getRgbFromColorName(color) + "}";
+
+    ui->textQuery->setStyleSheet(style);
+
     new SqlHighlighter(ui->textQuery->document());
-    ui->textQuery->setText("SELECT * FROM "+table+" LIMIT 1000;");
+    ui->textQuery->setText("SELECT * FROM "+table+" LIMIT " + QString::number(pref_sql_limit)+ ";");
 
     QLabel *label = new QLabel("Autorun on every ", this);
     QLabel *labelSeconds = new QLabel("second(s)", this);
@@ -62,6 +74,43 @@ Sql::Sql(const QString &host, const QString &schema, const QString &table, QWidg
 Sql::~Sql()
 {
     delete ui;
+}
+
+void Sql::setInterfaceSize(int increase)
+{
+    if (increase > 0 && pref_sql_font_size < 30)
+    {
+        pref_sql_font_size++;
+        pref_table_font_size++;
+        pref_table_row_height+=2;
+    }
+    if (increase < 0 && pref_sql_font_size > 6)
+    {
+        pref_sql_font_size--;
+        pref_table_font_size--;
+        pref_table_row_height-=2;
+    }
+    QFont fonte;
+    fonte.setFamilies(QStringList()
+                           << "Segoe UI"        // Windows
+                           << ".SF NS Text"     // macOS (nome interno do San Francisco)
+                           << "Ubuntu"          // Ubuntu
+                           << "Cantarell"       // GNOME padrão
+                           << "Noto Sans"       // fallback moderno do Google
+                           << "Sans Serif");    // fallback genérico
+    fonte.setPointSize(pref_table_font_size);
+    // fonte.setStyleHint(QFont::Monospace);  // opcional, força alinhamento fixo
+    ui->tableData->setFont(fonte);
+    // ui->tableData->setFixedHeight(pref_table_row_height);
+
+    QFont fonteQuery;
+    fonteQuery.setFamilies(QStringList() << "Consolas" << "Menlo" << "Courier New" << "Monospace");
+    fonteQuery.setPointSize(pref_sql_font_size);
+    fonteQuery.setStyleHint(QFont::Monospace);
+    ui->textQuery->setFont(fonteQuery);
+
+    ui->tableData->viewport()->update();
+    ui->textQuery->viewport()->update();
 }
 
 void Sql::formatSqlText()
@@ -91,24 +140,50 @@ void Sql::on_actionRun_triggered()
 {
     // executa a query
     QSqlQueryModel *model = new QSqlQueryModel(this);
-    QString consulta = ui->textQuery->toPlainText();
-    QSqlDatabase db = QSqlDatabase::database("mysql_connection_" + sql_host);
-    model->setQuery(consulta, db);
-
-    if (model->lastError().isValid()) {
-        ui->statusbar->showMessage("Query error: " + model->lastError().text());
-        delete model;  // opcional, já tem pai, mas se reutilizar...
-        return;
+    QString consulta = ui->textQuery->textCursor().selectedText();
+    if (consulta == "")
+    {
+        consulta = ui->textQuery->toPlainText();
     }
-    ui->tableData->setSortingEnabled(true);
-    ui->tableData->resizeColumnsToContents();
-    ui->tableData->setModel(model);  // exibe os resultados na tabela
-    ui->statusbar->showMessage("Query executed successfully!");
+    if (consulta != "")
+    {
+        QSqlDatabase db = QSqlDatabase::database("mysql_connection_" + sql_host);
+        model->setQuery(consulta, db);
+
+        if (model->lastError().isValid()) {
+            ui->statusbar->showMessage("Query error: " + model->lastError().text());
+            delete model;  // opcional, já tem pai, mas se reutilizar...
+            return;
+        }
+
+        ui->tableData->setModel(model);  // exibe os resultados na tabela
+        ui->tableData->resizeColumnsToContents();
+        ui->tableData->setSortingEnabled(true);
+        ui->statusbar->showMessage("Query executed successfully!");
+    }
 }
 
 
 void Sql::on_actionFormat_triggered()
 {
     formatSqlText();
+}
+
+
+void Sql::on_actionIncrease_triggered()
+{
+    setInterfaceSize(1);
+}
+
+
+void Sql::on_actionReduce_triggered()
+{
+    setInterfaceSize(-1);
+}
+
+
+void Sql::on_actionSave_triggered()
+{
+    updatePreferences();
 }
 

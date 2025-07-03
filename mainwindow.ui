@@ -51,14 +51,14 @@
        <enum>QFrame::Shadow::Plain</enum>
       </property>
       <property name="currentIndex">
-       <number>0</number>
+       <number>2</number>
       </property>
       <widget class="QWidget" name="pageTables_3">
        <property name="geometry">
         <rect>
          <x>0</x>
          <y>0</y>
-         <width>280</width>
+         <width>266</width>
          <height>455</height>
         </rect>
        </property>
@@ -111,7 +111,7 @@
             </property>
             <property name="icon">
              <iconset resource="icons.qrc">
-              <normaloff>:/icons/resources/star.svg</normaloff>:/icons/resources/star.svg</iconset>
+              <normaloff>:/icons/resources/heart tick.svg</normaloff>:/icons/resources/heart tick.svg</iconset>
             </property>
             <property name="iconSize">
              <size>
@@ -125,13 +125,13 @@
            </widget>
           </item>
           <item>
-           <widget class="QToolButton" name="buttonAddTables">
+           <widget class="QToolButton" name="buttonEditTables">
             <property name="text">
              <string>...</string>
             </property>
             <property name="icon">
              <iconset resource="icons.qrc">
-              <normaloff>:/icons/resources/add square.svg</normaloff>:/icons/resources/add square.svg</iconset>
+              <normaloff>:/icons/resources/brush.svg</normaloff>:/icons/resources/brush.svg</iconset>
             </property>
             <property name="iconSize">
              <size>
@@ -180,7 +180,7 @@
         <rect>
          <x>0</x>
          <y>0</y>
-         <width>280</width>
+         <width>266</width>
          <height>455</height>
         </rect>
        </property>
@@ -210,6 +210,9 @@
         </property>
         <item>
          <layout class="QHBoxLayout" name="horizontalLayout_3">
+          <property name="spacing">
+           <number>4</number>
+          </property>
           <item>
            <widget class="QLineEdit" name="lineEditSchemas">
             <property name="styleSheet">
@@ -230,7 +233,7 @@
             </property>
             <property name="icon">
              <iconset resource="icons.qrc">
-              <normaloff>:/icons/resources/star.svg</normaloff>:/icons/resources/star.svg</iconset>
+              <normaloff>:/icons/resources/heart tick.svg</normaloff>:/icons/resources/heart tick.svg</iconset>
             </property>
             <property name="iconSize">
              <size>
@@ -244,13 +247,13 @@
            </widget>
           </item>
           <item>
-           <widget class="QToolButton" name="buttonAddSchemas">
+           <widget class="QToolButton" name="buttonEditSchemas">
             <property name="text">
              <string>...</string>
             </property>
             <property name="icon">
              <iconset resource="icons.qrc">
-              <normaloff>:/icons/resources/add square.svg</normaloff>:/icons/resources/add square.svg</iconset>
+              <normaloff>:/icons/resources/brush.svg</normaloff>:/icons/resources/brush.svg</iconset>
             </property>
             <property name="iconSize">
              <size>
@@ -299,7 +302,7 @@
         <rect>
          <x>0</x>
          <y>0</y>
-         <width>280</width>
+         <width>266</width>
          <height>455</height>
         </rect>
        </property>
@@ -313,19 +316,19 @@
        </attribute>
        <layout class="QVBoxLayout" name="verticalLayout_2">
         <property name="spacing">
-         <number>5</number>
+         <number>4</number>
         </property>
         <property name="leftMargin">
-         <number>5</number>
+         <number>4</number>
         </property>
         <property name="topMargin">
-         <number>5</number>
+         <number>4</number>
         </property>
         <property name="rightMargin">
-         <number>5</number>
+         <number>4</number>
         </property>
         <property name="bottomMargin">
-         <number>5</number>
+         <number>4</number>
         </property>
         <item>
          <layout class="QHBoxLayout" name="horizontalLayout_2">
@@ -363,9 +366,22 @@
            </widget>
           </item>
           <item>
-           <widget class="QCheckBox" name="checkBoxConns">
+           <widget class="QToolButton" name="buttonEditConns">
             <property name="text">
-             <string>Edit</string>
+             <string>...</string>
+            </property>
+            <property name="icon">
+             <iconset resource="icons.qrc">
+              <normaloff>:/icons/resources/brush.svg</normaloff>:/icons/resources/brush.svg</iconset>
+            </property>
+            <property name="iconSize">
+             <size>
+              <width>16</width>
+              <height>16</height>
+             </size>
+            </property>
+            <property name="checkable">
+             <bool>true</bool>
             </property>
            </widget>
           </item>
@@ -538,15 +554,14 @@
  <tabstops>
   <tabstop>lineEditTables</tabstop>
   <tabstop>buttonFilterTables</tabstop>
-  <tabstop>buttonAddTables</tabstop>
+  <tabstop>buttonEditTables</tabstop>
   <tabstop>buttonUpdateTables</tabstop>
   <tabstop>lineEditSchemas</tabstop>
   <tabstop>buttonFilterSchemas</tabstop>
-  <tabstop>buttonAddSchemas</tabstop>
+  <tabstop>buttonEditSchemas</tabstop>
   <tabstop>buttonUpdateSchemas</tabstop>
   <tabstop>lineEditConns</tabstop>
   <tabstop>buttonNewConns</tabstop>
-  <tabstop>checkBoxConns</tabstop>
  </tabstops>
  <resources>
   <include location="icons.qrc"/>

@@ -46,7 +46,7 @@
         </font>
        </property>
        <property name="styleSheet">
-        <string notr="true">QTextEdit {background-color: #FEF9E7}</string>
+        <string notr="true"/>
        </property>
       </widget>
       <widget class="QTableView" name="tableData">
@@ -86,12 +86,12 @@
    </property>
    <property name="iconSize">
     <size>
-     <width>22</width>
-     <height>22</height>
+     <width>20</width>
+     <height>20</height>
     </size>
    </property>
    <property name="toolButtonStyle">
-    <enum>Qt::ToolButtonStyle::ToolButtonTextBesideIcon</enum>
+    <enum>Qt::ToolButtonStyle::ToolButtonIconOnly</enum>
    </property>
    <attribute name="toolBarArea">
     <enum>TopToolBarArea</enum>
@@ -101,10 +101,10 @@
    </attribute>
    <addaction name="actionRun"/>
    <addaction name="actionFormat"/>
-   <addaction name="actionSave"/>
    <addaction name="actionFavorites"/>
    <addaction name="actionIncrease"/>
    <addaction name="actionReduce"/>
+   <addaction name="actionSave"/>
   </widget>
   <widget class="QToolBar" name="toolBarData">
    <property name="windowTitle">
@@ -112,12 +112,12 @@
    </property>
    <property name="iconSize">
     <size>
-     <width>22</width>
-     <height>22</height>
+     <width>20</width>
+     <height>20</height>
     </size>
    </property>
    <property name="toolButtonStyle">
-    <enum>Qt::ToolButtonStyle::ToolButtonTextBesideIcon</enum>
+    <enum>Qt::ToolButtonStyle::ToolButtonIconOnly</enum>
    </property>
    <attribute name="toolBarArea">
     <enum>BottomToolBarArea</enum>
@@ -137,6 +137,9 @@
    <property name="text">
     <string>Run</string>
    </property>
+   <property name="shortcut">
+    <string>Meta+R</string>
+   </property>
    <property name="menuRole">
     <enum>QAction::MenuRole::NoRole</enum>
    </property>
@@ -149,6 +152,9 @@
    <property name="text">
     <string>Format</string>
    </property>
+   <property name="shortcut">
+    <string>Meta+F, Ctrl+F</string>
+   </property>
    <property name="menuRole">
     <enum>QAction::MenuRole::NoRole</enum>
    </property>
@@ -156,13 +162,13 @@
   <action name="actionSave">
    <property name="icon">
     <iconset resource="icons.qrc">
-     <normaloff>:/icons/resources/star.svg</normaloff>:/icons/resources/star.svg</iconset>
+     <normaloff>:/icons/resources/heart tick.svg</normaloff>:/icons/resources/heart tick.svg</iconset>
    </property>
    <property name="text">
     <string>Save</string>
    </property>
    <property name="toolTip">
-    <string>Save</string>
+    <string>Save preferences</string>
    </property>
    <property name="menuRole">
     <enum>QAction::MenuRole::NoRole</enum>
@@ -183,13 +189,16 @@
   <action name="actionIncrease">
    <property name="icon">
     <iconset resource="icons.qrc">
-     <normaloff>:/icons/resources/add square.svg</normaloff>:/icons/resources/add square.svg</iconset>
+     <normaloff>:/icons/resources/search zoom-2.svg</normaloff>:/icons/resources/search zoom-2.svg</iconset>
    </property>
    <property name="text">
     <string>Increase</string>
    </property>
    <property name="toolTip">
     <string>Increase font size</string>
+   </property>
+   <property name="shortcut">
+    <string>Meta+Shift+=</string>
    </property>
    <property name="menuRole">
     <enum>QAction::MenuRole::NoRole</enum>
@@ -198,13 +207,16 @@
   <action name="actionReduce">
    <property name="icon">
     <iconset resource="icons.qrc">
-     <normaloff>:/icons/resources/more square.svg</normaloff>:/icons/resources/more square.svg</iconset>
+     <normaloff>:/icons/resources/search zoom.svg</normaloff>:/icons/resources/search zoom.svg</iconset>
    </property>
    <property name="text">
     <string>Reduce</string>
    </property>
    <property name="toolTip">
     <string>Reduce font size</string>
+   </property>
+   <property name="shortcut">
+    <string>Meta+-</string>
    </property>
    <property name="menuRole">
     <enum>QAction::MenuRole::NoRole</enum>
