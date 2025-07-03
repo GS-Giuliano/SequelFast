@@ -42,7 +42,7 @@ QString actual_color = "";
 int pref_sql_limit = 100;
 int pref_table_row_height = 40;
 int pref_table_font_size = 10;
-int pref_sql_font_size = 12;
+int pref_sql_font_size = 10;
 
 
 void openPreferences()

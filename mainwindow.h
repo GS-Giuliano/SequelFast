@@ -58,6 +58,9 @@ private slots:
 
     void on_actionCascade_triggered();
 
+
+    void on_buttonFilterTables_clicked();
+
 private:
     Ui::MainWindow *ui;
 };

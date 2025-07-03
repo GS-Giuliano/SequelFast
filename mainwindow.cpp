@@ -240,7 +240,12 @@ void MainWindow::refresh_schemas(QString selectedHost)
 
             ui->listViewSchemas->setModel(proxy);
 
-            connect(ui->lineEditSchemas, &QLineEdit::textChanged, proxy, &QSortFilterProxyModel::setFilterFixedString);
+            // Filtro no LineEdit
+            connect(ui->lineEditSchemas, &QLineEdit::textChanged, this, [=](const QString &texto) {
+                QString pattern = QString("(%1)").arg(texto);
+                QRegularExpression re(pattern, QRegularExpression::CaseInsensitiveOption);
+                proxy->setFilterRegularExpression(re);
+            });
 
             if (sel > -1) {
                 QModelIndex index = proxy->index(sel, 0);
@@ -249,6 +254,8 @@ void MainWindow::refresh_schemas(QString selectedHost)
                 QApplication::processEvents();
                 refresh_tables(selectedHost);
             }
+
+
 
         }
         QApplication::restoreOverrideCursor();
@@ -371,6 +378,34 @@ void MainWindow::on_listViewSchemas_clicked(const QModelIndex &index)
     refresh_schema(actual_schema);
 }
 
+void MainWindow::on_listViewTables_clicked(const QModelIndex &index)
+{
+    actual_table= index.data(Qt::DisplayRole).toString();
+
+    if (ui->buttonEditTables->isChecked())
+    {
+        Structure *form = new Structure(actual_host, actual_schema, actual_table);
+
+        QMdiSubWindow *sub = new QMdiSubWindow;
+        sub->setWidget(form);
+        sub->setAttribute(Qt::WA_DeleteOnClose);  // subjanela será destruída ao fechar
+        ui->mdiArea->addSubWindow(sub);
+        sub->resize(500, 360);
+        sub->showMaximized();
+
+    } else {
+        Sql *form = new Sql(actual_host, actual_schema, actual_table, actual_color);
+
+        QMdiSubWindow *sub = new QMdiSubWindow;
+        sub->setWidget(form);
+        sub->setAttribute(Qt::WA_DeleteOnClose);  // subjanela será destruída ao fechar
+        ui->mdiArea->addSubWindow(sub);
+        sub->resize(500, 360);
+        sub->showMaximized();
+    }
+}
+
+
 void MainWindow::on_buttonFilterSchemas_clicked()
 {
     QString pref_name = "fav_"+actual_host;
@@ -427,6 +462,25 @@ void MainWindow::on_buttonNewConns_clicked()
     on_actionNew_connection_triggered();
 }
 
+
+
+
+void MainWindow::on_toolBoxLeft_currentChanged(int index)
+{
+    if (index == 0)
+    {
+        ui->listViewConns->setFocus();
+    }
+    if (index == 1)
+    {
+        ui->listViewSchemas->setFocus();
+    }
+    if (index == 2)
+    {
+        ui->listViewTables->setFocus();
+    }
+}
+
 void MainWindow::on_actionNew_connection_triggered()
 {
     QString selected ;
@@ -451,61 +505,12 @@ void MainWindow::on_actionNew_connection_triggered()
     }
 }
 
-
 void MainWindow::on_actionQuit_triggered()
 {
     dbMysql.close();
     dbPreferences.close();
     this->close();
 }
-
-
-
-void MainWindow::on_listViewTables_clicked(const QModelIndex &index)
-{
-    actual_table= index.data(Qt::DisplayRole).toString();
-
-    if (ui->buttonEditTables->isChecked())
-    {
-        Structure *form = new Structure(actual_host, actual_schema, actual_table);
-
-        QMdiSubWindow *sub = new QMdiSubWindow;
-        sub->setWidget(form);
-        sub->setAttribute(Qt::WA_DeleteOnClose);  // subjanela será destruída ao fechar
-        ui->mdiArea->addSubWindow(sub);
-        sub->resize(500, 360);
-        sub->showMaximized();
-
-    } else {
-        Sql *form = new Sql(actual_host, actual_schema, actual_table, actual_color);
-
-        QMdiSubWindow *sub = new QMdiSubWindow;
-        sub->setWidget(form);
-        sub->setAttribute(Qt::WA_DeleteOnClose);  // subjanela será destruída ao fechar
-        ui->mdiArea->addSubWindow(sub);
-        sub->resize(500, 360);
-        sub->showMaximized();
-    }
-}
-
-
-void MainWindow::on_toolBoxLeft_currentChanged(int index)
-{
-    if (index == 0)
-    {
-        ui->listViewConns->setFocus();
-    }
-    if (index == 1)
-    {
-        ui->listViewSchemas->setFocus();
-    }
-    if (index == 2)
-    {
-        ui->listViewTables->setFocus();
-    }
-}
-
-
 
 void MainWindow::on_actionTile_triggered()
 {
@@ -518,4 +523,27 @@ void MainWindow::on_actionCascade_triggered()
     ui->mdiArea->cascadeSubWindows();
 }
 
+
+
+void MainWindow::on_buttonFilterTables_clicked()
+{
+    QString pref_name = "fav_"+actual_host+"_"+actual_schema;
+
+    if (ui->buttonFilterTables->isChecked())
+    {
+        if (ui->lineEditTables->text() == "")
+        {
+            QString value = getStringPreference(pref_name);
+            if (value != "")
+            {
+                ui->lineEditTables->setText(value);
+            }
+        } else {
+            setStringPreference(pref_name, ui->lineEditTables->text());
+        }
+    } else {
+        ui->lineEditTables->setText("");
+    }
+
+}
 
