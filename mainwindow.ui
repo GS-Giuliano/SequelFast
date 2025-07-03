@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>987</width>
+    <width>1117</width>
     <height>678</height>
    </rect>
   </property>
@@ -15,6 +15,24 @@
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QGridLayout" name="gridLayout">
+    <property name="leftMargin">
+     <number>5</number>
+    </property>
+    <property name="topMargin">
+     <number>5</number>
+    </property>
+    <property name="rightMargin">
+     <number>5</number>
+    </property>
+    <property name="bottomMargin">
+     <number>5</number>
+    </property>
+    <property name="horizontalSpacing">
+     <number>5</number>
+    </property>
+    <property name="verticalSpacing">
+     <number>4</number>
+    </property>
     <item row="0" column="0">
      <widget class="QToolBox" name="toolBoxLeft">
       <property name="sizePolicy">
@@ -23,6 +41,9 @@
         <verstretch>0</verstretch>
        </sizepolicy>
       </property>
+      <property name="styleSheet">
+       <string notr="true"/>
+      </property>
       <property name="frameShape">
        <enum>QFrame::Shape::NoFrame</enum>
       </property>
@@ -30,15 +51,15 @@
        <enum>QFrame::Shadow::Plain</enum>
       </property>
       <property name="currentIndex">
-       <number>2</number>
+       <number>0</number>
       </property>
       <widget class="QWidget" name="pageTables_3">
        <property name="geometry">
         <rect>
          <x>0</x>
          <y>0</y>
-         <width>274</width>
-         <height>460</height>
+         <width>280</width>
+         <height>455</height>
         </rect>
        </property>
        <attribute name="icon">
@@ -50,10 +71,34 @@
         <string>Tables</string>
        </attribute>
        <layout class="QVBoxLayout" name="verticalLayout">
+        <property name="spacing">
+         <number>5</number>
+        </property>
+        <property name="leftMargin">
+         <number>5</number>
+        </property>
+        <property name="topMargin">
+         <number>5</number>
+        </property>
+        <property name="rightMargin">
+         <number>5</number>
+        </property>
+        <property name="bottomMargin">
+         <number>5</number>
+        </property>
         <item>
          <layout class="QHBoxLayout" name="horizontalLayout">
+          <property name="spacing">
+           <number>4</number>
+          </property>
           <item>
            <widget class="QLineEdit" name="lineEditTables">
+            <property name="styleSheet">
+             <string notr="true">QLineEdit {padding: 4px; border-color: #ddd; border-width: 1px; border-radius: 6px}</string>
+            </property>
+            <property name="maxLength">
+             <number>80</number>
+            </property>
             <property name="placeholderText">
              <string>Filter</string>
             </property>
@@ -122,7 +167,11 @@
          </layout>
         </item>
         <item>
-         <widget class="QListView" name="listViewTables"/>
+         <widget class="QListView" name="listViewTables">
+          <property name="alternatingRowColors">
+           <bool>true</bool>
+          </property>
+         </widget>
         </item>
        </layout>
       </widget>
@@ -131,8 +180,8 @@
         <rect>
          <x>0</x>
          <y>0</y>
-         <width>274</width>
-         <height>460</height>
+         <width>280</width>
+         <height>455</height>
         </rect>
        </property>
        <attribute name="icon">
@@ -144,10 +193,31 @@
         <string>Schemas</string>
        </attribute>
        <layout class="QVBoxLayout" name="verticalLayout_3">
+        <property name="spacing">
+         <number>5</number>
+        </property>
+        <property name="leftMargin">
+         <number>5</number>
+        </property>
+        <property name="topMargin">
+         <number>5</number>
+        </property>
+        <property name="rightMargin">
+         <number>5</number>
+        </property>
+        <property name="bottomMargin">
+         <number>5</number>
+        </property>
         <item>
          <layout class="QHBoxLayout" name="horizontalLayout_3">
           <item>
            <widget class="QLineEdit" name="lineEditSchemas">
+            <property name="styleSheet">
+             <string notr="true">QLineEdit {padding: 4px; border-radius: 6px}</string>
+            </property>
+            <property name="maxLength">
+             <number>80</number>
+            </property>
             <property name="placeholderText">
              <string>Filter</string>
             </property>
@@ -217,8 +287,8 @@
         </item>
         <item>
          <widget class="QListView" name="listViewSchemas">
-          <property name="selectionMode">
-           <enum>QAbstractItemView::SelectionMode::ExtendedSelection</enum>
+          <property name="alternatingRowColors">
+           <bool>true</bool>
           </property>
          </widget>
         </item>
@@ -229,8 +299,8 @@
         <rect>
          <x>0</x>
          <y>0</y>
-         <width>274</width>
-         <height>460</height>
+         <width>280</width>
+         <height>455</height>
         </rect>
        </property>
        <attribute name="icon">
@@ -242,10 +312,34 @@
         <string>Connections</string>
        </attribute>
        <layout class="QVBoxLayout" name="verticalLayout_2">
+        <property name="spacing">
+         <number>5</number>
+        </property>
+        <property name="leftMargin">
+         <number>5</number>
+        </property>
+        <property name="topMargin">
+         <number>5</number>
+        </property>
+        <property name="rightMargin">
+         <number>5</number>
+        </property>
+        <property name="bottomMargin">
+         <number>5</number>
+        </property>
         <item>
          <layout class="QHBoxLayout" name="horizontalLayout_2">
+          <property name="spacing">
+           <number>4</number>
+          </property>
           <item>
            <widget class="QLineEdit" name="lineEditConns">
+            <property name="styleSheet">
+             <string notr="true">QLineEdit {padding: 4px; border-radius: 6px}</string>
+            </property>
+            <property name="maxLength">
+             <number>80</number>
+            </property>
             <property name="placeholderText">
              <string>Filter</string>
             </property>
@@ -279,8 +373,8 @@
         </item>
         <item>
          <widget class="QListView" name="listViewConns">
-          <property name="focusPolicy">
-           <enum>Qt::FocusPolicy::StrongFocus</enum>
+          <property name="styleSheet">
+           <string notr="true">QListView {padding: 6px}</string>
           </property>
          </widget>
         </item>
@@ -298,8 +392,8 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>987</width>
-     <height>21</height>
+     <width>1117</width>
+     <height>24</height>
     </rect>
    </property>
    <property name="sizePolicy">
@@ -453,7 +547,6 @@
   <tabstop>lineEditConns</tabstop>
   <tabstop>buttonNewConns</tabstop>
   <tabstop>checkBoxConns</tabstop>
-  <tabstop>listViewConns</tabstop>
  </tabstops>
  <resources>
   <include location="icons.qrc"/>

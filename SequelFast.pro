@@ -12,16 +12,21 @@ SOURCES += \
     connection.cpp \
     functions.cpp \
     main.cpp \
-    mainwindow.cpp
+    mainwindow.cpp \
+    sql.cpp \
+    sqlhighlighter.cpp
 
 HEADERS += \
     connection.h \
     functions.h \
-    mainwindow.h
+    mainwindow.h \
+    sql.h \
+    sqlhighlighter.h
 
 FORMS += \
     connection.ui \
-    mainwindow.ui
+    mainwindow.ui \
+    sql.ui
 
 TRANSLATIONS += \
     SequelFast_pt_BR.ts

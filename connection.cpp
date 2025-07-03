@@ -7,6 +7,7 @@
 #include <QSqlError>
 #include <QSqlQuery>
 #include <QMessageBox>
+#include <QColorDialog>
 
 #include <QJsonDocument>
 #include <QJsonObject>
@@ -23,6 +24,7 @@ extern QString actual_schema;
 extern QString actual_table;
 
 QString thatHost;
+QString thatColor="white";
 
 Connection::Connection(QString selectedHost, QWidget *parent)
     : QDialog(parent)
@@ -47,15 +49,20 @@ Connection::Connection(QString selectedHost, QWidget *parent)
     ui->lineSSHpass->setText(item["ssh_pass"].toVariant().toString());
     ui->lineSSHkey->setText(item["ssh_keyfile"].toVariant().toString());
 
-    QString color = item["color"].toVariant().toString();
-    if (color == "black") {ui->radioButtonBlack->setChecked(true);};
-    if (color == "blue") {ui->radioButtonBlue->setChecked(true);};
-    if (color == "red") {ui->radioButtonRed->setChecked(true);};
-    if (color == "brown") {ui->radioButtonBrown->setChecked(true);};
-    if (color == "grey") {ui->radioButtonGrey->setChecked(true);};
-    if (color == "orange") {ui->radioButtonOrange->setChecked(true);};
-    if (color == "purple") {ui->radioButtonPurple->setChecked(true);};
+    thatColor = item["color"].toVariant().toString();
+    int color_number = 0;
 
+    if (thatColor == "white") {color_number = 0; };
+    if (thatColor == "brown") {color_number = 1; };
+    if (thatColor == "red")   {color_number = 2; };
+    if (thatColor == "purple"){color_number = 3; };
+    if (thatColor == "blue")  {color_number = 4; };
+    if (thatColor == "green") {color_number = 5; };
+    if (thatColor == "yellow"){color_number = 6; };
+    if (thatColor == "orange"){color_number = 7; };
+    if (thatColor == "grey")  {color_number = 8; };
+
+    ui->dial->setValue(color_number);
 }
 
 Connection::~Connection()
@@ -65,17 +72,7 @@ Connection::~Connection()
 
 void Connection::saveConnection()
 {
-    QString color = "";
-    if (ui->radioButtonBlack->isChecked()) { color = "black"; }
-    if (ui->radioButtonGrey->isChecked()) { color = "grey"; }
-    if (ui->radioButtonBrown->isChecked()) { color = "brown"; }
-    if (ui->radioButtonGreen->isChecked()) { color = "green"; }
-    if (ui->radioButtonBlue->isChecked()) { color = "blue"; }
-    if (ui->radioButtonOrange->isChecked()) { color = "orange"; }
-    if (ui->radioButtonRed->isChecked()) { color = "red"; }
-    if (ui->radioButtonPurple->isChecked()) { color = "purple"; }
-
-    if (!dbPreferences.open()) {
+        if (!dbPreferences.open()) {
         qCritical() << "Erro ao abrir o banco de dados SQLite:" << dbPreferences.lastError().text();
     }
 
@@ -83,7 +80,7 @@ void Connection::saveConnection()
 
     QString updateSql = "UPDATE conns SET name = :new_name, schema = :new_schema, color = :new_color, host = :new_host, user = :new_user, pass = :new_pass, port = :new_port, ssh_host = :new_sshhost, ssh_user = :new_sshuser, ssh_pass = :new_sshpass, ssh_port = :new_sshport, ssh_keyfile = :new_sshkey WHERE name = :name_to_update";
     query.prepare(updateSql);
-    query.bindValue(":new_color", color);
+    query.bindValue(":new_color", thatColor);
     query.bindValue(":new_name", ui->lineName->text());
     query.bindValue(":new_schema", ui->lineSchema->text());
     query.bindValue(":new_host", ui->lineHost->text());
@@ -153,5 +150,21 @@ void Connection::on_buttonConnect_clicked()
         qDebug() << "Conexão bem-sucedida!";
         dbMysql.close();
     }
+}
+
+
+
+void Connection::on_dial_valueChanged(int value)
+{
+    if (value == 0) {ui->dial->setStyleSheet("QDial {background-color: white}"); thatColor="white";};
+    if (value == 1) {ui->dial->setStyleSheet("QDial {background-color: #EDBB99}"); thatColor="brown";};
+    if (value == 2) {ui->dial->setStyleSheet("QDial {background-color: #FFBAAB}"); thatColor="red";};
+    if (value == 3) {ui->dial->setStyleSheet("QDial {background-color: #DBBAFF}"); thatColor="purple";};
+    if (value == 4) {ui->dial->setStyleSheet("QDial {background-color: #ABD8FF}"); thatColor="blue";};
+    if (value == 5) {ui->dial->setStyleSheet("QDial {background-color: #ABEBC6}"); thatColor="green";};
+    if (value == 6) {ui->dial->setStyleSheet("QDial {background-color: #FCF3CF}"); thatColor="yellow";};
+    if (value == 7) {ui->dial->setStyleSheet("QDial {background-color: #FFE6BA}"); thatColor="orange";};
+    if (value == 8) {ui->dial->setStyleSheet("QDial {background-color: #D7DBDD}"); thatColor="grey";};
+    // qDebug() << "Cor: " << thatColor;
 }
 

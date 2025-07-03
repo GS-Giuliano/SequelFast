@@ -16,8 +16,8 @@
   <widget class="QLabel" name="label">
    <property name="geometry">
     <rect>
-     <x>20</x>
-     <y>30</y>
+     <x>10</x>
+     <y>20</y>
      <width>60</width>
      <height>16</height>
     </rect>
@@ -29,8 +29,8 @@
   <widget class="QLineEdit" name="lineName">
    <property name="geometry">
     <rect>
-     <x>100</x>
-     <y>30</y>
+     <x>90</x>
+     <y>20</y>
      <width>191</width>
      <height>24</height>
     </rect>
@@ -102,14 +102,14 @@
   <widget class="QRadioButton" name="radioButtonBlack">
    <property name="geometry">
     <rect>
-     <x>100</x>
-     <y>60</y>
+     <x>300</x>
+     <y>10</y>
      <width>16</width>
      <height>21</height>
     </rect>
    </property>
    <property name="styleSheet">
-    <string notr="true">QRadioButton { color: black;}</string>
+    <string notr="true">QRadioButton { borcolor: black;}</string>
    </property>
    <property name="text">
     <string/>
@@ -118,8 +118,8 @@
   <widget class="QRadioButton" name="radioButtonRed">
    <property name="geometry">
     <rect>
-     <x>120</x>
-     <y>60</y>
+     <x>320</x>
+     <y>10</y>
      <width>16</width>
      <height>21</height>
     </rect>
@@ -134,8 +134,8 @@
   <widget class="QRadioButton" name="radioButtonGreen">
    <property name="geometry">
     <rect>
-     <x>140</x>
-     <y>60</y>
+     <x>340</x>
+     <y>10</y>
      <width>16</width>
      <height>21</height>
     </rect>
@@ -150,8 +150,8 @@
   <widget class="QRadioButton" name="radioButtonBlue">
    <property name="geometry">
     <rect>
-     <x>160</x>
-     <y>60</y>
+     <x>300</x>
+     <y>30</y>
      <width>16</width>
      <height>21</height>
     </rect>
@@ -166,8 +166,8 @@
   <widget class="QRadioButton" name="radioButtonPurple">
    <property name="geometry">
     <rect>
-     <x>180</x>
-     <y>60</y>
+     <x>320</x>
+     <y>30</y>
      <width>16</width>
      <height>21</height>
     </rect>
@@ -182,8 +182,8 @@
   <widget class="QRadioButton" name="radioButtonBrown">
    <property name="geometry">
     <rect>
-     <x>200</x>
-     <y>60</y>
+     <x>340</x>
+     <y>30</y>
      <width>16</width>
      <height>21</height>
     </rect>
@@ -198,8 +198,8 @@
   <widget class="QRadioButton" name="radioButtonOrange">
    <property name="geometry">
     <rect>
-     <x>220</x>
-     <y>60</y>
+     <x>300</x>
+     <y>50</y>
      <width>16</width>
      <height>21</height>
     </rect>
@@ -214,8 +214,8 @@
   <widget class="QRadioButton" name="radioButtonGrey">
    <property name="geometry">
     <rect>
-     <x>240</x>
-     <y>60</y>
+     <x>320</x>
+     <y>50</y>
      <width>16</width>
      <height>21</height>
     </rect>
@@ -225,19 +225,6 @@
    </property>
    <property name="text">
     <string/>
-   </property>
-  </widget>
-  <widget class="QLabel" name="label_15">
-   <property name="geometry">
-    <rect>
-     <x>20</x>
-     <y>60</y>
-     <width>60</width>
-     <height>16</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>Color</string>
    </property>
   </widget>
   <widget class="QTabWidget" name="tabWidget">
@@ -411,6 +398,41 @@
      </property>
      <property name="text">
       <string>Schema</string>
+     </property>
+    </widget>
+    <widget class="QDial" name="dial">
+     <property name="geometry">
+      <rect>
+       <x>280</x>
+       <y>30</y>
+       <width>61</width>
+       <height>61</height>
+      </rect>
+     </property>
+     <property name="styleSheet">
+      <string notr="true"/>
+     </property>
+     <property name="maximum">
+      <number>7</number>
+     </property>
+     <property name="pageStep">
+      <number>1</number>
+     </property>
+    </widget>
+    <widget class="QLabel" name="label_15">
+     <property name="geometry">
+      <rect>
+       <x>280</x>
+       <y>10</y>
+       <width>51</width>
+       <height>21</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Color</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignmentFlag::AlignCenter</set>
      </property>
     </widget>
    </widget>

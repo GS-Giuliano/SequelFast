@@ -35,6 +35,7 @@ void openPreferences()
     }
 
     QSqlQuery query(QSqlDatabase::database("pref_connection"));
+
     QString createTableSql = "CREATE TABLE IF NOT EXISTS conns ("
                              "id INTEGER PRIMARY KEY AUTOINCREMENT,"
                              "name TEXT NULL,"
@@ -54,6 +55,20 @@ void openPreferences()
         qCritical() << "Erro ao criar a tabela 'conns':" << query.lastError().text();
         dbPreferences.close();
     } else {
+        // QString createTableSql = "CREATE TABLE IF NOT EXISTS filters ("
+        //                          "id INTEGER PRIMARY KEY AUTOINCREMENT,"
+        //                          "name TEXT NULL,"
+        //                          "schema TEXT NULL,"
+        //                          "table TEXT NULL,"
+        //                          "schemas TEXT NULL,"
+        //                          "tables TEXT NULL"
+        //                          ")";
+        // if (!query.exec(createTableSql)) {
+        //     qCritical() << "Erro ao criar a tabela 'conns':" << query.lastError().text();
+        //     dbPreferences.close();
+        // } else {
+        // }
+
         if (!query.exec("SELECT COUNT(id) ttl FROM conns")) {
             qCritical() << "Erro ao consultar dados:" << query.lastError().text();
         } else {

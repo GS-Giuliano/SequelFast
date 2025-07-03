@@ -25,6 +25,8 @@ private slots:
 
     void on_buttonConnect_clicked();
 
+    void on_dial_valueChanged(int value);
+
 private:
     Ui::Connection *ui;
 };

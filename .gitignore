@@ -1,3 +1,5 @@
+# macOS
+.DS_Store
 # C++ objects and libs
 /build/
 *.slo
