@@ -52,6 +52,10 @@ private slots:
 
     void on_buttonEditSchemas_clicked();
 
+    void on_actionTile_triggered();
+
+    void on_actionCascade_triggered();
+
 private:
     Ui::MainWindow *ui;
 };

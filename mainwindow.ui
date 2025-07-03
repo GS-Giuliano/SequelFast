@@ -59,7 +59,7 @@
          <x>0</x>
          <y>0</y>
          <width>266</width>
-         <height>455</height>
+         <height>468</height>
         </rect>
        </property>
        <attribute name="icon">
@@ -181,7 +181,7 @@
          <x>0</x>
          <y>0</y>
          <width>266</width>
-         <height>455</height>
+         <height>468</height>
         </rect>
        </property>
        <attribute name="icon">
@@ -302,8 +302,8 @@
         <rect>
          <x>0</x>
          <y>0</y>
-         <width>266</width>
-         <height>455</height>
+         <width>264</width>
+         <height>468</height>
         </rect>
        </property>
        <attribute name="icon">
@@ -409,7 +409,7 @@
      <x>0</x>
      <y>0</y>
      <width>1117</width>
-     <height>24</height>
+     <height>21</height>
     </rect>
    </property>
    <property name="sizePolicy">
@@ -450,6 +450,9 @@
    <addaction name="actionVariables"/>
    <addaction name="actionProcesses"/>
    <addaction name="separator"/>
+   <addaction name="actionTile"/>
+   <addaction name="actionCascade"/>
+   <addaction name="actionArrange"/>
   </widget>
   <action name="actionNew_connection">
    <property name="icon">
@@ -472,7 +475,7 @@
   <action name="actionNew_table">
    <property name="icon">
     <iconset resource="icons.qrc">
-     <normaloff>:/icons/resources/element.svg</normaloff>:/icons/resources/element.svg</iconset>
+     <normaloff>:/icons/resources/copy.svg</normaloff>:/icons/resources/copy.svg</iconset>
    </property>
    <property name="text">
     <string>New table</string>
@@ -544,10 +547,46 @@
   <action name="actionProcesses">
    <property name="icon">
     <iconset resource="icons.qrc">
-     <normaloff>:/icons/resources/forward item.svg</normaloff>:/icons/resources/forward item.svg</iconset>
+     <normaloff>:/icons/resources/bubble.svg</normaloff>:/icons/resources/bubble.svg</iconset>
    </property>
    <property name="text">
     <string>Processes</string>
+   </property>
+  </action>
+  <action name="actionTile">
+   <property name="icon">
+    <iconset resource="icons.qrc">
+     <normaloff>:/icons/resources/element.svg</normaloff>:/icons/resources/element.svg</iconset>
+   </property>
+   <property name="text">
+    <string>Tile</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::MenuRole::NoRole</enum>
+   </property>
+  </action>
+  <action name="actionCascade">
+   <property name="icon">
+    <iconset resource="icons.qrc">
+     <normaloff>:/icons/resources/square.svg</normaloff>:/icons/resources/square.svg</iconset>
+   </property>
+   <property name="text">
+    <string>Cascade</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::MenuRole::NoRole</enum>
+   </property>
+  </action>
+  <action name="actionArrange">
+   <property name="icon">
+    <iconset resource="icons.qrc">
+     <normaloff>:/icons/resources/kanban.svg</normaloff>:/icons/resources/kanban.svg</iconset>
+   </property>
+   <property name="text">
+    <string>Arrange</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::MenuRole::NoRole</enum>
    </property>
   </action>
  </widget>
