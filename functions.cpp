@@ -11,6 +11,8 @@
 #include <QJsonObject>
 #include <QJsonArray>
 #include <QJsonValue>
+#include <QMap>
+#include <QProcess>
 
 QJsonArray connections;
 
@@ -408,3 +410,4 @@ QString getRgbFromColorName(const QString &colorName)
     }
     return "#FFFFFF";
 }
+

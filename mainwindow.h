@@ -21,6 +21,8 @@ public:
     void refresh_schemas(QString selectedHost);
     void refresh_schema(QString selectedSchema);
     void refresh_tables(QString selectedHost);
+    void startSSH(QString &selectedHost);
+    void endSSH(QString &selectedHost);
 
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();

@@ -138,6 +138,9 @@ void Sql::formatSqlText()
 
 void Sql::on_actionRun_triggered()
 {
+    QApplication::setOverrideCursor(Qt::WaitCursor);
+    QApplication::processEvents();
+
     // executa a query
     QSqlQueryModel *model = new QSqlQueryModel(this);
     QString consulta = ui->textQuery->textCursor().selectedText();
@@ -153,6 +156,8 @@ void Sql::on_actionRun_triggered()
         if (model->lastError().isValid()) {
             ui->statusbar->showMessage("Query error: " + model->lastError().text());
             delete model;  // opcional, já tem pai, mas se reutilizar...
+            QApplication::restoreOverrideCursor();
+            QApplication::processEvents();
             return;
         }
 
@@ -161,7 +166,11 @@ void Sql::on_actionRun_triggered()
         ui->tableData->setSortingEnabled(true);
         ui->statusbar->showMessage("Query executed successfully!");
     }
+    QApplication::restoreOverrideCursor();
+    QApplication::processEvents();
+
 }
+
 
 
 void Sql::on_actionFormat_triggered()

@@ -452,7 +452,6 @@
    <addaction name="separator"/>
    <addaction name="actionTile"/>
    <addaction name="actionCascade"/>
-   <addaction name="actionArrange"/>
   </widget>
   <action name="actionNew_connection">
    <property name="icon">
@@ -572,18 +571,6 @@
    </property>
    <property name="text">
     <string>Cascade</string>
-   </property>
-   <property name="menuRole">
-    <enum>QAction::MenuRole::NoRole</enum>
-   </property>
-  </action>
-  <action name="actionArrange">
-   <property name="icon">
-    <iconset resource="icons.qrc">
-     <normaloff>:/icons/resources/kanban.svg</normaloff>:/icons/resources/kanban.svg</iconset>
-   </property>
-   <property name="text">
-    <string>Arrange</string>
    </property>
    <property name="menuRole">
     <enum>QAction::MenuRole::NoRole</enum>

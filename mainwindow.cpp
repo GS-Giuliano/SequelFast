@@ -11,8 +11,12 @@
 #include <QStringListModel>
 #include <QStandardItemModel>
 #include <QMdiSubWindow>
+#include <QProgressDialog>
+#include <QTimer>
 
 #include <QSortFilterProxyModel>
+#include <QMap>
+#include <QProcess>
 
 #include <QJsonDocument>
 #include <QJsonObject>
@@ -23,6 +27,7 @@
 #include <connection.h>
 #include <sql.h>
 #include <structure.h>
+#include <tunnelsqlmanager.h>
 
 extern QJsonArray connections;
 extern QSqlDatabase dbPreferences;
@@ -65,14 +70,48 @@ bool MainWindow::host_connect(QString selectedHost)
     qDebug() << " User: " << item["user"].toVariant().toString();
     qDebug() << " Pass: " << item["pass"].toVariant().toString();
 
+    QApplication::setOverrideCursor(Qt::WaitCursor);
+    QApplication::processEvents();
     dbMysql = QSqlDatabase::addDatabase("QMYSQL", "mysql_connection_"+selectedHost);
 
-    dbMysql.setHostName(item["host"].toVariant().toString());
-    dbMysql.setDatabaseName(item["schema"].toVariant().toString());
-    dbMysql.setPort(item["port"].toVariant().toInt());
-    dbMysql.setUserName(item["user"].toVariant().toString());
-    dbMysql.setPassword(item["pass"].toVariant().toString());
+    if (item["ssh_host"] != "")
+    {
+        // QProgressDialog progress("Conectando...", "Cancelar", 0, 0, this);
+        // progress.setWindowModality(Qt::ApplicationModal);
+        // progress.setCancelButton(nullptr);
+        // progress.show();
 
+        TunnelSqlManager *manager = new TunnelSqlManager(this);
+
+        bool ok = manager->conectar(
+            item["name"].toVariant().toString(),
+            item["ssh_user"].toVariant().toString(),
+            item["ssh_host"].toVariant().toString(),
+            item["ssh_port"].toVariant().toString(),
+            item["ssh_pass"].toVariant().toString(),
+            item["ssh_keyfile"].toVariant().toString(),
+            item["host"].toVariant().toString(),
+            item["port"].toVariant().toString(),
+            item["user"].toVariant().toString(),
+            item["pass"].toVariant().toString(),
+            item["schema"].toVariant().toString());
+        // progress.close();
+        if (!ok) {
+            QApplication::restoreOverrideCursor();
+            QApplication::processEvents();
+            return(false);
+            // dbMysql = manager->obterConexao(item["name"].toVariant().toString());
+            // manager->obterConexao(item["name"].toVariant().toString());
+        }
+    } else {
+        dbMysql.setHostName(item["host"].toVariant().toString());
+        dbMysql.setDatabaseName(item["schema"].toVariant().toString());
+        dbMysql.setPort(item["port"].toVariant().toInt());
+        dbMysql.setUserName(item["user"].toVariant().toString());
+        dbMysql.setPassword(item["pass"].toVariant().toString());
+    }
+    QApplication::restoreOverrideCursor();
+    QApplication::processEvents();
     if (!dbMysql.open()) {
         qDebug() << dbMysql.lastError();
         ui->statusbar->showMessage("Database connection failed!");
@@ -144,6 +183,8 @@ void MainWindow::refresh_schemas(QString selectedHost)
                                  QMessageBox::Ok
                                  );
     } else {
+        QApplication::setOverrideCursor(Qt::WaitCursor);
+        QApplication::processEvents();
         QJsonObject item = getConnection(selectedHost);
         QSqlQuery query(QSqlDatabase::database("mysql_connection_" + selectedHost));
 
@@ -204,9 +245,14 @@ void MainWindow::refresh_schemas(QString selectedHost)
             if (sel > -1) {
                 QModelIndex index = proxy->index(sel, 0);
                 ui->listViewSchemas->setCurrentIndex(index);
+                QApplication::restoreOverrideCursor();
+                QApplication::processEvents();
                 refresh_tables(selectedHost);
             }
+
         }
+        QApplication::restoreOverrideCursor();
+        QApplication::processEvents();
     }
 }
 
@@ -231,6 +277,9 @@ void MainWindow::refresh_schema(QString selectedSchema)
 }
 
 void MainWindow::refresh_tables(QString selectedHost) {
+    QApplication::setOverrideCursor(Qt::WaitCursor);
+    QApplication::processEvents();
+
     QSqlQuery query(QSqlDatabase::database("mysql_connection_" + selectedHost));
     if (query.exec("SHOW TABLES")) {
         ui->lineEditTables->setText("");
@@ -282,6 +331,8 @@ void MainWindow::refresh_tables(QString selectedHost) {
         ui->statusbar->showMessage("Find tables error!");
         qDebug() << "Erro ao buscar tabelas";
     }
+    QApplication::restoreOverrideCursor();
+    QApplication::processEvents();
 }
 
 
