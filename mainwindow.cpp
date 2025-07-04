@@ -517,7 +517,6 @@ void MainWindow::on_actionTile_triggered()
     ui->mdiArea->tileSubWindows();
 }
 
-
 void MainWindow::on_actionCascade_triggered()
 {
     ui->mdiArea->cascadeSubWindows();
