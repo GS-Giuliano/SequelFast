@@ -151,24 +151,53 @@ void Sql::on_actionRun_triggered()
     if (consulta != "")
     {
         QSqlDatabase db = QSqlDatabase::database("mysql_connection_" + sql_host);
-        model->setQuery(consulta, db);
 
-        if (model->lastError().isValid()) {
-            ui->statusbar->showMessage("Query error: " + model->lastError().text());
-            delete model;  // opcional, já tem pai, mas se reutilizar...
-            QApplication::restoreOverrideCursor();
-            QApplication::processEvents();
-            return;
+        QString comando = consulta.trimmed().split(QRegularExpression("\\s+"), Qt::SkipEmptyParts).value(0).toUpper();
+
+        if (comando == "SELECT" || comando == "SHOW" || comando == "DESCRIBE" || comando == "EXPLAIN") {
+            // comandos que retornam resultados
+            QSqlQueryModel *model = new QSqlQueryModel(this);
+            model->setQuery(consulta, db);
+
+            if (model->lastError().isValid()) {
+                ui->statusbar->showMessage("Query error: " + model->lastError().text());
+                delete model;
+            } else {
+                ui->tableData->setModel(model);
+                ui->tableData->resizeColumnsToContents();
+                ui->tableData->setSortingEnabled(true);
+                ui->statusbar->showMessage("Success! Rows: " + QString::number(model->rowCount()));
+            }
+        } else {
+            // comandos como INSERT, UPDATE, DELETE, etc.
+            QSqlQuery query(db);
+            if (!query.exec(consulta)) {
+                ui->statusbar->showMessage("Command error: " + query.lastError().text());
+            } else {
+                int linhasAfetadas = query.numRowsAffected();
+                ui->statusbar->showMessage("Success! Line affected: " + QString::number(linhasAfetadas));
+            }
+
+            // Limpa a tabela visual, pois não há dados a mostrar
+            ui->tableData->setModel(nullptr);
         }
 
-        ui->tableData->setModel(model);  // exibe os resultados na tabela
-        ui->tableData->resizeColumnsToContents();
-        ui->tableData->setSortingEnabled(true);
-        ui->statusbar->showMessage("Query executed successfully!");
+        // model->setQuery(consulta, db);
+
+        // if (model->lastError().isValid()) {
+        //     ui->statusbar->showMessage("Query error: " + model->lastError().text());
+        //     delete model;  // opcional, já tem pai, mas se reutilizar...
+        //     QApplication::restoreOverrideCursor();
+        //     QApplication::processEvents();
+        //     return;
+        // }
+        // ui->tableData->setModel(model);  // exibe os resultados na tabela
+        // ui->tableData->resizeColumnsToContents();
+        // ui->tableData->setSortingEnabled(true);
+        // ui->statusbar->showMessage("Query executed successfully!");
     }
     QApplication::restoreOverrideCursor();
     QApplication::processEvents();
-
 }
 
 

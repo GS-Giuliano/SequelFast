@@ -28,41 +28,40 @@ public:
     ~MainWindow();
 
 private slots:
-    void on_listViewConns_clicked(const QModelIndex &index);
-
-    void on_actionQuit_triggered();
 
     void on_buttonNewConns_clicked();
-
-    void on_actionNew_connection_triggered();
-
-    void on_listViewSchemas_clicked(const QModelIndex &index);
-
+    void on_buttonFilterSchemas_clicked();
+    void on_buttonEditConns_clicked();
+    void on_buttonEditTables_clicked();
+    void on_buttonEditSchemas_clicked();
+    void on_buttonFilterTables_clicked();
     void on_buttonUpdateSchemas_clicked();
-
     void on_buttonUpdateTables_clicked();
-
-    void on_listViewTables_clicked(const QModelIndex &index);
-
     void on_toolBoxLeft_currentChanged(int index);
 
-    void on_buttonFilterSchemas_clicked();
-
-    void on_buttonEditConns_clicked();
-
-    void on_buttonEditTables_clicked();
-
-    void on_buttonEditSchemas_clicked();
-
+    void on_actionQuit_triggered();
+    void on_actionNew_connection_triggered();
     void on_actionTile_triggered();
-
     void on_actionCascade_triggered();
 
+    void on_listViewConns_clicked(const QModelIndex &index);
+    void on_listViewSchemas_clicked(const QModelIndex &index);
+    void on_listViewTables_clicked(const QModelIndex &index);
 
-    void on_buttonFilterTables_clicked();
+    void listViewConns_open(const QModelIndex &index);
+    void listViewConns_edit(const QModelIndex &index);
+    void listViewConns_clone(const QModelIndex &index);
+    void listViewConns_remove(const QModelIndex &index);
+    void mostrarMenuContextoConns(const QPoint &pos);
+
+    void mostrarMenuContextoSchemas(const QPoint &pos);
+    void mostrarMenuContextoTables(const QPoint &pos);
+
 
 private:
     Ui::MainWindow *ui;
+
+    QAction* action_db_options;
 };
 
 class ColoredItemDelegate : public QStyledItemDelegate {

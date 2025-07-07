@@ -18,7 +18,17 @@ void openPreferences();
 
 // Conections (MySQL)
 QJsonObject getConnection(QString selectedHost);
-bool addConnection(QString name);
+bool addConnection(QString name,
+                   QString color = "",
+                   QString host = "",
+                   QString user = "",
+                   QString pass = "",
+                   QString port = "",
+                   QString ssh_host = "",
+                   QString ssh_user = "",
+                   QString ssh_pass = "",
+                   QString ssh_port = "",
+                   QString ssh_keyfile = "");
 bool deleteConnection(QString name);
 bool connMysql(QWidget *parent, QString selectedHost);
 // Preferences

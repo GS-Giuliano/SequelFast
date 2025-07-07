@@ -16,7 +16,7 @@ SqlHighlighter::SqlHighlighter(QTextDocument *parent)
         "\\bRIGHT\\b", "\\bINNER\\b", "\\bOUTER\\b", "\\bORDER\\b", "\\bBY\\b",
         "\\bGROUP\\b", "\\bLIMIT\\b", "\\bOFFSET\\b", "\\bAS\\b", "\\bDISTINCT\\b",
         "\\bAND\\b", "\\bOR\\b", "\\bNOT\\b", "\\bNULL\\b", "\\bIS\\b", "\\bCASE\\b",
-        "\\bSHOW\\b","\\bDATABASE\\b","\\bTABLE\\b","\\bDESCIBE\\b","\\bSET\\b",
+        "\\bSHOW\\b","\\bDATABASE\\b","\\bTABLE\\b","\\bDESCRIBE\\b","\\bSET\\b",
         "\\bLIKE\\b","\\bTRUNCATE\\b"
 
     };

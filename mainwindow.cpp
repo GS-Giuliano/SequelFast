@@ -13,6 +13,10 @@
 #include <QMdiSubWindow>
 #include <QProgressDialog>
 #include <QTimer>
+#include <QAction>
+#include <QContextMenuEvent>
+#include <QMenu>
+#include <QInputDialog>
 
 #include <QSortFilterProxyModel>
 #include <QMap>
@@ -50,6 +54,20 @@ MainWindow::MainWindow(QWidget *parent)
     openPreferences();
 
     ui->setupUi(this);
+
+    // Menus de contexto
+    ui->listViewConns->setContextMenuPolicy(Qt::CustomContextMenu);
+    ui->listViewSchemas->setContextMenuPolicy(Qt::CustomContextMenu);
+    ui->listViewTables->setContextMenuPolicy(Qt::CustomContextMenu);
+
+    connect(ui->listViewConns, &QListView::customContextMenuRequested,
+            this, &MainWindow::mostrarMenuContextoConns);
+
+    connect(ui->listViewSchemas, &QListView::customContextMenuRequested,
+            this, &MainWindow::mostrarMenuContextoSchemas);
+
+    connect(ui->listViewTables, &QListView::customContextMenuRequested,
+            this, &MainWindow::mostrarMenuContextoTables);
 
     refresh_connections();
     getPreferences();
@@ -342,32 +360,33 @@ void MainWindow::refresh_tables(QString selectedHost) {
     QApplication::processEvents();
 }
 
-
 void MainWindow::on_listViewConns_clicked(const QModelIndex &index)
 {
-    actual_host = index.data(Qt::DisplayRole).toString();
+    // actual_host = index.data(Qt::DisplayRole).toString();
 
     if (ui->buttonEditConns->isChecked())
     {
-        if (index.isValid()) {
-            Connection *janela = new Connection(actual_host, this);
-            int result = janela->exec();
-            if (result == QDialog::Accepted) {
-                refresh_connections();
-            }
-        }
+        listViewConns_edit(index);
+        // if (index.isValid()) {
+        //     Connection *janela = new Connection(actual_host, this);
+        //     int result = janela->exec();
+        //     if (result == QDialog::Accepted) {
+        //         refresh_connections();
+        //     }
+        // }
     } else {
-        QModelIndex i = ui->listViewConns->currentIndex();
-        if (i.isValid()) {
-            if (host_connect(actual_host))
-            {
-                ui->buttonFilterSchemas->setChecked(false);
-                ui->buttonFilterTables->setChecked(false);
-                ui->toolBoxLeft->setCurrentIndex(1);
-                QJsonObject item = getConnection(actual_host);
-                actual_color = item["color"].toString();
-            }
-        }
+        listViewConns_open(index);
+        // QModelIndex i = ui->listViewConns->currentIndex();
+        // if (i.isValid()) {
+        //     if (host_connect(actual_host))
+        //     {
+        //         ui->buttonFilterSchemas->setChecked(false);
+        //         ui->buttonFilterTables->setChecked(false);
+        //         ui->toolBoxLeft->setCurrentIndex(1);
+        //         QJsonObject item = getConnection(actual_host);
+        //         actual_color = item["color"].toString();
+        //     }
+        // }
     }
 }
 
@@ -546,3 +565,142 @@ void MainWindow::on_buttonFilterTables_clicked()
 
 }
 
+
+void MainWindow::listViewConns_open(const QModelIndex &index)
+{
+    actual_host = index.data(Qt::DisplayRole).toString();
+    if (host_connect(actual_host))
+    {
+        ui->buttonFilterSchemas->setChecked(false);
+        ui->buttonFilterTables->setChecked(false);
+        ui->toolBoxLeft->setCurrentIndex(1);
+        QJsonObject item = getConnection(actual_host);
+        actual_color = item["color"].toString();
+    }
+}
+
+void MainWindow::listViewConns_edit(const QModelIndex &index)
+{
+    actual_host = index.data(Qt::DisplayRole).toString();
+    Connection *janela = new Connection(actual_host, this);
+    int result = janela->exec();
+    if (result == QDialog::Accepted) {
+        refresh_connections();
+    }
+}
+
+void MainWindow::listViewConns_clone(const QModelIndex &index)
+{
+    actual_host = index.data(Qt::DisplayRole).toString();
+    QJsonObject orig = getConnection(actual_host);
+    QString selected ;
+    bool fez = false;
+    newConnectionCount = 0;
+    while(!fez)
+    {
+        selected = actual_host;
+        if (newConnectionCount > 0) {
+            selected+=" " +std::to_string(newConnectionCount);
+        }
+        newConnectionCount++;
+        fez = addConnection(selected,
+                            orig["color"].toVariant().toString(),
+                            orig["host"].toVariant().toString(),
+                            orig["user"].toVariant().toString(),
+                            orig["pass"].toVariant().toString(),
+                            orig["port"].toVariant().toString(),
+                            orig["ssh_host"].toVariant().toString(),
+                            orig["ssh_user"].toVariant().toString(),
+                            orig["ssh_pass"].toVariant().toString(),
+                            orig["ssh_port"].toVariant().toString(),
+                            orig["ssh_keyfile"].toVariant().toString() );
+        if (fez)
+        {
+            Connection *janela = new Connection(selected, this);
+            int result = janela->exec();
+            if (result == QDialog::Accepted) {
+                refresh_connections();
+            }
+        }
+    }
+}
+
+void MainWindow::listViewConns_remove(const QModelIndex &index)
+{
+    actual_host = index.data(Qt::DisplayRole).toString();
+    deleteConnection(actual_host);
+    refresh_connections();
+}
+
+void MainWindow::mostrarMenuContextoConns(const QPoint &pos)
+{
+    QModelIndex index = ui->listViewConns->indexAt(pos);
+    if (!index.isValid())
+        return;
+
+    QMenu menu(this);
+    QAction *schemaOpen = menu.addAction("Open");
+    QAction *schemaEdit = menu.addAction("Edit");
+    QAction *schemaClone = menu.addAction("Clone");
+    QAction *schemaRemove = menu.addAction("Remove");
+
+    QAction *selectedAction = menu.exec(ui->listViewConns->viewport()->mapToGlobal(pos));
+
+    if (selectedAction == schemaOpen) {
+        listViewConns_open(index);
+    }
+    else if (selectedAction == schemaEdit) {
+        listViewConns_edit(index);
+    }
+    else if (selectedAction == schemaClone) {
+        listViewConns_clone(index);
+    }
+    else if (selectedAction == schemaRemove) {
+        listViewConns_remove(index);
+    }
+}
+
+
+void MainWindow::mostrarMenuContextoSchemas(const QPoint &pos)
+{
+    QModelIndex index = ui->listViewSchemas->indexAt(pos);
+    if (!index.isValid())
+        return;
+
+    QMenu menu(this);
+    QAction *schemaOpen = menu.addAction("Open");
+    QAction *schemaStatistics = menu.addAction("Statistics");
+    QAction *schemaBatchRun = menu.addAction("Batch run");
+
+    QAction *selectedAction = menu.exec(ui->listViewSchemas->viewport()->mapToGlobal(pos));
+
+    if (selectedAction == schemaOpen) {
+        on_listViewSchemas_clicked(index);
+    }
+    else if (selectedAction == schemaStatistics) {
+    // TODO
+    }
+    else if (selectedAction == schemaBatchRun) {
+    // TODO
+    }
+}
+
+void MainWindow::mostrarMenuContextoTables(const QPoint &pos)
+{
+    QModelIndex index = ui->listViewTables->indexAt(pos);
+    if (!index.isValid())
+        return;
+
+    QMenu menu(this);
+    QAction *tableOpen = menu.addAction("Open");
+    QAction *tableEdit = menu.addAction("Edit");
+
+    QAction *selectedAction = menu.exec(ui->listViewTables->viewport()->mapToGlobal(pos));
+
+    if (selectedAction == tableOpen) {
+        on_listViewTables_clicked(index); // TODO
+    }
+    else if (selectedAction == tableEdit) {
+        on_listViewTables_clicked(index); // TODO
+    }
+}

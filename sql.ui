@@ -75,7 +75,7 @@
      <x>0</x>
      <y>0</y>
      <width>800</width>
-     <height>24</height>
+     <height>21</height>
     </rect>
    </property>
   </widget>
@@ -137,8 +137,11 @@
    <property name="text">
     <string>Run</string>
    </property>
+   <property name="toolTip">
+    <string>Run (CTRL+R)</string>
+   </property>
    <property name="shortcut">
-    <string>Meta+R</string>
+    <string>Ctrl+R</string>
    </property>
    <property name="menuRole">
     <enum>QAction::MenuRole::NoRole</enum>
@@ -152,8 +155,11 @@
    <property name="text">
     <string>Format</string>
    </property>
+   <property name="toolTip">
+    <string>Format (CTRL+F)</string>
+   </property>
    <property name="shortcut">
-    <string>Meta+F, Ctrl+F</string>
+    <string>Ctrl+F</string>
    </property>
    <property name="menuRole">
     <enum>QAction::MenuRole::NoRole</enum>
@@ -168,7 +174,10 @@
     <string>Save</string>
    </property>
    <property name="toolTip">
-    <string>Save preferences</string>
+    <string>Save default (CTRL+S)</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+S</string>
    </property>
    <property name="menuRole">
     <enum>QAction::MenuRole::NoRole</enum>
@@ -181,6 +190,12 @@
    </property>
    <property name="text">
     <string>Favorites</string>
+   </property>
+   <property name="toolTip">
+    <string>Favorites (CTRL+Y)</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Y</string>
    </property>
    <property name="menuRole">
     <enum>QAction::MenuRole::NoRole</enum>
@@ -198,7 +213,7 @@
     <string>Increase font size</string>
    </property>
    <property name="shortcut">
-    <string>Meta+Shift+=</string>
+    <string>Ctrl+Shift+=</string>
    </property>
    <property name="menuRole">
     <enum>QAction::MenuRole::NoRole</enum>
@@ -216,7 +231,7 @@
     <string>Reduce font size</string>
    </property>
    <property name="shortcut">
-    <string>Meta+-</string>
+    <string>Ctrl+-</string>
    </property>
    <property name="menuRole">
     <enum>QAction::MenuRole::NoRole</enum>

@@ -67,7 +67,7 @@ bool TunnelSqlManager::conectar(const QString &id,
 
         tunnel->start("ssh", args);
 
-        if (!tunnel->waitForStarted(5000)) {
+        if (!tunnel->waitForStarted(10000)) {
             qWarning() << "Erro ao iniciar túnel SSH para" << id << ":" << tunnel->errorString();
             delete tunnel;
             return false;

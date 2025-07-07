@@ -305,7 +305,17 @@ void updatePreferences()
     updateIntPreference("sql_font_size", pref_sql_font_size);
 }
 
-bool addConnection(QString name)
+bool addConnection(QString name,
+                   QString color = "",
+                   QString host = "",
+                   QString user = "",
+                   QString pass = "",
+                   QString port = "",
+                   QString ssh_host = "",
+                   QString ssh_user = "",
+                   QString ssh_pass = "",
+                   QString ssh_port = "",
+                   QString ssh_keyfile = "")
 {
     bool sai = false;
     if (!dbPreferences.isValid())
@@ -328,14 +338,23 @@ bool addConnection(QString name)
         return(false);
     } else {
         if (!query.last()) {
-            QString insertSql = "INSERT INTO conns (name, host, user, pass, port) VALUES (:name, :host, :user, :pass, :port)";
+            QString insertSql = "INSERT INTO conns (name, color, host, user, pass, port, ssh_host, ssh_user, ssh_pass, ssh_port, ssh_keyfile) "
+                                "VALUES (:name, :color, :host, :user, :pass, :port, :ssh_host, :ssh_user, :ssh_pass, :ssh_port, :ssh_keyfile)";
             query.prepare(insertSql);
 
             query.bindValue(":name", name);
-            query.bindValue(":host", "");
-            query.bindValue(":user", "");
-            query.bindValue(":pass", "");
-            query.bindValue(":port", "3306");
+            query.bindValue(":color", color);
+            query.bindValue(":host", host);
+            query.bindValue(":user", user);
+            query.bindValue(":pass", pass);
+            query.bindValue(":port", port);
+
+            query.bindValue(":ssh_host", ssh_host);
+            query.bindValue(":ssh_user", ssh_user);
+            query.bindValue(":ssh_pass", ssh_pass);
+            query.bindValue(":ssh_port", ssh_port);
+            query.bindValue(":ssh_keyfile", ssh_keyfile);
+
 
             if (!query.exec()) {
                 qWarning() << "Erro ao inserir host:" << query.lastError().text();
