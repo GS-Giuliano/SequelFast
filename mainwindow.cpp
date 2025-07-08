@@ -32,6 +32,7 @@
 #include <sql.h>
 #include <structure.h>
 #include <tunnelsqlmanager.h>
+#include <statistics.h>
 
 extern QJsonArray connections;
 extern QSqlDatabase dbPreferences;
@@ -367,26 +368,8 @@ void MainWindow::on_listViewConns_clicked(const QModelIndex &index)
     if (ui->buttonEditConns->isChecked())
     {
         listViewConns_edit(index);
-        // if (index.isValid()) {
-        //     Connection *janela = new Connection(actual_host, this);
-        //     int result = janela->exec();
-        //     if (result == QDialog::Accepted) {
-        //         refresh_connections();
-        //     }
-        // }
     } else {
         listViewConns_open(index);
-        // QModelIndex i = ui->listViewConns->currentIndex();
-        // if (i.isValid()) {
-        //     if (host_connect(actual_host))
-        //     {
-        //         ui->buttonFilterSchemas->setChecked(false);
-        //         ui->buttonFilterTables->setChecked(false);
-        //         ui->toolBoxLeft->setCurrentIndex(1);
-        //         QJsonObject item = getConnection(actual_host);
-        //         actual_color = item["color"].toString();
-        //     }
-        // }
     }
 }
 
@@ -678,6 +661,10 @@ void MainWindow::mostrarMenuContextoSchemas(const QPoint &pos)
         on_listViewSchemas_clicked(index);
     }
     else if (selectedAction == schemaStatistics) {
+        actual_schema = index.data(Qt::DisplayRole).toString();
+        Statistics *janela = new Statistics(actual_host, actual_schema, this);
+        int result = janela->exec();
+
     // TODO
     }
     else if (selectedAction == schemaBatchRun) {

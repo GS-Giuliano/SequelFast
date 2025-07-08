@@ -15,6 +15,7 @@ SOURCES += \
     mainwindow.cpp \
     sql.cpp \
     sqlhighlighter.cpp \
+    statistics.cpp \
     structure.cpp \
     tunnelsqlmanager.cpp
 
@@ -24,6 +25,7 @@ HEADERS += \
     mainwindow.h \
     sql.h \
     sqlhighlighter.h \
+    statistics.h \
     structure.h \
     tunnelsqlmanager.h
 
@@ -31,6 +33,7 @@ FORMS += \
     connection.ui \
     mainwindow.ui \
     sql.ui \
+    statistics.ui \
     structure.ui
 
 TRANSLATIONS += \
