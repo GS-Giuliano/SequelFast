@@ -16,6 +16,7 @@ public:
     ~Sql();
     void setInterfaceSize(int increase);
     void formatSqlText();
+    void statusMessage(QString msg);
 
 private slots:
     void on_actionRun_triggered();
@@ -27,6 +28,10 @@ private slots:
     void on_actionReduce_triggered();
 
     void on_actionSave_triggered();
+
+    void on_timer_tick();
+
+    void on_button_clicked();
 
 private:
     Ui::Sql *ui;

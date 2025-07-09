@@ -33,9 +33,9 @@ Statistics::Statistics(QString &host, QString &schema, QWidget *parent)
     : QDialog(parent)
     , ui(new Ui::Statistics)
 {
-    QString sql_host;
-    QString sql_schema;
-    QString sql_table;
+    QString sql_host = host;
+    QString sql_schema = schema;
+    // QString sql_table = table;
 
     ui->setupUi(this);
     this->setWindowTitle(sql_host +" • "+sql_schema );
