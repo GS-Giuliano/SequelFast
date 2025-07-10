@@ -1,4 +1,6 @@
 # macOS
+/SequelFast.app/
+SequelFast.app
 .DS_Store
 # C++ objects and libs
 /build/

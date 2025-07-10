@@ -34,6 +34,17 @@ sudo cmake --install .
 
 ## Instalação no macOS
 
+## Ambiente
+
+Configure corretamente o ambiente:
+
+Adicione as linhas no arquivo ~/.zshrc
+
+```bash
+export QTDIR=~/Qt/6.9.1/macos
+export PATH=$PATH:$QTDIR/bin
+```
+
 ### Drivers do MySQL
 
 <!-- ```bash
@@ -83,3 +94,45 @@ cmake --build . --parallel
 cmake --install .
 cp plugins/sqldrivers/libqsqlmysql.dylib ~/Qt/6.9.1/macos/plugins/sqldrivers/
 ```
+
+
+## Instalação do sistema no Linux
+
+Se você quiser que o ícone apareça no menu de aplicativos, Dock (como no KDE, GNOME, etc.):
+
+Crie um arquivo .desktop, por exemplo:
+```
+[Desktop Entry]
+Version=1.0
+Name=SequelFast
+Comment=Ferramenta SQL
+Exec=/caminho/para/SequelFast
+Icon=/caminho/absoluto/para/icons/icon_128.png
+Terminal=false
+Type=Application
+Categories=Development;Database;
+```
+
+Salve como:
+
+~/.local/share/applications/sequelfast.desktop (usuário)
+ou /usr/share/applications/sequelfast.desktop (global)
+
+Depois, rode:
+
+```bash
+chmod +x ~/.local/share/applications/sequelfast.desktop
+update-desktop-database ~/.local/share/applications/
+```
+
+📦 Instalação recomendada dos ícones no sistema (opcional)
+
+Você pode instalar ícones com múltiplas resoluções nas pastas padrão:
+
+```bash
+sudo cp icons/icon_128.png /usr/share/icons/hicolor/128x128/apps/sequelfast.png
+sudo gtk-update-icon-cache /usr/share/icons/hicolor
+```
+
+
+

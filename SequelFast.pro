@@ -1,4 +1,4 @@
-QT       += core gui sql
+0QT       += core gui sql
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -40,6 +40,7 @@ TRANSLATIONS += \
     SequelFast_pt_BR.ts
 CONFIG += lrelease
 CONFIG += embed_translations
+CONFIG += app_bundle # (This is the default, so this line is often omitted)
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
@@ -48,3 +49,14 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 
 RESOURCES += \
     icons.qrc
+
+# Ícone do executável no Windows
+win32 {
+    RC_FILE = icons/app_icon.rc
+}
+
+# Ícone do app no macOS
+mac {
+    ICON = resources/icon.icns
+
+}

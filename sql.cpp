@@ -64,7 +64,7 @@ Sql::Sql(const QString &host, const QString &schema, const QString &table, const
     // Espaçador invisível que "empurra" o conteúdo para a esquerda
     QWidget *spacer = new QWidget(this);
     spacer->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
-    QLabel *label = new QLabel("Repeat every ", this);
+    QLabel *label = new QLabel("Every ", this);
     QLabel *labelSeconds = new QLabel("second(s) ", this);
     QLabel *labelTimes = new QLabel(" time(s)", this);
 

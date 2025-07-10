@@ -47,8 +47,7 @@ bool TunnelSqlManager::conectar(const QString &id,
     int portaLocal = 3307 + sshTunnels.size();
     if (!sshTunnels.contains(id)) {
 
-        // tunnel: ssh -L 3307:localhost:3306 usuario@servidor_ssh
-        // tunnel: ssh -L 3307:localhost:3306 -i ~/.ssh/giusoft.key opc@152.67.53.67 -p22
+        // tunnel: ssh -T -L 3307:localhost:3306 usuario@servidor_ssh
 
         QProcess *tunnel = new QProcess(this);
 
@@ -62,10 +61,18 @@ bool TunnelSqlManager::conectar(const QString &id,
         QString destino = QString("%1@%2").arg(usuarioSsh, servidorSsh);
         QString porta = QString("-p%1").arg(portaSsh);
 
-        QStringList args { "-T", "-L", portaArg, key, porta , destino};
-        qDebug() << "ssh " << args;
-
-        tunnel->start("ssh", args);
+        if (senhaSsh == "")
+        {
+            QStringList args { "-T", "-L", portaArg, key, porta , destino};
+            qDebug() << "ssh" << args;
+            tunnel->start("ssh", args);
+        } else {
+            // sshpass -p 'senhaAqui' ssh -T -L 3307:localhost:3306 usuario@servidor_ssh
+            QString comSenha = QString("'%1'").arg(senhaSsh);
+            QStringList args { "-p", comSenha,"ssh", "-T", "-L", portaArg, key, porta , destino};
+            qDebug() << "sshpass" << args;
+            tunnel->start("sshpass", args);
+        }
 
         if (!tunnel->waitForStarted(10000)) {
             qWarning() << "Erro ao iniciar túnel SSH para" << id << ":" << tunnel->errorString();

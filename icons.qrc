@@ -99,5 +99,16 @@
         <file>resources/cloud.svg</file>
         <file>resources/cloud connection 2.svg</file>
         <file>resources/box 3.svg</file>
+        <file>resources/icon_16.png</file>
+        <file>resources/icon_32.png</file>
+        <file>resources/icon_48.png</file>
+        <file>resources/icon_64.png</file>
+        <file>resources/icon_128.png</file>
+        <file>resources/icon_256.png</file>
+        <file>resources/icon_512.png</file>
+        <file>resources/icon_1024.png</file>
+        <file>resources/icon.icns</file>
+        <file>resources/icon.ico</file>
+        <file>resources/icon.png</file>
     </qresource>
 </RCC>

@@ -51,7 +51,7 @@
        <enum>QFrame::Shadow::Plain</enum>
       </property>
       <property name="currentIndex">
-       <number>1</number>
+       <number>0</number>
       </property>
       <property name="tabSpacing">
        <number>4</number>
@@ -171,6 +171,9 @@
         </item>
         <item>
          <widget class="QListView" name="listViewTables">
+          <property name="editTriggers">
+           <set>QAbstractItemView::EditTrigger::NoEditTriggers</set>
+          </property>
           <property name="alternatingRowColors">
            <bool>true</bool>
           </property>
@@ -215,7 +218,7 @@
               </widget>
              </item>
              <item>
-              <widget class="QLabel" name="label_2">
+              <widget class="QLabel" name="labelTablesSize">
                <property name="font">
                 <font>
                  <pointsize>10</pointsize>
@@ -275,7 +278,7 @@
               </widget>
              </item>
              <item>
-              <widget class="QLabel" name="label_4">
+              <widget class="QLabel" name="labelTablesRows">
                <property name="font">
                 <font>
                  <pointsize>10</pointsize>
@@ -467,7 +470,7 @@
               </widget>
              </item>
              <item>
-              <widget class="QLabel" name="label_6">
+              <widget class="QLabel" name="labelSchemaSize">
                <property name="font">
                 <font>
                  <pointsize>10</pointsize>
@@ -524,7 +527,7 @@
               </widget>
              </item>
              <item>
-              <widget class="QLabel" name="label_8">
+              <widget class="QLabel" name="labelSchemaTables">
                <property name="font">
                 <font>
                  <pointsize>10</pointsize>
@@ -642,6 +645,9 @@
          <widget class="QListView" name="listViewConns">
           <property name="styleSheet">
            <string notr="true">QListView {padding: 6px}</string>
+          </property>
+          <property name="editTriggers">
+           <set>QAbstractItemView::EditTrigger::NoEditTriggers</set>
           </property>
          </widget>
         </item>

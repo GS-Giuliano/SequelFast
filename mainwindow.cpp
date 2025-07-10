@@ -363,8 +363,10 @@ void MainWindow::refresh_tables(QString selectedHost) {
 
 void MainWindow::on_listViewConns_clicked(const QModelIndex &index)
 {
-    // actual_host = index.data(Qt::DisplayRole).toString();
+}
 
+void MainWindow::on_listViewConns_doubleClicked(const QModelIndex &index)
+{
     if (ui->buttonEditConns->isChecked())
     {
         listViewConns_edit(index);
@@ -374,15 +376,77 @@ void MainWindow::on_listViewConns_clicked(const QModelIndex &index)
 }
 
 
+
 void MainWindow::on_listViewSchemas_clicked(const QModelIndex &index)
+{
+    actual_schema = index.data(Qt::DisplayRole).toString();
+
+    QSqlDatabase db = QSqlDatabase::database("mysql_connection_" + actual_host);
+
+    QSqlQuery query(db);
+
+    QString consulta = "SELECT table_schema AS name, ROUND(SUM(data_length + index_length) / 1024 / 1024, 2) size "
+                       "FROM information_schema.TABLES "
+                       "WHERE table_schema = '"+actual_schema+"' "
+                                         "GROUP BY table_schema ";
+    if (query.exec( consulta )) {
+        if (query.next()) {
+            ui->labelSchemaSize->setText(query.value("size").toString() + " Mb");
+        }
+    }
+
+    consulta = "SELECT COUNT(*) AS total_tables FROM information_schema.tables "
+               "WHERE table_schema = '"+actual_schema+"'";
+    if (query.exec( consulta )) {
+        if (query.next()) {
+            ui->labelSchemaTables->setText(query.value("total_tables").toString());
+        }
+    }
+}
+
+
+void MainWindow::on_listViewSchemas_doubleClicked(const QModelIndex &index)
 {
     actual_schema = index.data(Qt::DisplayRole).toString();
     refresh_schema(actual_schema);
 }
 
+
 void MainWindow::on_listViewTables_clicked(const QModelIndex &index)
 {
     actual_table= index.data(Qt::DisplayRole).toString();
+
+    QSqlDatabase db = QSqlDatabase::database("mysql_connection_" + actual_host);
+
+    QSqlQuery query(db);
+
+    QString consulta = "SELECT table_name AS 'table', table_rows AS 'rows',"
+        "ROUND((data_length + index_length) / 1024 / 1024, 2) AS 'size'"
+        "FROM  information_schema.tables WHERE  table_schema = '"+actual_schema+"' AND "
+        " table_name = '"+actual_table+"'";
+    if (query.exec( consulta )) {
+        if (query.next()) {
+            ui->labelTablesSize->setText(query.value("size").toString() + " Mb");
+            ui->labelTablesRows->setText(query.value("rows").toString());
+        }
+    }
+}
+
+void MainWindow::on_listViewTables_doubleClicked(const QModelIndex &index)
+{
+    actual_table= index.data(Qt::DisplayRole).toString();
+    QMdiSubWindow *sub = ui->mdiArea->activeSubWindow();
+
+    bool maximize = true;
+
+    if (sub) {
+        if (sub->isMaximized()) {
+            qDebug() << "A subjanela está maximizada.";
+        } else {
+            qDebug() << "A subjanela está restaurada.";
+            maximize = false;
+        }
+    }
 
     if (ui->buttonEditTables->isChecked())
     {
@@ -393,7 +457,10 @@ void MainWindow::on_listViewTables_clicked(const QModelIndex &index)
         sub->setAttribute(Qt::WA_DeleteOnClose);  // subjanela será destruída ao fechar
         ui->mdiArea->addSubWindow(sub);
         sub->resize(500, 360);
-        sub->showMaximized();
+        if (maximize)
+            sub->showMaximized();
+        else
+            sub->show();
 
     } else {
         Sql *form = new Sql(actual_host, actual_schema, actual_table, actual_color);
@@ -403,9 +470,13 @@ void MainWindow::on_listViewTables_clicked(const QModelIndex &index)
         sub->setAttribute(Qt::WA_DeleteOnClose);  // subjanela será destruída ao fechar
         ui->mdiArea->addSubWindow(sub);
         sub->resize(500, 360);
-        sub->showMaximized();
+        if (maximize)
+            sub->showMaximized();
+        else
+            sub->show();
     }
 }
+
 
 
 void MainWindow::on_buttonFilterSchemas_clicked()
@@ -691,3 +762,6 @@ void MainWindow::mostrarMenuContextoTables(const QPoint &pos)
         on_listViewTables_clicked(index); // TODO
     }
 }
+
+
+

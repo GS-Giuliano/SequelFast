@@ -58,6 +58,12 @@ private slots:
     void mostrarMenuContextoTables(const QPoint &pos);
 
 
+    void on_listViewSchemas_doubleClicked(const QModelIndex &index);
+
+    void on_listViewConns_doubleClicked(const QModelIndex &index);
+
+    void on_listViewTables_doubleClicked(const QModelIndex &index);
+
 private:
     Ui::MainWindow *ui;
 

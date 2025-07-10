@@ -13,6 +13,9 @@
 #include <QJsonValue>
 #include <QMap>
 #include <QProcess>
+#include <QStandardPaths>
+#include <QDir>
+#include <QMessageBox>
 
 QJsonArray connections;
 
@@ -32,7 +35,8 @@ QJsonArray colors = QJsonArray{
 
 QSqlDatabase dbPreferences;
 QSqlDatabase dbMysql;
-QString dbPath = "preferences.db";
+QString dbPath = "";
+QString dbName = "preferences.db";
 
 QString actual_host = "";
 QString actual_schema = "";
@@ -47,15 +51,29 @@ int pref_sql_font_size = 10;
 
 void openPreferences()
 {
+    qDebug() << QSqlDatabase::drivers();
+    qDebug() << "Plugin paths:" << QCoreApplication::libraryPaths();
 
     if (!dbPreferences.isValid())
     {
-        dbPreferences = QSqlDatabase::addDatabase("QSQLITE", "pref_connection");
-        dbPreferences.setDatabaseName(dbPath); // Define o caminho para o arquivo do banco de dados
+        // Caminho recomendado
+        QString basePath = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
+
+        // Garante que o diretório existe
+        QDir().mkpath(basePath);
+
+        // Caminho completo do banco
+        QString dbPath = basePath + "/" + dbName;
+        // QString dbPath = dbName;
+
+        // Conectar
+        QSqlDatabase dbPreferences = QSqlDatabase::addDatabase("QSQLITE", "pref_connection");
+        dbPreferences.setDatabaseName(dbPath);
     }
 
     if (!dbPreferences.open()) {
         qCritical() << "Erro ao abrir o banco de dados SQLite:" << dbPreferences.lastError().text();
+        return;
     }
 
     QSqlQuery query(QSqlDatabase::database("pref_connection"));
