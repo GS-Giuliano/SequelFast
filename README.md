@@ -1,7 +1,15 @@
 # SequelFast
 OpenSource MySQL and MariaDB Client focused on speed
 
+Para executar:
 
+## macOS Intel
+
+Abra o arquivo SequelFast.dmb e copie o arquivo para a pasta /Applications (Aplicativos)
+
+Certifique-se de que a pasta abaixo existe:
+
+~/Library/Application\ Support/SequelFastTeam/SequelFast/
 
 ## Technology
 

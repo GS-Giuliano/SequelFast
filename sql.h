@@ -2,6 +2,9 @@
 #define SQL_H
 
 #include <QMainWindow>
+#include <QLineEdit>
+#include <QPushButton>
+#include <QSqlDatabase>
 
 namespace Ui {
 class Sql;
@@ -35,6 +38,16 @@ private slots:
 
 private:
     Ui::Sql *ui;
+    QSqlDatabase dbMysqlLocal;
+    QString sql_host;
+    QString sql_schema;
+    QString sql_table;
+    QString sql_color;
+    QLineEdit *edit;
+    QLineEdit *editTimes;
+    QPushButton *button;
+    QTimer *timer;
+
 };
 
 #endif // SQL_H

@@ -43,8 +43,9 @@ extern QString actual_schema;
 extern QString actual_table;
 extern QString actual_color;
 
-int newConnectionCount = 0;
+extern bool prefLoaded;
 
+int newConnectionCount = 0;
 
 
 MainWindow::MainWindow(QWidget *parent)
@@ -52,26 +53,33 @@ MainWindow::MainWindow(QWidget *parent)
     , ui(new Ui::MainWindow)
 {
 
-    openPreferences();
 
     ui->setupUi(this);
 
-    // Menus de contexto
-    ui->listViewConns->setContextMenuPolicy(Qt::CustomContextMenu);
-    ui->listViewSchemas->setContextMenuPolicy(Qt::CustomContextMenu);
-    ui->listViewTables->setContextMenuPolicy(Qt::CustomContextMenu);
+    if (openPreferences())
+    {
+        // Menus de contexto
+        ui->listViewConns->setContextMenuPolicy(Qt::CustomContextMenu);
+        connect(ui->listViewConns, &QListView::customContextMenuRequested,
+                this, &MainWindow::mostrarMenuContextoConns);
 
-    connect(ui->listViewConns, &QListView::customContextMenuRequested,
-            this, &MainWindow::mostrarMenuContextoConns);
+        ui->listViewSchemas->setContextMenuPolicy(Qt::CustomContextMenu);
+        connect(ui->listViewSchemas, &QListView::customContextMenuRequested,
+                this, &MainWindow::mostrarMenuContextoSchemas);
 
-    connect(ui->listViewSchemas, &QListView::customContextMenuRequested,
-            this, &MainWindow::mostrarMenuContextoSchemas);
+        ui->listViewTables->setContextMenuPolicy(Qt::CustomContextMenu);
+        connect(ui->listViewTables, &QListView::customContextMenuRequested,
+                this, &MainWindow::mostrarMenuContextoTables);
 
-    connect(ui->listViewTables, &QListView::customContextMenuRequested,
-            this, &MainWindow::mostrarMenuContextoTables);
+        refresh_connections();
+        getPreferences();
 
-    refresh_connections();
-    getPreferences();
+    } else {
+        QMessageBox::warning(this, "Error", "Can't create preferences file! Check permissions and try again...");
+        QTimer::singleShot(0, qApp, &QApplication::quit);
+    }
+    // qDebug() << "Version:" << APP_VERSION << "Build:" << APP_BUILD_DATE << APP_BUILD_TIME;
+    ui->statusbar->showMessage("Version: " + QString(APP_VERSION) + " - Build:" + QString(APP_BUILD_DATE) + QString(APP_BUILD_TIME));
 
 }
 
@@ -84,10 +92,10 @@ bool MainWindow::host_connect(QString selectedHost)
 {
     QJsonObject item = getConnection(selectedHost);
 
-    qDebug() << "Tentando conexao...";
-    qDebug() << " Host: " << item["host"].toVariant().toString();
-    qDebug() << " User: " << item["user"].toVariant().toString();
-    qDebug() << " Pass: " << item["pass"].toVariant().toString();
+    // qDebug() << "Tentando conexao...";
+    // qDebug() << " Host: " << item["host"].toVariant().toString();
+    // qDebug() << " User: " << item["user"].toVariant().toString();
+    // qDebug() << " Pass: " << item["pass"].toVariant().toString();
 
     QApplication::setOverrideCursor(Qt::WaitCursor);
     QApplication::processEvents();
@@ -363,6 +371,7 @@ void MainWindow::refresh_tables(QString selectedHost) {
 
 void MainWindow::on_listViewConns_clicked(const QModelIndex &index)
 {
+    qDebug() << index;
 }
 
 void MainWindow::on_listViewConns_doubleClicked(const QModelIndex &index)
@@ -432,48 +441,15 @@ void MainWindow::on_listViewTables_clicked(const QModelIndex &index)
     }
 }
 
+
 void MainWindow::on_listViewTables_doubleClicked(const QModelIndex &index)
 {
-    actual_table= index.data(Qt::DisplayRole).toString();
-    QMdiSubWindow *sub = ui->mdiArea->activeSubWindow();
-
-    bool maximize = true;
-
-    if (sub) {
-        if (sub->isMaximized()) {
-            qDebug() << "A subjanela está maximizada.";
-        } else {
-            qDebug() << "A subjanela está restaurada.";
-            maximize = false;
-        }
-    }
-
+    // actual_table= index.data(Qt::DisplayRole).toString();
     if (ui->buttonEditTables->isChecked())
     {
-        Structure *form = new Structure(actual_host, actual_schema, actual_table);
-
-        QMdiSubWindow *sub = new QMdiSubWindow;
-        sub->setWidget(form);
-        sub->setAttribute(Qt::WA_DeleteOnClose);  // subjanela será destruída ao fechar
-        ui->mdiArea->addSubWindow(sub);
-        sub->resize(500, 360);
-        if (maximize)
-            sub->showMaximized();
-        else
-            sub->show();
-
+        on_listViewTables_edit(index);
     } else {
-        Sql *form = new Sql(actual_host, actual_schema, actual_table, actual_color);
-
-        QMdiSubWindow *sub = new QMdiSubWindow;
-        sub->setWidget(form);
-        sub->setAttribute(Qt::WA_DeleteOnClose);  // subjanela será destruída ao fechar
-        ui->mdiArea->addSubWindow(sub);
-        sub->resize(500, 360);
-        if (maximize)
-            sub->showMaximized();
-        else
-            sub->show();
+        on_listViewTables_open(index);
     }
 }
 
@@ -582,7 +558,8 @@ void MainWindow::on_actionQuit_triggered()
 {
     dbMysql.close();
     dbPreferences.close();
-    this->close();
+    // this->close();
+    QApplication::quit();
 }
 
 void MainWindow::on_actionTile_triggered()
@@ -734,13 +711,63 @@ void MainWindow::mostrarMenuContextoSchemas(const QPoint &pos)
     else if (selectedAction == schemaStatistics) {
         actual_schema = index.data(Qt::DisplayRole).toString();
         Statistics *janela = new Statistics(actual_host, actual_schema, this);
-        int result = janela->exec();
+        janela->exec();
 
     // TODO
     }
     else if (selectedAction == schemaBatchRun) {
     // TODO
     }
+}
+
+void MainWindow::on_listViewTables_open(const QModelIndex &index)
+{
+    actual_table= index.data(Qt::DisplayRole).toString();
+    QMdiSubWindow *prev = ui->mdiArea->activeSubWindow();
+    bool maximize = true;
+
+    if (prev) {
+        if (!prev->isMaximized()) {
+            maximize = false;
+        }
+    }
+
+    Sql *form = new Sql(actual_host, actual_schema, actual_table, actual_color);
+
+    QMdiSubWindow *sub = new QMdiSubWindow;
+    sub->setWidget(form);
+    sub->setAttribute(Qt::WA_DeleteOnClose);  // subjanela será destruída ao fechar
+    ui->mdiArea->addSubWindow(sub);
+    sub->resize(500, 360);
+    if (maximize)
+        sub->showMaximized();
+    else
+        sub->show();
+
+}
+
+void MainWindow::on_listViewTables_edit(const QModelIndex &index)
+{
+    actual_table= index.data(Qt::DisplayRole).toString();
+    QMdiSubWindow *prev = ui->mdiArea->activeSubWindow();
+    bool maximize = true;
+
+    if (prev) {
+        if (!prev->isMaximized()) {
+            maximize = false;
+        }
+    }
+    Structure *form = new Structure(actual_host, actual_schema, actual_table);
+
+    QMdiSubWindow *sub = new QMdiSubWindow;
+    sub->setWidget(form);
+    sub->setAttribute(Qt::WA_DeleteOnClose);  // subjanela será destruída ao fechar
+    ui->mdiArea->addSubWindow(sub);
+    sub->resize(500, 360);
+    if (maximize)
+        sub->showMaximized();
+    else
+        sub->show();
 }
 
 void MainWindow::mostrarMenuContextoTables(const QPoint &pos)
@@ -756,10 +783,10 @@ void MainWindow::mostrarMenuContextoTables(const QPoint &pos)
     QAction *selectedAction = menu.exec(ui->listViewTables->viewport()->mapToGlobal(pos));
 
     if (selectedAction == tableOpen) {
-        on_listViewTables_clicked(index); // TODO
+        on_listViewTables_open(index); // TODO
     }
     else if (selectedAction == tableEdit) {
-        on_listViewTables_clicked(index); // TODO
+        on_listViewTables_edit(index); // TODO
     }
 }
 

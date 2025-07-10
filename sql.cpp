@@ -25,20 +25,11 @@ extern QJsonArray connections;
 extern QSqlDatabase dbPreferences;
 extern QSqlDatabase dbMysql;
 
-QString sql_host;
-QString sql_schema;
-QString sql_table;
-QString sql_color;
-
 extern int pref_sql_limit;
 extern int pref_table_row_height;
 extern int pref_table_font_size;
 extern int pref_sql_font_size;
 
-QLineEdit *edit;
-QLineEdit *editTimes;
-QPushButton *button;
-QTimer *timer;
 
 
 Sql::Sql(const QString &host, const QString &schema, const QString &table, const QString &color, QWidget *parent)
@@ -52,6 +43,8 @@ Sql::Sql(const QString &host, const QString &schema, const QString &table, const
 
     ui->setupUi(this);
 
+    dbMysqlLocal = dbMysql;
+
     setInterfaceSize(0);
 
     this->setWindowTitle(schema+" • "+table);
@@ -59,7 +52,14 @@ Sql::Sql(const QString &host, const QString &schema, const QString &table, const
     ui->textQuery->setStyleSheet(style);
 
     new SqlHighlighter(ui->textQuery->document());
-    ui->textQuery->setText("SELECT * FROM "+table+" LIMIT " + QString::number(pref_sql_limit)+ ";");
+
+    QString param = sql_host + ":" + sql_schema + ":" + sql_table;
+    QString queryStr = getStringPreference(param);
+    if (queryStr == "")
+    {
+        queryStr = "SELECT * FROM "+table+" LIMIT " + QString::number(pref_sql_limit)+ ";";
+    }
+    ui->textQuery->setText(queryStr);
 
     // Espaçador invisível que "empurra" o conteúdo para a esquerda
     QWidget *spacer = new QWidget(this);
@@ -69,14 +69,16 @@ Sql::Sql(const QString &host, const QString &schema, const QString &table, const
     QLabel *labelTimes = new QLabel(" time(s)", this);
 
     edit = new QLineEdit(this);
-    edit->setText("5");
+    edit->setText("1");
     edit->setFixedWidth(50);
+    edit->setPlaceholderText("Seconds");
     QIntValidator *validator = new QIntValidator(0, 3600, this);
     edit->setValidator(validator);
 
     editTimes = new QLineEdit(this);
     editTimes->setText("5");
     editTimes->setFixedWidth(50);
+    editTimes->setPlaceholderText("Times");
     QIntValidator *validatorTimes = new QIntValidator(0, 99999, this);
     editTimes->setValidator(validatorTimes);
 
@@ -174,26 +176,29 @@ void Sql::formatSqlText()
 
 void Sql::on_actionRun_triggered()
 {
+
+    qDebug() << "host: " << sql_host << " schema: " << sql_schema << " table: " << sql_table;
+
     QApplication::setOverrideCursor(Qt::WaitCursor);
     QApplication::processEvents();
 
     // executa a query
     // QSqlQueryModel *model = new QSqlQueryModel(this);
-    QString consulta = ui->textQuery->textCursor().selectedText();
-    if (consulta == "")
+    QString queryStr = ui->textQuery->textCursor().selectedText();
+    if (queryStr == "")
     {
-        consulta = ui->textQuery->toPlainText();
+        queryStr = ui->textQuery->toPlainText();
     }
-    if (consulta != "")
+    if (queryStr != "")
     {
         QSqlDatabase db = QSqlDatabase::database("mysql_connection_" + sql_host);
 
-        QString comando = consulta.trimmed().split(QRegularExpression("\\s+"), Qt::SkipEmptyParts).value(0).toUpper();
+        QString comando = queryStr.trimmed().split(QRegularExpression("\\s+"), Qt::SkipEmptyParts).value(0).toUpper();
 
         if (comando == "SELECT" || comando == "SHOW" || comando == "DESCRIBE" || comando == "EXPLAIN") {
             // comandos que retornam resultados
             QSqlQueryModel *model = new QSqlQueryModel(this);
-            model->setQuery(consulta, db);
+            model->setQuery(queryStr, db);
 
             if (model->lastError().isValid()) {
                 statusMessage("Query error: " + model->lastError().text());
@@ -207,7 +212,7 @@ void Sql::on_actionRun_triggered()
         } else {
             // comandos como INSERT, UPDATE, DELETE, etc.
             QSqlQuery query(db);
-            if (!query.exec(consulta)) {
+            if (!query.exec(queryStr)) {
                 statusMessage("Command error: " + query.lastError().text());
             } else {
                 int linhasAfetadas = query.numRowsAffected();
@@ -259,6 +264,13 @@ void Sql::on_actionReduce_triggered()
 void Sql::on_actionSave_triggered()
 {
     updatePreferences();
+    QString param = sql_host + ":" + sql_schema + ":" + sql_table;
+    QString queryStr = ui->textQuery->textCursor().selectedText();
+    if (queryStr == "")
+    {
+        queryStr = ui->textQuery->toPlainText();
+    }
+    setStringPreference(param, queryStr);
 }
 
 void Sql::statusMessage(QString msg)
@@ -308,5 +320,13 @@ void Sql::on_button_clicked()
         qDebug() << "Timer iniciado durante " << edit->text() << " por " << editTimes->text() << " vezes";
         timer->start(edit->text().toInt()*1000);
         edit->setEnabled(false);
+        ui->textQuery->setEnabled(false);
+    } else {
+        if (timer->isActive())
+        {
+            edit->setEnabled(true);
+            timer->stop();
+            ui->textQuery->setEnabled(true);
+        }
     }
 }

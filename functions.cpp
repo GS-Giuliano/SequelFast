@@ -48,32 +48,30 @@ int pref_table_row_height = 40;
 int pref_table_font_size = 10;
 int pref_sql_font_size = 10;
 
+bool prefLoaded = false;
 
-void openPreferences()
+bool openPreferences()
 {
-    qDebug() << QSqlDatabase::drivers();
-    qDebug() << "Plugin paths:" << QCoreApplication::libraryPaths();
+    // qDebug() << QSqlDatabase::drivers();
+    // qDebug() << "Plugin paths:" << QCoreApplication::libraryPaths();
 
     if (!dbPreferences.isValid())
     {
         // Caminho recomendado
         QString basePath = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
-
-        // Garante que o diretório existe
         QDir().mkpath(basePath);
-
-        // Caminho completo do banco
         QString dbPath = basePath + "/" + dbName;
-        // QString dbPath = dbName;
 
         // Conectar
-        QSqlDatabase dbPreferences = QSqlDatabase::addDatabase("QSQLITE", "pref_connection");
+        dbPreferences = QSqlDatabase::addDatabase("QSQLITE", "pref_connection");
+        // qDebug() << "Preferences path: " << dbPath;
         dbPreferences.setDatabaseName(dbPath);
     }
 
     if (!dbPreferences.open()) {
+        prefLoaded = false;
         qCritical() << "Erro ao abrir o banco de dados SQLite:" << dbPreferences.lastError().text();
-        return;
+        return(false);
     }
 
     QSqlQuery query(QSqlDatabase::database("pref_connection"));
@@ -182,8 +180,10 @@ void openPreferences()
             QJsonObject item = valor.toObject();
         }
     }
+    prefLoaded = true;
+    return(true);
+    // dbPreferences.close();
 
-    dbPreferences.close();
 }
 
 void updateIntPreference(QString name, int value)

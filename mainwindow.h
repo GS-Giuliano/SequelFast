@@ -53,8 +53,11 @@ private slots:
     void listViewConns_clone(const QModelIndex &index);
     void listViewConns_remove(const QModelIndex &index);
     void mostrarMenuContextoConns(const QPoint &pos);
-
     void mostrarMenuContextoSchemas(const QPoint &pos);
+
+
+    void on_listViewTables_open(const QModelIndex &index);
+    void on_listViewTables_edit(const QModelIndex &index);
     void mostrarMenuContextoTables(const QPoint &pos);
 
 

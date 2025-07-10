@@ -1,6 +1,10 @@
 #ifndef FUNCTIONS_H
 #define FUNCTIONS_H
 
+#define APP_VERSION "0.1.0"
+#define APP_BUILD_DATE __DATE__
+#define APP_BUILD_TIME __TIME__
+
 #include <QDebug>
 
 #include <QCoreApplication>
@@ -14,7 +18,7 @@
 #include <QJsonValue>
 
 
-void openPreferences();
+bool openPreferences();
 
 // Conections (MySQL)
 QJsonObject getConnection(QString selectedHost);

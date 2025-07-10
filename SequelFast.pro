@@ -1,3 +1,4 @@
+#set(CMAKE_AUTOUIC ON)
 QT       += core gui sql
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
