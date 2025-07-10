@@ -178,7 +178,7 @@ void Sql::on_actionRun_triggered()
     QApplication::processEvents();
 
     // executa a query
-    QSqlQueryModel *model = new QSqlQueryModel(this);
+    // QSqlQueryModel *model = new QSqlQueryModel(this);
     QString consulta = ui->textQuery->textCursor().selectedText();
     if (consulta == "")
     {
