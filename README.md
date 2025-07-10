@@ -34,6 +34,15 @@ sudo cmake --install .
 
 ## Instalação no macOS
 
+## Pré-requisitos
+
+Certifique-se de ter instalado "Command Line Tools" do Xcode, e requisitos para o módulo MySQL:
+
+```bash
+xcode-select --install
+brew install mariadb cmake ninja
+```
+
 ## Ambiente
 
 Configure corretamente o ambiente:
@@ -45,42 +54,14 @@ export QTDIR=~/Qt/6.9.1/macos
 export PATH=$PATH:$QTDIR/bin
 ```
 
-### Drivers do MySQL
+### Drivers do MySQL - macOS Intel
 
-<!-- ```bash
-brew install mysql cmake ninja
-brew --prefix mysql
-# entre na pasta dos fontes do qt
-cd ~/Qt/6.9.1/Src
-./configure -debug-and-release -sql-mysql  -- -DMySQL_ROOT=$(brew --prefix mysql)/
-cmake --build . --parallel
-sudo cmake --install .
-```
- -->
+Para maior compatibilidade, instale os drivers do MariaDB aon invés do MySQL.
 
 ```bash
-brew install mysql cmake ninja
 mkdir build-sqldrivers
 cd build-sqldrivers
-~/Qt/6.9.1/macos/bin/qt-cmake -G Ninja \
-~/Qt/6.9.1/Src/qtbase/src/plugins/sqldrivers \
--DCMAKE_INSTALL_PREFIX=~/Qt/6.9.1/macos \
--DFEATURE_sql_mysql=ON \
--DMySQL_ROOT="$(brew --prefix mysql)" \
--DMySQL_INCLUDE_DIR=$(brew --prefix mysql)/include/mysql \
--DMySQL_LIBRARY=$(brew --prefix mysql)/lib/libmysqlclient.dylib \
--DCMAKE_BUILD_TYPE=Debug
 
-cmake --build . --parallel
-cmake --install .
-cp plugins/sqldrivers/libqsqlmysql.dylib ~/Qt/6.9.1/macos/plugins/sqldrivers/
-```
-
-
-```bash
-brew install mariadb cmake ninja
-mkdir build-sqldrivers
-cd build-sqldrivers
 ~/Qt/6.9.1/macos/bin/qt-cmake -G Ninja \
 ~/Qt/6.9.1/Src/qtbase/src/plugins/sqldrivers \
 -DCMAKE_INSTALL_PREFIX=~/Qt/6.9.1/macos \
@@ -94,6 +75,33 @@ cmake --build . --parallel
 cmake --install .
 cp plugins/sqldrivers/libqsqlmysql.dylib ~/Qt/6.9.1/macos/plugins/sqldrivers/
 ```
+
+### Drivers do MySQL - macOS Silicon
+
+Para maior compatibilidade, instale os drivers do MariaDB aon invés do MySQL.
+
+```bash
+brew install mariadb cmake ninja
+mkdir build-sqldrivers
+cd build-sqldrivers
+
+~/Qt/6.9.1/macos/bin/qt-cmake -G Ninja \
+~/Qt/6.9.1/Src/qtbase/src/plugins/sqldrivers \
+-DCMAKE_INSTALL_PREFIX=~/Qt/6.9.1/macos \
+-DCMAKE_OSX_ARCHITECTURES=arm64 \
+-DCMAKE_BUILD_TYPE=Debug \
+-DCMAKE_CXX_STANDARD=17 \
+-DCMAKE_CXX_EXTENSIONS=OFF \
+-DFEATURE_sql_mysql=ON \
+-DMySQL_ROOT="$(brew --prefix mariadb)" \
+-DMySQL_INCLUDE_DIR="$(brew --prefix mariadb)/include/mysql" \
+-DMySQL_LIBRARY="$(brew --prefix mariadb)/lib/libmysqlclient.dylib"
+
+cmake --build . --parallel
+cmake --install .
+cp plugins/sqldrivers/libqsqlmysql.dylib ~/Qt/6.9.1/macos/plugins/sqldrivers/
+```
+
 
 
 ## Instalação do sistema no Linux
