@@ -700,7 +700,12 @@ void MainWindow::mostrarMenuContextoSchemas(const QPoint &pos)
 
     QMenu menu(this);
     QAction *schemaOpen = menu.addAction("Open");
+    menu.addSeparator();
+    QAction *schemaUsers = menu.addAction("Users");
     QAction *schemaStatistics = menu.addAction("Statistics");
+    menu.addSeparator();
+    QAction *schemaBackup = menu.addAction("Backup");
+    QAction *schemaRestore = menu.addAction("Restore");
     QAction *schemaBatchRun = menu.addAction("Batch run");
 
     QAction *selectedAction = menu.exec(ui->listViewSchemas->viewport()->mapToGlobal(pos));
