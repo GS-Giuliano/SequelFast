@@ -218,7 +218,7 @@ void Structure::refresh_structure()
             ui->tableView->setCurrentIndex(firstIndex);
         }
     } else {
-        QMessageBox::warning(this, "Error", "Fail do connect to database.");
+        QMessageBox::warning(this, "Error", "Failed to connect to the database!");
 
     }
 

@@ -43,5 +43,7 @@ QString setStringPreference(QString name, QString value);
 void getPreferences();
 void updatePreferences();
 QString getRgbFromColorName(const QString &colorName);
+QStringList extractFieldsWithPrefix(const QStringList &fields, const QString &tableName, const QString &alias);
+QString extractCurrentQuery(const QString &text, int cursorPos);
 
 #endif // FUNCTIONS_H

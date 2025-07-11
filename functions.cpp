@@ -448,3 +448,49 @@ QString getRgbFromColorName(const QString &colorName)
     return "#FFFFFF";
 }
 
+QStringList extractFieldsWithPrefix(const QStringList &fields, const QString &tableName, const QString &alias) {
+    QStringList result;
+    for (const QString &field : fields) {
+        QString trimmed = field.trimmed();
+
+        // Campo com prefixo (ex: P.nome ou pessoas.nome)
+        if (trimmed.contains('.')) {
+            QString prefix = trimmed.section('.', 0, 0);
+            QString fieldName = trimmed.section('.', 1);
+
+            if ((!alias.isEmpty() && prefix == alias) || prefix == tableName) {
+                result << fieldName;
+            }
+        } else {
+            // Campo sem prefixo: assume-se que pertence à tabela principal
+            result << trimmed;
+        }
+    }
+    return result;
+}
+
+
+QString extractCurrentQuery(const QString &text, int cursorPos)
+{
+    if (text.isEmpty() || cursorPos < 0 || cursorPos > text.length())
+        return "";
+
+    // Ajuste: se o cursor está no fim exato e o último caractere é ';', retroceder
+    if (cursorPos == text.length() && text.endsWith(';'))
+        cursorPos--;
+
+    // Encontrar início (ponto e vírgula anterior)
+    int start = 0;
+    if (cursorPos > 0) {
+        int lastSemi = text.lastIndexOf(';', cursorPos - 1);
+        start = (lastSemi == -1) ? 0 : lastSemi + 1;
+    }
+
+    // Encontrar fim (próximo ponto e vírgula após o cursor)
+    int end = text.indexOf(';', cursorPos);
+    if (end == -1)
+        end = text.length();
+
+    QString query = text.mid(start, end - start).trimmed();
+    return query;
+}
