@@ -664,7 +664,11 @@
         </layout>
        </widget>
       </widget>
-      <widget class="QMdiArea" name="mdiArea"/>
+      <widget class="QMdiArea" name="mdiArea">
+       <property name="styleSheet">
+        <string notr="true"/>
+       </property>
+      </widget>
      </widget>
     </item>
    </layout>
