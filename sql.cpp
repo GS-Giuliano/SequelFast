@@ -303,63 +303,66 @@ void Sql::refresh_structure()
 
     if (dbMysqlLocal.open())
     {
-        QString queryStr = "DESCRIBE " + sql_table;
+
         QSqlQuery query(QSqlDatabase::database("mysql_connection_" + sql_host));
-
+        QString queryStr = QString("USE %1;").arg(sql_schema);
         if (query.exec(queryStr)) {
-            QStandardItemModel *model = new QStandardItemModel(this);
+            QString queryStr = "DESCRIBE " + sql_table;
+            if (query.exec(queryStr)) {
+                QStandardItemModel *model = new QStandardItemModel(this);
 
-            // Define os cabeçalhos das colunas
-            model->setHorizontalHeaderLabels(QStringList() << "Field" << "Type" << "Null" << "Key" << "Default" << "Extra");
+                // Define os cabeçalhos das colunas
+                model->setHorizontalHeaderLabels(QStringList() << "Field" << "Type" << "Null" << "Key" << "Default" << "Extra");
 
-            int row = 0;
-            while (query.next()) {
-                model->setItem(row, 0, new QStandardItem(query.value("Field").toString()));
-                model->setItem(row, 1, new QStandardItem(query.value("Type").toString()));
-                model->setItem(row, 2, new QStandardItem(query.value("Null").toString()));
-                model->setItem(row, 3, new QStandardItem(query.value("Key").toString()));
-                model->setItem(row, 4, new QStandardItem(query.value("Default").toString()));
-                model->setItem(row, 5, new QStandardItem(query.value("Extra").toString()));
-                ++row;
+                int row = 0;
+                while (query.next()) {
+                    model->setItem(row, 0, new QStandardItem(query.value("Field").toString()));
+                    model->setItem(row, 1, new QStandardItem(query.value("Type").toString()));
+                    model->setItem(row, 2, new QStandardItem(query.value("Null").toString()));
+                    model->setItem(row, 3, new QStandardItem(query.value("Key").toString()));
+                    model->setItem(row, 4, new QStandardItem(query.value("Default").toString()));
+                    model->setItem(row, 5, new QStandardItem(query.value("Extra").toString()));
+                    ++row;
+                }
+
+                // ui->tableView->setModel(model);
+                // ui->tableView->resizeColumnsToContents();
+                // ui->tableView->horizontalHeader()->setStretchLastSection(true);
+
+            } else {
+                qCritical() << "Erro ao obter estrutura:" << query.lastError().text();
             }
+            // Aplicar delegates dinamicamente após atualizar os dados
+            // int cols = ui->tableView->model()->columnCount();
+            // for (int col = 0; col < cols; ++col) {
+            //     QString header = ui->tableView->model()->headerData(col, Qt::Horizontal).toString().toLower();
+            //     if (header == "field") {
+            //         ui->tableView->setItemDelegateForColumn(col, new RegexDelegateName(this));
+            //     } else if (header == "type") {
+            //         ui->tableView->setItemDelegateForColumn(col, new RegexDelegateType(this));
+            //     } else if (header == "null") {
+            //         ui->tableView->setItemDelegateForColumn(col, new RegexDelegateYesNo(this));
+            //     }
+            // }
+            // connect(ui->tableView->selectionModel(), &QItemSelectionModel::currentChanged,
+            //         this, [this](const QModelIndex &current, const QModelIndex &) {
+            //             if (current.isValid()) {
+            //                 editIndex = current;
+            //                 previousValue = ui->tableView->model()->data(current);
+            //             }
+            //         });
 
-            // ui->tableView->setModel(model);
-            // ui->tableView->resizeColumnsToContents();
-            // ui->tableView->horizontalHeader()->setStretchLastSection(true);
+            // connect(ui->tableView->model(), &QAbstractItemModel::dataChanged,
+            //         this, &Structure::on_tableData_changed);
 
-        } else {
-            qCritical() << "Erro ao obter estrutura:" << query.lastError().text();
+
+            // // Seleciona a primeira linha após carregar os dados
+            // if (ui->tableView->model()->rowCount() > 0) {
+            //     QModelIndex firstIndex = ui->tableView->model()->index(0, 0);
+            //     ui->tableView->selectionModel()->select(firstIndex, QItemSelectionModel::Select | QItemSelectionModel::Rows);
+            //     ui->tableView->setCurrentIndex(firstIndex);
+            // }
         }
-        // Aplicar delegates dinamicamente após atualizar os dados
-        // int cols = ui->tableView->model()->columnCount();
-        // for (int col = 0; col < cols; ++col) {
-        //     QString header = ui->tableView->model()->headerData(col, Qt::Horizontal).toString().toLower();
-        //     if (header == "field") {
-        //         ui->tableView->setItemDelegateForColumn(col, new RegexDelegateName(this));
-        //     } else if (header == "type") {
-        //         ui->tableView->setItemDelegateForColumn(col, new RegexDelegateType(this));
-        //     } else if (header == "null") {
-        //         ui->tableView->setItemDelegateForColumn(col, new RegexDelegateYesNo(this));
-        //     }
-        // }
-        // connect(ui->tableView->selectionModel(), &QItemSelectionModel::currentChanged,
-        //         this, [this](const QModelIndex &current, const QModelIndex &) {
-        //             if (current.isValid()) {
-        //                 editIndex = current;
-        //                 previousValue = ui->tableView->model()->data(current);
-        //             }
-        //         });
-
-        // connect(ui->tableView->model(), &QAbstractItemModel::dataChanged,
-        //         this, &Structure::on_tableData_changed);
-
-
-        // // Seleciona a primeira linha após carregar os dados
-        // if (ui->tableView->model()->rowCount() > 0) {
-        //     QModelIndex firstIndex = ui->tableView->model()->index(0, 0);
-        //     ui->tableView->selectionModel()->select(firstIndex, QItemSelectionModel::Select | QItemSelectionModel::Rows);
-        //     ui->tableView->setCurrentIndex(firstIndex);
-        // }
     } else {
         qCritical() << "Failed to connect to the database";
     }
@@ -471,7 +474,7 @@ void Sql::query2TableView(QTableView *tableView, const QString &queryStr, const 
     tableView->resizeColumnsToContents();
 
     if (comando == "SELECT" && hasId && !hasJoin && !hasSubquery) {
-        qDebug() << "- Edição: HABILITADA";
+        // qDebug() << "- Edição: HABILITADA";
         editEnabled = true;
         tableView->setEditTriggers(
             QAbstractItemView::SelectedClicked |
@@ -494,10 +497,6 @@ void Sql::query2TableView(QTableView *tableView, const QString &queryStr, const 
             QString idValue = model->item(index.row(), idPosition)->text();
             QString newValue = index.model()->data(index, Qt::EditRole).toString();
             QString oldValue = model->item(index.row(), index.column())->data(Qt::UserRole).toString();
-
-            qDebug() << "Salvando -> Campo:" << fieldName
-                     << "| ID:" << idValue
-                     << "| Valor novo:" << newValue;
 
             if (!on_tableData_edit_trigger(idValue, fieldName, newValue)) {
                 model->blockSignals(true);  // evita loop de sinais
@@ -554,7 +553,7 @@ void Sql::query2TableView(QTableView *tableView, const QString &queryStr, const 
                     }
                 });
     } else {
-        qDebug() << "- Edição: DESABILITADA";
+        // qDebug() << "- Edição: DESABILITADA";
         editEnabled = false;
         tableView->setEditTriggers(QAbstractItemView::NoEditTriggers);
     }
@@ -575,7 +574,7 @@ bool Sql::on_tableData_edit_trigger(QString &id, QString &fieldName, QString &ne
     QSqlQuery query(dbMysqlLocal);
 
     QString queryStr = "UPDATE " + sql_table + " SET " + fieldName + " = '" + newValue + "' WHERE id = " + id;
-    qDebug() << queryStr;
+    // qDebug() << queryStr;
     if (!query.exec(queryStr) || query.numRowsAffected() == 0) {
         qWarning() << "Erro na query:" << query.lastError().text();
         return false;
@@ -602,7 +601,7 @@ void Sql::on_actionRun_triggered()
         QTextCursor cursor = ui->textQuery->textCursor();  // textEdit é um ponteiro para QTextEdit
         int cursorPos = cursor.position();
         queryStr = extractCurrentQuery(ui->textQuery->toPlainText(), cursorPos);
-        qDebug() << "Query sob o cursor:" << queryStr;
+        // qDebug() << "Query sob o cursor:" << queryStr;
     }
     if (queryStr != "")
     {
@@ -676,15 +675,15 @@ void Sql::on_actionRun_triggered()
             hasSubquery = queryStr.contains(QRegularExpression(R"(\(\s*SELECT\s+)", QRegularExpression::DotMatchesEverythingOption | QRegularExpression::CaseInsensitiveOption));
 
             // ▶ Impressão para teste
-            qDebug() << "- Possui JOIN? " << (hasJoin ? "Sim" : "Não");
-            qDebug() << "- Possui subquery (SELECT aninhado)? " << (hasSubquery ? "Sim" : "Não");
+            // qDebug() << "- Possui JOIN? " << (hasJoin ? "Sim" : "Não");
+            // qDebug() << "- Possui subquery (SELECT aninhado)? " << (hasSubquery ? "Sim" : "Não");
 
             // ▶ Impressão para teste
-            qDebug() << "- Tabela principal:" << tableName;
-            qDebug() << "- Alias da tabela:" << tableAlias;
-            qDebug() << "- Campos SELECT da tabela principal:" << selectFields;
-            qDebug() << "- Campos WHERE da tabela principal:" << whereFields;
-            qDebug() << "- Campos ORDER BY da tabela principal:" << orderByFields;
+            // qDebug() << "- Tabela principal:" << tableName;
+            // qDebug() << "- Alias da tabela:" << tableAlias;
+            // qDebug() << "- Campos SELECT da tabela principal:" << selectFields;
+            // qDebug() << "- Campos WHERE da tabela principal:" << whereFields;
+            // qDebug() << "- Campos ORDER BY da tabela principal:" << orderByFields;
 
         }
 
@@ -762,7 +761,6 @@ void Sql::on_timer_tick()
 
         if (remaining <= 1)
         {
-            qDebug() << "Timer finalizado!";
             timer->stop();
             editTimes->setText("0");  // opcional, para refletir que chegou a zero
             edit->setEnabled(true);
@@ -770,7 +768,6 @@ void Sql::on_timer_tick()
         }
         else
         {
-            qDebug() << "Timer disparado!";
             on_actionRun_triggered();
             if (ui->textQuery->styleSheet() == "QTextEdit {background-color: " + getRgbFromColorName(sql_color) + "}")
             {
@@ -791,8 +788,6 @@ void Sql::on_button_clicked()
 {
     if (button->isChecked())
     {
-        // Inicia o timer com intervalo de 1000ms (1 segundo)
-        qDebug() << "Timer iniciado durante " << edit->text() << " por " << editTimes->text() << " vezes";
         timer->start(edit->text().toInt()*1000);
         edit->setEnabled(false);
         ui->textQuery->setEnabled(false);
@@ -909,7 +904,7 @@ void Sql::on_tableDelete_triggered()
     for (int row : sortedRows) {
         QString id = ui->tableData->model()->data(ui->tableData->model()->index(row, idPosition)).toString();
         QString del = QString("DELETE FROM %1 WHERE id = %2").arg(sql_table).arg(id);
-        qDebug() << del;
+        // qDebug() << del;
         if (!query.exec(del)) {
             qWarning() << "Erro ao excluir linha id=" << id << ":" << query.lastError().text();
         } else {

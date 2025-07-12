@@ -50,6 +50,8 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 
 RESOURCES += \
     icons.qrc
+RESOURCES += qdarkstyle/dark/darkstyle.qrc
+RESOURCES += qdarkstyle/light/lightstyle.qrc
 
 # Ícone do executável no Windows
 win32 {

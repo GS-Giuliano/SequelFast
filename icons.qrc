@@ -110,5 +110,7 @@
         <file>resources/icon.icns</file>
         <file>resources/icon.ico</file>
         <file>resources/icon.png</file>
+        <file>resources/moon.svg</file>
+        <file>resources/sun.svg</file>
     </qresource>
 </RCC>

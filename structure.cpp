@@ -160,62 +160,66 @@ void Structure::refresh_structure()
 
     if (dbMysqlLocal.open())
     {
-        QString queryStr = "DESCRIBE " + str_table;
         QSqlQuery query(QSqlDatabase::database("mysql_connection_" + str_host));
-
+        QString queryStr = QString("USE %1;").arg(str_schema);
         if (query.exec(queryStr)) {
-            QStandardItemModel *model = new QStandardItemModel(this);
 
-            // Define os cabeçalhos das colunas
-            model->setHorizontalHeaderLabels(QStringList() << "Field" << "Type" << "Null" << "Key" << "Default" << "Extra");
+            QString queryStr = "DESCRIBE " + str_table;
 
-            int row = 0;
-            while (query.next()) {
-                model->setItem(row, 0, new QStandardItem(query.value("Field").toString()));
-                model->setItem(row, 1, new QStandardItem(query.value("Type").toString()));
-                model->setItem(row, 2, new QStandardItem(query.value("Null").toString()));
-                model->setItem(row, 3, new QStandardItem(query.value("Key").toString()));
-                model->setItem(row, 4, new QStandardItem(query.value("Default").toString()));
-                model->setItem(row, 5, new QStandardItem(query.value("Extra").toString()));
-                ++row;
+            if (query.exec(queryStr)) {
+                QStandardItemModel *model = new QStandardItemModel(this);
+
+                // Define os cabeçalhos das colunas
+                model->setHorizontalHeaderLabels(QStringList() << "Field" << "Type" << "Null" << "Key" << "Default" << "Extra");
+
+                int row = 0;
+                while (query.next()) {
+                    model->setItem(row, 0, new QStandardItem(query.value("Field").toString()));
+                    model->setItem(row, 1, new QStandardItem(query.value("Type").toString()));
+                    model->setItem(row, 2, new QStandardItem(query.value("Null").toString()));
+                    model->setItem(row, 3, new QStandardItem(query.value("Key").toString()));
+                    model->setItem(row, 4, new QStandardItem(query.value("Default").toString()));
+                    model->setItem(row, 5, new QStandardItem(query.value("Extra").toString()));
+                    ++row;
+                }
+
+                ui->tableView->setModel(model);
+                ui->tableView->resizeColumnsToContents();
+                ui->tableView->horizontalHeader()->setStretchLastSection(true);
+
+            } else {
+                qCritical() << "Erro ao obter estrutura:" << query.lastError().text();
             }
-
-            ui->tableView->setModel(model);
-            ui->tableView->resizeColumnsToContents();
-            ui->tableView->horizontalHeader()->setStretchLastSection(true);
-
-        } else {
-            qCritical() << "Erro ao obter estrutura:" << query.lastError().text();
-        }
-        // Aplicar delegates dinamicamente após atualizar os dados
-        int cols = ui->tableView->model()->columnCount();
-        for (int col = 0; col < cols; ++col) {
-            QString header = ui->tableView->model()->headerData(col, Qt::Horizontal).toString().toLower();
-            if (header == "field") {
-                ui->tableView->setItemDelegateForColumn(col, new RegexDelegateName(this));
-            } else if (header == "type") {
-                ui->tableView->setItemDelegateForColumn(col, new RegexDelegateType(this));
-            } else if (header == "null") {
-                ui->tableView->setItemDelegateForColumn(col, new RegexDelegateYesNo(this));
+            // Aplicar delegates dinamicamente após atualizar os dados
+            int cols = ui->tableView->model()->columnCount();
+            for (int col = 0; col < cols; ++col) {
+                QString header = ui->tableView->model()->headerData(col, Qt::Horizontal).toString().toLower();
+                if (header == "field") {
+                    ui->tableView->setItemDelegateForColumn(col, new RegexDelegateName(this));
+                } else if (header == "type") {
+                    ui->tableView->setItemDelegateForColumn(col, new RegexDelegateType(this));
+                } else if (header == "null") {
+                    ui->tableView->setItemDelegateForColumn(col, new RegexDelegateYesNo(this));
+                }
             }
-        }
-        connect(ui->tableView->selectionModel(), &QItemSelectionModel::currentChanged,
-                this, [this](const QModelIndex &current, const QModelIndex &) {
-                    if (current.isValid()) {
-                        editIndex = current;
-                        previousValue = ui->tableView->model()->data(current);
-                    }
-                });
+            connect(ui->tableView->selectionModel(), &QItemSelectionModel::currentChanged,
+                    this, [this](const QModelIndex &current, const QModelIndex &) {
+                        if (current.isValid()) {
+                            editIndex = current;
+                            previousValue = ui->tableView->model()->data(current);
+                        }
+                    });
 
-        connect(ui->tableView->model(), &QAbstractItemModel::dataChanged,
-                this, &Structure::on_tableData_changed);
+            connect(ui->tableView->model(), &QAbstractItemModel::dataChanged,
+                    this, &Structure::on_tableData_changed);
 
 
-        // Seleciona a primeira linha após carregar os dados
-        if (ui->tableView->model()->rowCount() > 0) {
-            QModelIndex firstIndex = ui->tableView->model()->index(0, 0);
-            ui->tableView->selectionModel()->select(firstIndex, QItemSelectionModel::Select | QItemSelectionModel::Rows);
-            ui->tableView->setCurrentIndex(firstIndex);
+            // Seleciona a primeira linha após carregar os dados
+            if (ui->tableView->model()->rowCount() > 0) {
+                QModelIndex firstIndex = ui->tableView->model()->index(0, 0);
+                ui->tableView->selectionModel()->select(firstIndex, QItemSelectionModel::Select | QItemSelectionModel::Rows);
+                ui->tableView->setCurrentIndex(firstIndex);
+            }
         }
     } else {
         QMessageBox::warning(this, "Error", "Failed to connect to the database!");

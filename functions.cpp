@@ -1,3 +1,4 @@
+#include <QMainWindow>
 #include <QDebug>
 #include <QMessageBox>
 #include <QStringListModel>
@@ -19,18 +20,40 @@
 
 QJsonArray connections;
 
-QJsonArray colors = QJsonArray{
-    QJsonObject{{"name", "white"},  {"rgb", "#FFFFFF"}},
-    QJsonObject{{"name", "brown"},  {"rgb", "#EDBB99"}},
-    QJsonObject{{"name", "red"},    {"rgb", "#FFBAAB"}},
-    QJsonObject{{"name", "purple"}, {"rgb", "#EBCAFF"}},
-    QJsonObject{{"name", "blue"},   {"rgb", "#CBE8FF"}},
-    QJsonObject{{"name", "green"},  {"rgb", "#DBFBD6"}},
-    QJsonObject{{"name", "yellow"}, {"rgb", "#FCF3CF"}},
-    QJsonObject{{"name", "orange"}, {"rgb", "#FFE6BA"}},
-    QJsonObject{{"name", "grey"},   {"rgb", "#D7DBDD"}}
-};
+QString currentTheme = "dark";
 
+QJsonArray colors;
+
+QJsonArray colorThemes = QJsonArray{
+    QJsonObject{
+        {"theme", "light"},
+        {"colors", QJsonArray{
+                       QJsonObject{{"name", "white"},  {"rgb", "#FFFFFF"}},
+                       QJsonObject{{"name", "brown"},  {"rgb", "#EDBB99"}},
+                       QJsonObject{{"name", "red"},    {"rgb", "#FFBAAB"}},
+                       QJsonObject{{"name", "purple"}, {"rgb", "#EBCAFF"}},
+                       QJsonObject{{"name", "blue"},   {"rgb", "#CBE8FF"}},
+                       QJsonObject{{"name", "green"},  {"rgb", "#DBFBD6"}},
+                       QJsonObject{{"name", "yellow"}, {"rgb", "#FCF3CF"}},
+                       QJsonObject{{"name", "orange"}, {"rgb", "#FFE6BA"}},
+                       QJsonObject{{"name", "grey"},   {"rgb", "#D7DBDD"}}
+                   }}
+    },
+    QJsonObject{
+        {"theme", "dark"},
+        {"colors", QJsonArray{
+                       QJsonObject{{"name", "white"},  {"rgb", "#2e2e2e"}},
+                       QJsonObject{{"name", "brown"},  {"rgb", "#8E735B"}},
+                       QJsonObject{{"name", "red"},    {"rgb", "#8B3F3F"}},
+                       QJsonObject{{"name", "purple"}, {"rgb", "#7A5E9A"}},
+                       QJsonObject{{"name", "blue"},   {"rgb", "#43697D"}},
+                       QJsonObject{{"name", "green"},  {"rgb", "#4D7A4D"}},
+                       QJsonObject{{"name", "yellow"}, {"rgb", "#9E8F3E"}},
+                       QJsonObject{{"name", "orange"}, {"rgb", "#A86732"}},
+                       QJsonObject{{"name", "grey"},   {"rgb", "#5E5E5E"}}
+                   }}
+    }
+};
 
 
 QSqlDatabase dbPreferences;
@@ -49,6 +72,7 @@ int pref_table_font_size = 10;
 int pref_sql_font_size = 10;
 
 bool prefLoaded = false;
+
 
 bool openPreferences()
 {
@@ -494,3 +518,29 @@ QString extractCurrentQuery(const QString &text, int cursorPos)
     QString query = text.mid(start, end - start).trimmed();
     return query;
 }
+
+void changeTheme(QWidget *app)
+{
+    qDebug() << "mudar tema: " << currentTheme;
+    QFile f(QString(":qdarkstyle/%1/%2style.qss").arg(currentTheme).arg(currentTheme));
+
+    if (!f.exists())   {
+        printf("Unable to set stylesheet, file not found\n");
+    }
+    else   {
+        f.open(QFile::ReadOnly | QFile::Text);
+        QTextStream ts(&f);
+        app->setStyleSheet(ts.readAll());
+
+        for (const QJsonValue &val : colorThemes) {
+            QJsonObject obj = val.toObject();
+            if (obj["theme"].toString() == currentTheme) {
+                colors = obj["colors"].toArray();
+                break;
+            }
+        }
+
+        setStringPreference("theme", currentTheme);
+    }
+}
+

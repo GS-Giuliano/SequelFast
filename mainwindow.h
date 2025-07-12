@@ -67,6 +67,8 @@ private slots:
 
     void on_listViewTables_doubleClicked(const QModelIndex &index);
 
+    void on_actionTheme_triggered();
+
 private:
     Ui::MainWindow *ui;
 

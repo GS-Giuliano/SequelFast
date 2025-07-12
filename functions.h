@@ -7,6 +7,7 @@
 
 #include <QDebug>
 
+#include <QMainWindow>
 #include <QCoreApplication>
 #include <QSqlDatabase>
 #include <QSqlError>
@@ -19,7 +20,6 @@
 
 
 bool openPreferences();
-
 // Conections (MySQL)
 QJsonObject getConnection(QString selectedHost);
 bool addConnection(QString name,
@@ -45,5 +45,6 @@ void updatePreferences();
 QString getRgbFromColorName(const QString &colorName);
 QStringList extractFieldsWithPrefix(const QStringList &fields, const QString &tableName, const QString &alias);
 QString extractCurrentQuery(const QString &text, int cursorPos);
+void changeTheme(QWidget *app);
 
 #endif // FUNCTIONS_H

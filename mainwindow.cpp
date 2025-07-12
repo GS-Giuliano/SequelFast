@@ -17,6 +17,8 @@
 #include <QContextMenuEvent>
 #include <QMenu>
 #include <QInputDialog>
+#include <QTextStream>
+#include <QFile>
 
 #include <QSortFilterProxyModel>
 #include <QMap>
@@ -38,6 +40,8 @@ extern QJsonArray connections;
 extern QSqlDatabase dbPreferences;
 extern QSqlDatabase dbMysql;
 
+extern QString currentTheme;
+
 extern QString actual_host;
 extern QString actual_schema;
 extern QString actual_table;
@@ -52,12 +56,18 @@ MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
 {
-
-
     ui->setupUi(this);
 
     if (openPreferences())
     {
+        currentTheme = getStringPreference("theme");
+        qDebug() << "tema salvo: " << currentTheme;
+        if (currentTheme == "")
+        {
+            currentTheme = "light";
+        }
+        changeTheme(this);
+
         // Menus de contexto
         ui->listViewConns->setContextMenuPolicy(Qt::CustomContextMenu);
         connect(ui->listViewConns, &QListView::customContextMenuRequested,
@@ -796,4 +806,16 @@ void MainWindow::mostrarMenuContextoTables(const QPoint &pos)
 }
 
 
+
+
+void MainWindow::on_actionTheme_triggered()
+{
+    if (currentTheme == "light")
+    {
+        currentTheme = "dark";
+    } else {
+        currentTheme = "light";
+    }
+    changeTheme(this);
+}
 
