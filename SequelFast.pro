@@ -4,38 +4,39 @@ QT       += core gui sql
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
 CONFIG += c++17
+INCLUDEPATH += src
 
 # You can make your code fail to compile if it uses deprecated APIs.
 # In order to do so, uncomment the following line.
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
-    connection.cpp \
-    functions.cpp \
-    main.cpp \
-    mainwindow.cpp \
-    sql.cpp \
-    sqlhighlighter.cpp \
-    statistics.cpp \
-    structure.cpp \
-    tunnelsqlmanager.cpp
+src/connection.cpp \
+src/functions.cpp \
+src/main.cpp \
+src/mainwindow.cpp \
+src/sql.cpp \
+src/sqlhighlighter.cpp \
+src/statistics.cpp \
+src/structure.cpp \
+src/tunnelsqlmanager.cpp
 
 HEADERS += \
-    connection.h \
-    functions.h \
-    mainwindow.h \
-    sql.h \
-    sqlhighlighter.h \
-    statistics.h \
-    structure.h \
-    tunnelsqlmanager.h
+src/connection.h \
+src/functions.h \
+src/mainwindow.h \
+src/sql.h \
+src/sqlhighlighter.h \
+src/statistics.h \
+src/structure.h \
+src/tunnelsqlmanager.h
 
 FORMS += \
-    connection.ui \
-    mainwindow.ui \
-    sql.ui \
-    statistics.ui \
-    structure.ui
+src/connection.ui \
+src/mainwindow.ui \
+src/sql.ui \
+src/statistics.ui \
+src/structure.ui
 
 TRANSLATIONS += \
     SequelFast_pt_BR.ts

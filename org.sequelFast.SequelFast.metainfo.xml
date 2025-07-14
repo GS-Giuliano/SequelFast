@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>org.sequelFast.SequelFast</id>
+  <name>SequelFast</name>
+  <summary>Fast and Clean Database Client Application</summary>
+  <description>
+    <p>SequelFast is a fast, clean and powerful database client for managing MySQL databases.</p>
+  </description>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>GPL-3.0</project_license>
+  <categories>
+    <category>Utility</category>
+    <category>Database</category>
+  </categories>
+  <icon type="stock" name="org.sequelFast.SequelFast"/>
+  <releases>
+    <release version="1.0.0" date="2025-07-14"/>
+  </releases>
+</component>

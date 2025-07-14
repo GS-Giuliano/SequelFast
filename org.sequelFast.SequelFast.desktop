@@ -1,0 +1,7 @@
+[Desktop Entry]
+Name=SequelFast
+Exec=SequelFast
+Type=Application
+Icon=org.sequelFast.SequelFast
+Categories=Utility;Database;
+Comment=Fast and Clean Database Client Application

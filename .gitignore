@@ -1,6 +1,7 @@
 # macOS
 /SequelFast.app/
 SequelFast.app
+SequelFast.dmg
 /install_macos_intel/
 .DS_Store
 # C++ objects and libs

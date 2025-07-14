@@ -1,0 +1,44 @@
+app-id: org.sequelFast.SequelFast
+runtime: org.kde.Platform
+runtime-version: '6.7'
+sdk: org.kde.Sdk
+command: SequelFast
+finish-args:
+  - --share=ipc
+  - --socket=fallback-x11
+  - --socket=wayland
+  - --device=dri
+  - --share=network
+  - --filesystem=home
+modules:
+  - name: mysql
+    buildsystem: simple
+    build-commands:
+      - install -D /usr/lib/x86_64-linux-gnu/libmysqlclient.so.21 /app/lib/libmysqlclient.so.21
+    sources:
+      - type: file
+        path: /usr/lib/x86_64-linux-gnu/libmysqlclient.so.21
+  - name: SequelFast
+    buildsystem: cmake-ninja
+    config-opts:
+      - -DCMAKE_BUILD_TYPE=RelWithDebInfo
+      - -DCMAKE_INSTALL_PREFIX=/app
+    sources:
+      - type: dir
+        path: .
+    post-install:
+      - install -Dm644 resources/icon_1024.png /app/share/icons/hicolor/1024x1024/apps/org.sequelFast.SequelFast.png
+      - install -Dm644 resources/* -t /app/share/SequelFast/resources/
+      - install -Dm644 themes/dark/* -t /app/share/SequelFast/themes/dark/
+      - install -Dm644 themes/light/* -t /app/share/SequelFast/themes/light/
+      - install -Dm644 org.sequelFast.SequelFast.desktop -t /app/share/applications/
+      - install -Dm644 org.sequelFast.SequelFast.metainfo.xml -t /app/share/metainfo/
+  - name: qt-sqldrivers
+    buildsystem: cmake-ninja
+    config-opts:
+      - -DCMAKE_BUILD_TYPE=RelWithDebInfo
+      - -DCMAKE_INSTALL_PREFIX=/app
+      - -DMySQL_ROOT=/usr
+    sources:
+      - type: dir
+        path: /path/to/qt6-source/qtbase/src/plugins/sqldrivers
