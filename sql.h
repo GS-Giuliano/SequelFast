@@ -42,17 +42,15 @@ private slots:
 
     bool on_tableData_edit_trigger(QString &id, QString &fieldName, QString &newValue);
 
-    void show_context_menu(const QPoint &pos);
-
     void on_tableClone_triggered();
     void on_tableDelete_triggered();
     void on_tableCopyInsert_triggered();
     void on_tableCopyUpdate_triggered();
     void on_tableCopyCsv_triggered();
-    void on_tableCopyGfwForm_triggered();
-    void on_tableCopyGfwTable_triggered();
-    void on_tableCopyLaravelForm_triggered();
-    void on_tableCopyLaravelTable_triggered();
+    void on_tableCRUDGfw_triggered();
+    void on_tableCRUDLaravel_triggered();
+
+    void show_context_menu(const QPoint &pos);
 
 
 

@@ -1,4 +1,7 @@
 #include "sqlhighlighter.h"
+#include "functions.h"
+
+extern QString currentTheme;
 
 SqlHighlighter::SqlHighlighter(QTextDocument *parent)
     : QSyntaxHighlighter(parent)
@@ -7,7 +10,10 @@ SqlHighlighter::SqlHighlighter(QTextDocument *parent)
 
     // Palavras-chave SQL (azul escuro e negrito)
     QTextCharFormat keywordFormat;
-    keywordFormat.setForeground(Qt::darkBlue);
+    if (currentTheme == "light")
+        keywordFormat.setForeground(Qt::darkBlue);
+    else
+        keywordFormat.setForeground(QBrush(QColor("#4040DF")));
     keywordFormat.setFontWeight(QFont::Bold);
 
     QStringList keywords = {
@@ -29,7 +35,10 @@ SqlHighlighter::SqlHighlighter(QTextDocument *parent)
 
     // Funções SQL (laranja)
     QTextCharFormat functionFormat;
-    functionFormat.setForeground(Qt::darkRed);  // cor laranja
+    if (currentTheme == "light")
+        functionFormat.setForeground(Qt::darkRed);
+    else
+        functionFormat.setForeground(Qt::red);
 
     QStringList functions = {
         "\\bMIN\\b", "\\bMAX\\b", "\\bCOUNT\\b", "\\bCONCAT\\b", "\\bAVG\\b",
@@ -73,7 +82,10 @@ SqlHighlighter::SqlHighlighter(QTextDocument *parent)
 
     // Números (int e float)
     QTextCharFormat numberFormat;
-    numberFormat.setForeground(QColor("#6A0DAD"));  // roxo escuro
+    if (currentTheme == "light")
+        numberFormat.setForeground(QColor("#6A0DAD"));  // roxo escuro
+    else
+        numberFormat.setForeground(QColor("#9A3DDD"));  // roxo claro
     rule.pattern = QRegularExpression("\\b\\d+(\\.\\d+)?\\b");
     rule.format = numberFormat;
     rules.append(rule);

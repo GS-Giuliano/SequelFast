@@ -15,8 +15,8 @@ class MainWindow : public QMainWindow
     Q_OBJECT
 
 public:
+    void changeTheme();
     bool host_connect(QString selectedHost);
-
     void refresh_connections();
     void refresh_schemas(QString selectedHost);
     void refresh_schema(QString selectedSchema);

@@ -45,6 +45,5 @@ void updatePreferences();
 QString getRgbFromColorName(const QString &colorName);
 QStringList extractFieldsWithPrefix(const QStringList &fields, const QString &tableName, const QString &alias);
 QString extractCurrentQuery(const QString &text, int cursorPos);
-void changeTheme(QWidget *app);
 
 #endif // FUNCTIONS_H

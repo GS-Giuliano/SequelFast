@@ -668,6 +668,9 @@
        <property name="styleSheet">
         <string notr="true"/>
        </property>
+       <property name="viewMode">
+        <enum>QMdiArea::ViewMode::TabbedView</enum>
+       </property>
       </widget>
      </widget>
     </item>

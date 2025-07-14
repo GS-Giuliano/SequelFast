@@ -807,52 +807,6 @@ void Sql::on_button_clicked()
 
 // Menu de contexto
 
-void Sql::show_context_menu(const QPoint &pos)
-{
-    QMenu menu(this);
-    QAction *tableClone = menu.addAction("Clone row");
-    QAction *tableDelete = menu.addAction("Delete row(s)");
-    menu.addSeparator();
-    QAction *tableCopyInsert = menu.addAction("Copy as INSERT");
-    QAction *tableCopyUpdate = menu.addAction("Copy as UPDATE");
-    QAction *tableCopyCsv = menu.addAction("Copy as CSV");
-    menu.addSeparator();
-    QAction *tableCopyGfwForm = menu.addAction("Copy as gFW Form");
-    QAction *tableCopyGfwTable = menu.addAction("Copy as gFW Table");
-    QAction *tableCopyLaravelForm = menu.addAction("Copy as Laravel Form");
-    QAction *tableCopyLaravelTable = menu.addAction("Copy as Laravel Table");
-
-    QAction *selectedAction = menu.exec(ui->tableData->viewport()->mapToGlobal(pos));
-
-    if (selectedAction == tableClone) {
-        on_tableClone_triggered();
-    }
-    else if (selectedAction == tableDelete) {
-        on_tableDelete_triggered();
-    }
-    else if (selectedAction == tableCopyInsert) {
-        on_tableCopyInsert_triggered();
-    }
-    else if (selectedAction == tableCopyUpdate) {
-        on_tableCopyUpdate_triggered();
-    }
-    else if (selectedAction == tableCopyCsv) {
-        on_tableCopyCsv_triggered();
-    }
-    else if (selectedAction == tableCopyGfwForm) {
-        on_tableCopyGfwForm_triggered();
-    }
-    else if (selectedAction == tableCopyGfwTable) {
-        on_tableCopyGfwTable_triggered();
-    }
-    else if (selectedAction == tableCopyLaravelForm) {
-        on_tableCopyLaravelForm_triggered();
-    }
-    else if (selectedAction == tableCopyLaravelTable) {
-        on_tableCopyLaravelTable_triggered();
-    }
-}
-
 void Sql::on_tableClone_triggered()
 {
     QModelIndexList selection = ui->tableData->selectionModel()->selectedIndexes();
@@ -1035,48 +989,120 @@ void Sql::on_tableCopyCsv_triggered()
         return a.row() == b.row() ? a.column() < b.column() : a.row() < b.row();
     });
 
+    QAbstractItemModel *model = ui->tableData->model();
+
+    // Obter colunas únicas selecionadas (em ordem)
+    QSet<int> selectedColumnsSet;
+    for (const QModelIndex &index : selection)
+        selectedColumnsSet.insert(index.column());
+
+    QList<int> selectedColumns = selectedColumnsSet.values();
+    std::sort(selectedColumns.begin(), selectedColumns.end());
+
+    // Cabeçalhos
+    QStringList headerRow;
+    for (int column : selectedColumns) {
+        QString header = model->headerData(column, Qt::Horizontal).toString();
+        header.replace("\"", "\"\"");
+        headerRow << "\"" + header + "\"";
+    }
+
+    QStringList csvText;
+    csvText << headerRow.join(";");
+
     int currentRow = selection.first().row();
     QStringList csvRow;
-    QStringList csvText;
+    csvRow.fill("", selectedColumns.size());
 
     for (const QModelIndex &index : selection) {
         if (index.row() != currentRow) {
-            csvText << csvRow.join(",");
-            csvRow.clear();
+            csvText << csvRow.join(";");
+            csvRow.fill("", selectedColumns.size());
             currentRow = index.row();
         }
-        // csvRow << "\"" + index.data().toString().replace("\"", "\"\"") + "\"";
-        csvRow << index.data().toString();
+
+        int colIndex = selectedColumns.indexOf(index.column());
+        if (colIndex != -1) {
+            QVariant data = index.data();
+            QString str = data.toString();
+            str.replace("\"", "\"\"");
+
+            // Detectar o tipo real do valor
+            QVariant::Type type = data.type();
+
+            bool isNumeric = (type == QVariant::Int ||
+                              type == QVariant::UInt ||
+                              type == QVariant::LongLong ||
+                              type == QVariant::ULongLong ||
+                              type == QVariant::Double);
+
+            bool needsQuotes = !isNumeric ||
+                               str.contains(";") ||
+                               str.contains("\n") ||
+                               str.contains("\"") ||
+                               str.startsWith("{") || str.startsWith("[");  // possível JSON
+
+            csvRow[colIndex] = needsQuotes ? "\"" + str + "\"" : str;
+        }
     }
-    csvText << csvRow.join(",");
+
+    csvText << csvRow.join(";");
 
     QClipboard *clipboard = QApplication::clipboard();
     clipboard->setText(csvText.join("\n"));
 }
 
 
-void Sql::on_tableCopyGfwForm_triggered()
+void Sql::on_tableCRUDGfw_triggered()
 {
     QClipboard *clipboard = QApplication::clipboard();
     clipboard->setText("<?php \n ?>");
 }
 
-void Sql::on_tableCopyGfwTable_triggered()
+void Sql::on_tableCRUDLaravel_triggered()
 {
     QClipboard *clipboard = QApplication::clipboard();
     clipboard->setText("<?php \n ?>");
 }
 
-void Sql::on_tableCopyLaravelForm_triggered()
+void Sql::show_context_menu(const QPoint &pos)
 {
-    QClipboard *clipboard = QApplication::clipboard();
-    clipboard->setText("<?php \n ?>");
-}
+    QMenu menu(this);
+    QAction *tableClone = menu.addAction("Clone row");
+    QAction *tableDelete = menu.addAction("Delete row(s)");
+    menu.addSeparator();
+    QAction *tableCopyInsert = menu.addAction("Copy as INSERT");
+    QAction *tableCopyUpdate = menu.addAction("Copy as UPDATE");
+    QAction *tableCopyCsv = menu.addAction("Copy as CSV");
+    menu.addSeparator();
+    QAction *tableCRUDGfw= menu.addAction("CRUD gFW");
+    QAction *tableCRUDLaravel = menu.addAction("CRUD Laravel");
+    menu.addSeparator();
+    QAction *tableExportCSV = menu.addAction("Export as CSV");
+    QAction *tableExportPDF = menu.addAction("Export as PDF");
 
-void Sql::on_tableCopyLaravelTable_triggered()
-{
-    QClipboard *clipboard = QApplication::clipboard();
-    clipboard->setText("<?php \n ?>");
-}
+    QAction *selectedAction = menu.exec(ui->tableData->viewport()->mapToGlobal(pos));
 
+    if (selectedAction == tableClone) {
+        on_tableClone_triggered();
+    }
+    else if (selectedAction == tableDelete) {
+        on_tableDelete_triggered();
+    }
+    else if (selectedAction == tableCopyInsert) {
+        on_tableCopyInsert_triggered();
+    }
+    else if (selectedAction == tableCopyUpdate) {
+        on_tableCopyUpdate_triggered();
+    }
+    else if (selectedAction == tableCopyCsv) {
+        on_tableCopyCsv_triggered();
+    }
+    else if (selectedAction == tableCRUDGfw) {
+        on_tableCRUDGfw_triggered();
+    }
+    else if (selectedAction == tableCRUDLaravel) {
+        on_tableCRUDLaravel_triggered();
+    }
+}
 

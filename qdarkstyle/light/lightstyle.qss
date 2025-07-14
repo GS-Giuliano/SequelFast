@@ -75,6 +75,7 @@ QMainWindow::separator {
   border: 0px solid #FAFAFA;
   spacing: 0px;
   padding: 2px;
+  border-radius: 6px;
 }
 
 QMainWindow::separator:hover {
@@ -944,6 +945,7 @@ QGraphicsView:hover, QGraphicsView:!hover, QGraphicsView:selected, QGraphicsView
 QCalendarWidget {
   border: 1px solid #C0C4C8;
   border-radius: 7px;
+  font-size: 10px;
 }
 
 QCalendarWidget:disabled {
@@ -1945,9 +1947,11 @@ QColumnView::item:!selected:hover {
 }
 
 QTableCornerButton::section {
-  background-color: #FAFAFA;
+  background-color: #D8D8D8;
   border: 1px transparent #C0C4C8;
   border-radius: 0px;
+  border-top-left-radius: 4px;
+  border-top-right-radius: 4px;
 }
 
 /* QHeaderView ------------------------------------------------------------
@@ -1956,7 +1960,7 @@ https://doc.qt.io/qt-5/stylesheet-examples.html#customizing-qheaderview
 
 --------------------------------------------------------------------------- */
 QHeaderView {
-  background-color: #C0C4C8;
+  background-color: transparent;
   border: 0px transparent #C0C4C8;
   padding: 0;
   margin: 0;
@@ -1971,7 +1975,7 @@ QHeaderView:disabled {
 QHeaderView::section {
   background-color: #C0C4C8;
   color: #19232D;
-  border-radius: 0;
+  border-radius: 0px;
   text-align: left;
   font-size: 13px;
 }
@@ -1985,7 +1989,13 @@ QHeaderView::section::horizontal {
 }
 
 QHeaderView::section::horizontal::first, QHeaderView::section::horizontal::only-one {
-  border-left: 1px solid #C0C4C8;
+  border-left: 0px solid #FAFAFA;
+  border-top-left-radius: 4px;
+}
+
+QHeaderView::section::horizontal::last, QHeaderView::section::horizontal::only-one {
+  border-left: 0px solid #FAFAFA;
+  border-top-right-radius: 4px;
 }
 
 QHeaderView::section::horizontal:disabled {
@@ -2172,7 +2182,7 @@ QDateEdit, QDateTimeEdit {
   padding-bottom: 2px;
   padding-left: 4px;
   padding-right: 4px;
-  min-width: 10px;
+  min-width: 16px;
 }
 
 QDateEdit:on, QDateTimeEdit:on {
@@ -2182,7 +2192,7 @@ QDateEdit:on, QDateTimeEdit:on {
 QDateEdit::drop-down, QDateTimeEdit::drop-down {
   subcontrol-origin: padding;
   subcontrol-position: top right;
-  width: 12px;
+  width: 16px;
   border-left: 1px solid #C0C4C8;
 }
 

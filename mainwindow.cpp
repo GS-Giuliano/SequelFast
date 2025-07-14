@@ -19,6 +19,8 @@
 #include <QInputDialog>
 #include <QTextStream>
 #include <QFile>
+#include <QPainter>
+#include <QPixmap>
 
 #include <QSortFilterProxyModel>
 #include <QMap>
@@ -49,6 +51,9 @@ extern QString actual_color;
 
 extern bool prefLoaded;
 
+extern QJsonArray colors;
+extern QJsonArray colorThemes;
+
 int newConnectionCount = 0;
 
 
@@ -66,7 +71,7 @@ MainWindow::MainWindow(QWidget *parent)
         {
             currentTheme = "light";
         }
-        changeTheme(this);
+        changeTheme();
 
         // Menus de contexto
         ui->listViewConns->setContextMenuPolicy(Qt::CustomContextMenu);
@@ -97,6 +102,53 @@ MainWindow::~MainWindow()
 {
     delete ui;
 }
+
+void MainWindow::changeTheme()
+{
+    qDebug() << "mudar tema: " << currentTheme;
+    QFile f(QString(":qdarkstyle/%1/%2style.qss").arg(currentTheme).arg(currentTheme));
+
+    if (!f.exists())   {
+        printf("Unable to set stylesheet, file not found\n");
+    }
+    else   {
+        f.open(QFile::ReadOnly | QFile::Text);
+        QTextStream ts(&f);
+        this->setStyleSheet(ts.readAll());
+
+        for (const QJsonValue &val : colorThemes) {
+            QJsonObject obj = val.toObject();
+            if (obj["theme"].toString() == currentTheme) {
+                colors = obj["colors"].toArray();
+                break;
+            }
+        }
+        setStringPreference("theme", currentTheme);
+
+        if (currentTheme=="dark")
+        {
+            QPixmap pixmap(10, 10);
+            pixmap.fill(Qt::darkGray); // cor de fundo
+
+            QPainter painter(&pixmap);
+            painter.setPen(Qt::black);
+            painter.drawPoint(5, 5); // ponto central
+            painter.end();
+            ui->mdiArea->setBackground(QBrush(pixmap));
+        } else {
+            QPixmap pixmap(10, 10);
+            pixmap.fill(Qt::white); // cor de fundo
+
+            QPainter painter(&pixmap);
+            painter.setPen(Qt::gray);
+            painter.drawPoint(5, 5); // ponto central
+            painter.end();
+            ui->mdiArea->setBackground(QBrush(pixmap));
+        }
+
+    }
+}
+
 
 bool MainWindow::host_connect(QString selectedHost)
 {
@@ -777,6 +829,7 @@ void MainWindow::on_listViewTables_edit(const QModelIndex &index)
     QMdiSubWindow *sub = new QMdiSubWindow;
     sub->setWidget(form);
     sub->setAttribute(Qt::WA_DeleteOnClose);  // subjanela será destruída ao fechar
+
     ui->mdiArea->addSubWindow(sub);
     sub->resize(500, 360);
     if (maximize)
@@ -794,6 +847,10 @@ void MainWindow::mostrarMenuContextoTables(const QPoint &pos)
     QMenu menu(this);
     QAction *tableOpen = menu.addAction("Open");
     QAction *tableEdit = menu.addAction("Edit");
+    menu.addSeparator();
+    QAction *tableExportSQL = menu.addAction("Export as SQL");
+    QAction *tableExportCSV = menu.addAction("Export as CSV");
+    QAction *tableExportPDF = menu.addAction("Export as PDF");
 
     QAction *selectedAction = menu.exec(ui->listViewTables->viewport()->mapToGlobal(pos));
 
@@ -816,6 +873,6 @@ void MainWindow::on_actionTheme_triggered()
     } else {
         currentTheme = "light";
     }
-    changeTheme(this);
+    changeTheme();
 }
 

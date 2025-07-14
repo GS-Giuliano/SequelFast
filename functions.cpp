@@ -519,28 +519,3 @@ QString extractCurrentQuery(const QString &text, int cursorPos)
     return query;
 }
 
-void changeTheme(QWidget *app)
-{
-    qDebug() << "mudar tema: " << currentTheme;
-    QFile f(QString(":qdarkstyle/%1/%2style.qss").arg(currentTheme).arg(currentTheme));
-
-    if (!f.exists())   {
-        printf("Unable to set stylesheet, file not found\n");
-    }
-    else   {
-        f.open(QFile::ReadOnly | QFile::Text);
-        QTextStream ts(&f);
-        app->setStyleSheet(ts.readAll());
-
-        for (const QJsonValue &val : colorThemes) {
-            QJsonObject obj = val.toObject();
-            if (obj["theme"].toString() == currentTheme) {
-                colors = obj["colors"].toArray();
-                break;
-            }
-        }
-
-        setStringPreference("theme", currentTheme);
-    }
-}
-
