@@ -43,14 +43,14 @@ QJsonArray colorThemes = QJsonArray{
         {"theme", "dark"},
         {"colors", QJsonArray{
                        QJsonObject{{"name", "white"},  {"rgb", "#2e2e2e"}},
-                       QJsonObject{{"name", "brown"},  {"rgb", "#8E735B"}},
-                       QJsonObject{{"name", "red"},    {"rgb", "#8B3F3F"}},
-                       QJsonObject{{"name", "purple"}, {"rgb", "#7A5E9A"}},
-                       QJsonObject{{"name", "blue"},   {"rgb", "#43697D"}},
-                       QJsonObject{{"name", "green"},  {"rgb", "#4D7A4D"}},
-                       QJsonObject{{"name", "yellow"}, {"rgb", "#9E8F3E"}},
-                       QJsonObject{{"name", "orange"}, {"rgb", "#A86732"}},
-                       QJsonObject{{"name", "grey"},   {"rgb", "#5E5E5E"}}
+                       QJsonObject{{"name", "brown"},  {"rgb", "#63503E"}},
+                       QJsonObject{{"name", "red"},    {"rgb", "#612C2C"}},
+                       QJsonObject{{"name", "purple"}, {"rgb", "#55416B"}},
+                       QJsonObject{{"name", "blue"},   {"rgb", "#2F4A57"}},
+                       QJsonObject{{"name", "green"},  {"rgb", "#355535"}},
+                       QJsonObject{{"name", "yellow"}, {"rgb", "#6F642B"}},
+                       QJsonObject{{"name", "orange"}, {"rgb", "#754823"}},
+                       QJsonObject{{"name", "grey"},   {"rgb", "#424242"}}
                    }}
     }
 };

@@ -41,6 +41,7 @@
 extern QJsonArray connections;
 extern QSqlDatabase dbPreferences;
 extern QSqlDatabase dbMysql;
+extern QString currentTheme;
 
 extern int pref_sql_limit;
 extern int pref_table_row_height;
@@ -190,6 +191,11 @@ Sql::Sql(const QString &host, const QString &schema, const QString &table, const
     this->setWindowTitle(schema+" • "+table);
     QString style = "QTextEdit {background-color: " + getRgbFromColorName(sql_color) + "}";
     ui->textQuery->setStyleSheet(style);
+
+    if (currentTheme=="light")
+        ui->textQuery->setTextColor(QColor("black"));
+    else
+        ui->textQuery->setTextColor(QColor("white"));
 
     new SqlHighlighter(ui->textQuery->document());
 

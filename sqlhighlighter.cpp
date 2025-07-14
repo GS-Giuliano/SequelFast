@@ -13,7 +13,7 @@ SqlHighlighter::SqlHighlighter(QTextDocument *parent)
     if (currentTheme == "light")
         keywordFormat.setForeground(Qt::darkBlue);
     else
-        keywordFormat.setForeground(QBrush(QColor("#4040DF")));
+        keywordFormat.setForeground(QBrush(QColor("#A0A0FF")));
     keywordFormat.setFontWeight(QFont::Bold);
 
     QStringList keywords = {
@@ -99,7 +99,10 @@ SqlHighlighter::SqlHighlighter(QTextDocument *parent)
 
     // Comentários SQL iniciados por "--" (cinza)
     QTextCharFormat commentFormat;
-    commentFormat.setForeground(Qt::gray);
+    if (currentTheme == "light")
+        commentFormat.setForeground(Qt::darkGray);
+    else
+        commentFormat.setForeground(Qt::gray);
     rule.pattern = QRegularExpression("--[^\n]*");
     rule.format = commentFormat;
     rules.append(rule);

@@ -61,7 +61,7 @@
         <enum>QFrame::Shadow::Plain</enum>
        </property>
        <property name="currentIndex">
-        <number>1</number>
+        <number>2</number>
        </property>
        <property name="tabSpacing">
         <number>4</number>
@@ -72,7 +72,7 @@
           <x>0</x>
           <y>0</y>
           <width>218</width>
-          <height>473</height>
+          <height>474</height>
          </rect>
         </property>
         <attribute name="icon">
@@ -321,7 +321,7 @@
           <x>0</x>
           <y>0</y>
           <width>218</width>
-          <height>473</height>
+          <height>474</height>
          </rect>
         </property>
         <attribute name="icon">
@@ -567,7 +567,7 @@
           <x>0</x>
           <y>0</y>
           <width>218</width>
-          <height>473</height>
+          <height>474</height>
          </rect>
         </property>
         <attribute name="icon">
@@ -671,6 +671,12 @@
        <property name="viewMode">
         <enum>QMdiArea::ViewMode::TabbedView</enum>
        </property>
+       <property name="tabsClosable">
+        <bool>true</bool>
+       </property>
+       <property name="tabsMovable">
+        <bool>true</bool>
+       </property>
       </widget>
      </widget>
     </item>
@@ -682,7 +688,7 @@
      <x>0</x>
      <y>0</y>
      <width>1117</width>
-     <height>24</height>
+     <height>21</height>
     </rect>
    </property>
    <property name="sizePolicy">

@@ -23,6 +23,7 @@ public:
     void refresh_tables(QString selectedHost);
     void startSSH(QString &selectedHost);
     void endSSH(QString &selectedHost);
+    void customAlert(QString title, QString message);
 
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();

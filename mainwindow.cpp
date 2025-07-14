@@ -90,7 +90,8 @@ MainWindow::MainWindow(QWidget *parent)
         getPreferences();
 
     } else {
-        QMessageBox::warning(this, "Error", "Can't create preferences file! Check permissions and try again...");
+        customAlert("Error","Can't create preferences file! Check permissions and try again...");
+        // QMessageBox::warning(this, "Error", "Can't create preferences file! Check permissions and try again...");
         QTimer::singleShot(0, qApp, &QApplication::quit);
     }
     // qDebug() << "Version:" << APP_VERSION << "Build:" << APP_BUILD_DATE << APP_BUILD_TIME;
@@ -103,10 +104,30 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
+void MainWindow::customAlert(QString title, QString message)
+{
+    QMessageBox msgBox;
+    msgBox.setWindowTitle(title);
+    msgBox.setText(message);
+    msgBox.setStandardButtons(QMessageBox::Ok);
+    msgBox.setStyleSheet(
+        "QLabel {"
+        "    padding: 10px;"
+        "   min-height: 30px;"
+        "   min-width: 300px;"
+        "}"
+        "QPushButton {"
+        "    padding: 5px;"
+        "    margin: 5px"
+        "}"
+        );
+    msgBox.exec();
+}
+
 void MainWindow::changeTheme()
 {
     qDebug() << "mudar tema: " << currentTheme;
-    QFile f(QString(":qdarkstyle/%1/%2style.qss").arg(currentTheme).arg(currentTheme));
+    QFile f(QString(":themes/%1/%2style.qss").arg(currentTheme).arg(currentTheme));
 
     if (!f.exists())   {
         printf("Unable to set stylesheet, file not found\n");
@@ -204,11 +225,8 @@ bool MainWindow::host_connect(QString selectedHost)
     if (!dbMysql.open()) {
         qDebug() << dbMysql.lastError();
         ui->statusbar->showMessage("Database connection failed!");
-        QMessageBox::information(this,
-                                 "Connection failed!",
-                                 "Check parameters and try again",
-                                 QMessageBox::Ok
-                                 );
+
+        customAlert("Connection failed!", "Check parameters and try again");
         return(false);
     } else {
         ui->statusbar->showMessage("Host connected!");
@@ -573,6 +591,28 @@ void MainWindow::on_buttonNewConns_clicked()
     on_actionNew_connection_triggered();
 }
 
+void MainWindow::on_buttonFilterTables_clicked()
+{
+    QString pref_name = "fav_"+actual_host+"_"+actual_schema;
+
+    if (ui->buttonFilterTables->isChecked())
+    {
+        if (ui->lineEditTables->text() == "")
+        {
+            QString value = getStringPreference(pref_name);
+            if (value != "")
+            {
+                ui->lineEditTables->setText(value);
+            }
+        } else {
+            setStringPreference(pref_name, ui->lineEditTables->text());
+        }
+    } else {
+        ui->lineEditTables->setText("");
+    }
+
+}
+
 
 
 
@@ -620,8 +660,8 @@ void MainWindow::on_actionQuit_triggered()
 {
     dbMysql.close();
     dbPreferences.close();
-    // this->close();
-    QApplication::quit();
+    this->close();
+    // QApplication::quit();
 }
 
 void MainWindow::on_actionTile_triggered()
@@ -635,28 +675,19 @@ void MainWindow::on_actionCascade_triggered()
 }
 
 
-
-void MainWindow::on_buttonFilterTables_clicked()
+void MainWindow::on_actionTheme_triggered()
 {
-    QString pref_name = "fav_"+actual_host+"_"+actual_schema;
-
-    if (ui->buttonFilterTables->isChecked())
+    if (currentTheme == "light")
     {
-        if (ui->lineEditTables->text() == "")
-        {
-            QString value = getStringPreference(pref_name);
-            if (value != "")
-            {
-                ui->lineEditTables->setText(value);
-            }
-        } else {
-            setStringPreference(pref_name, ui->lineEditTables->text());
-        }
+        currentTheme = "dark";
     } else {
-        ui->lineEditTables->setText("");
+        currentTheme = "light";
     }
-
+    changeTheme();
+    refresh_connections();
 }
+
+
 
 
 void MainWindow::listViewConns_open(const QModelIndex &index)
@@ -863,16 +894,4 @@ void MainWindow::mostrarMenuContextoTables(const QPoint &pos)
 }
 
 
-
-
-void MainWindow::on_actionTheme_triggered()
-{
-    if (currentTheme == "light")
-    {
-        currentTheme = "dark";
-    } else {
-        currentTheme = "light";
-    }
-    changeTheme();
-}
 
