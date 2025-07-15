@@ -72,22 +72,13 @@ Use *mariadb* drivers for better compatibility.
 #### Linux
 
 ```bash
-sudo apt install patchelf mariadb cmake ninja
+sudo apt -y install mariadb-server cmake build-essential libxcb-cursor0 libxcb-cursor-dev
+patchelf mariadb cmake ninja
+
 mkdir build-sqldrivers
 cd build-sqldrivers
 
-~/Qt/6.9.1/macos/bin/qt-cmake -G Ninja \
-~/Qt/6.9.1/Src/qtbase/src/plugins/sqldrivers \
--DCMAKE_INSTALL_PREFIX=~/Qt/6.9.1/macos \
--DCMAKE_OSX_ARCHITECTURES=arm64 \
--DCMAKE_BUILD_TYPE=Debug \
--DCMAKE_CXX_STANDARD=17 \
--DCMAKE_CXX_EXTENSIONS=OFF \
--DFEATURE_sql_mysql=ON \
--DMySQL_ROOT="$(brew --prefix mariadb)" \
--DMySQL_INCLUDE_DIR="$(brew --prefix mariadb)/include/mysql" \
--DMySQL_LIBRARY="$(brew --prefix mariadb)/lib/libmysqlclient.dylib"
-
+~/Qt/6.9.1/gcc_64/bin/qt-cmake -G Ninja ~/Qt/6.9.1/Src/qtbase/src/plugins/sqldrivers -DCMAKE_INSTALL_PREFIX=~/Qt/6.9.1/gcc_64/ 
 cmake --build . --parallel
 cmake --install .
 cp plugins/sqldrivers/libqsqlmysql.dylib ~/Qt/6.9.1/macos/plugins/sqldrivers/
