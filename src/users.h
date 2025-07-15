@@ -19,7 +19,10 @@ public:
     void create_user_dialog(QWidget *parent, const QString &connectionName);
     void delete_selected_user();
 
+
 private slots:
+    void show_context_menu(const QPoint &pos);
+
     void on_actionRefresh_triggered();
 
     void on_actionNew_triggered();

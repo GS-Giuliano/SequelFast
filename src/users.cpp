@@ -75,6 +75,12 @@ Users::Users(QString &host, QString &schema, QWidget *parent)
     this->setWindowTitle(usr_host +" • "+usr_schema );
 
     ui->setupUi(this);
+
+    ui->tableView->setContextMenuPolicy(Qt::CustomContextMenu);
+    connect(ui->tableView, &QTableView::customContextMenuRequested,
+            this, &Users::show_context_menu);
+
+
     refresh_users();
 }
 
@@ -287,13 +293,13 @@ void Users::delete_selected_user()
     QMessageBox msgBox;
     msgBox.setStyleSheet(
         "QLabel:last {"
-        "   padding-right: 10px;"
+        "   padding-right: 20px;"
         "   min-height: 30px;"
-        "   min-width: 200px;"
+        "   min-width: 280px;"
         "}"
         "QPushButton {"
-        "    padding: 10px;"
-        "    margin: 10px;"
+        "    padding: 4px;"
+        "    margin: 20px;"
         "    min-height: 16px;"
         "}"
         );
@@ -330,6 +336,25 @@ void Users::delete_selected_user()
 
     refresh_users();  // Atualiza a lista após exclusão
 }
+
+void Users::show_context_menu(const QPoint &pos)
+{
+    QMenu menu(this);
+    QAction *tableAdd = menu.addAction("Add");
+    QAction *tableDelete = menu.addAction("Delete");
+
+    QAction *selectedAction = menu.exec(ui->tableView->viewport()->mapToGlobal(pos));
+
+    if (selectedAction == tableAdd) {
+        create_user_dialog(this, usr_host);
+    }
+    else if (selectedAction == tableDelete) {
+        delete_selected_user();
+    }
+
+}
+
+
 
 void Users::on_actionRefresh_triggered()
 {

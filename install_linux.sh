@@ -1,5 +1,5 @@
 #!/bin/bash
-sudo apt -y install libxcb-cursor0 libxcb-cursor-dev
+sudo apt -y install libxcb-cursor0 libxcb-cursor-dev libgl1-mesa-dev
 mkdir -p ~/Applications/SequelFast
 cp -fR * ~/Applications/SequelFast
 mkdir -p ~/.local/share/applications
