@@ -42,7 +42,7 @@ QJsonArray colorThemes = QJsonArray{
     QJsonObject{
         {"theme", "dark"},
         {"colors", QJsonArray{
-                       QJsonObject{{"name", "white"},  {"rgb", "#2e2e2e"}},
+                       QJsonObject{{"name", "white"},  {"rgb", "#09131D"}},
                        QJsonObject{{"name", "brown"},  {"rgb", "#63503E"}},
                        QJsonObject{{"name", "red"},    {"rgb", "#612C2C"}},
                        QJsonObject{{"name", "purple"}, {"rgb", "#55416B"}},

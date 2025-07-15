@@ -407,6 +407,7 @@ void Sql::query2TableView(QTableView *tableView, const QString &queryStr, const 
 
     QSqlQuery query(dbMysqlLocal);
     if (!query.exec(queryStr)) {
+        statusMessage("Query error: "+query.lastError().text());
         qWarning() << "Erro na query:" << query.lastError().text();
         delete model;
         return;
@@ -475,12 +476,12 @@ void Sql::query2TableView(QTableView *tableView, const QString &queryStr, const 
         model->appendRow(rowItems);
     }
 
-
     tableView->setModel(model);
     tableView->resizeColumnsToContents();
 
     if (comando == "SELECT" && hasId && !hasJoin && !hasSubquery) {
         // qDebug() << "- Edição: HABILITADA";
+        rowsAffected = query.numRowsAffected();
         editEnabled = true;
         tableView->setEditTriggers(
             QAbstractItemView::SelectedClicked |
@@ -554,10 +555,13 @@ void Sql::query2TableView(QTableView *tableView, const QString &queryStr, const 
                         } else {
                             info = QString("%1 • %2(%3)").arg(field.name(), sqlTypeName).arg(fieldSize);
                         }
-
                         statusBar()->showMessage(info);
                     }
                 });
+
+        // QTimer::singleShot(1000, this, SLOT(statusMessage("Success • Rows: "+QString::number(rowsAffected))));
+        statusMessage("Success • Rows: "+QString::number(rowsAffected));
+
     } else {
         // qDebug() << "- Edição: DESABILITADA";
         editEnabled = false;
@@ -582,6 +586,7 @@ bool Sql::on_tableData_edit_trigger(QString &id, QString &fieldName, QString &ne
     QString queryStr = "UPDATE " + sql_table + " SET " + fieldName + " = '" + newValue + "' WHERE id = " + id;
     // qDebug() << queryStr;
     if (!query.exec(queryStr) || query.numRowsAffected() == 0) {
+
         qWarning() << "Erro na query:" << query.lastError().text();
         return false;
     }
@@ -615,9 +620,7 @@ void Sql::on_actionRun_triggered()
         editEnabled = false;
 
         QSqlDatabase db = QSqlDatabase::database("mysql_connection_" + sql_host);
-
         QString comando = queryStr.trimmed().split(QRegularExpression("\\s+"), Qt::SkipEmptyParts).value(0).toUpper();
-
 
         if (comando == "SELECT")
         {

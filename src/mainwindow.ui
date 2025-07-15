@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Sequel Fast</string>
+   <string>SequelFast</string>
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QHBoxLayout" name="horizontalLayout_10">
@@ -123,7 +123,7 @@
               <string>...</string>
              </property>
              <property name="icon">
-              <iconset resource="icons.qrc">
+              <iconset resource="../icons.qrc">
                <normaloff>:/icons/resources/heart tick.svg</normaloff>:/icons/resources/heart tick.svg</iconset>
              </property>
              <property name="iconSize">
@@ -143,7 +143,7 @@
               <string>...</string>
              </property>
              <property name="icon">
-              <iconset resource="icons.qrc">
+              <iconset resource="../icons.qrc">
                <normaloff>:/icons/resources/brush.svg</normaloff>:/icons/resources/brush.svg</iconset>
              </property>
              <property name="iconSize">
@@ -163,7 +163,7 @@
               <string>...</string>
              </property>
              <property name="icon">
-              <iconset resource="icons.qrc">
+              <iconset resource="../icons.qrc">
                <normaloff>:/icons/resources/refresh square.svg</normaloff>:/icons/resources/refresh square.svg</iconset>
              </property>
              <property name="iconSize">
@@ -372,7 +372,7 @@
               <string>...</string>
              </property>
              <property name="icon">
-              <iconset resource="icons.qrc">
+              <iconset resource="../icons.qrc">
                <normaloff>:/icons/resources/heart tick.svg</normaloff>:/icons/resources/heart tick.svg</iconset>
              </property>
              <property name="iconSize">
@@ -392,7 +392,7 @@
               <string>...</string>
              </property>
              <property name="icon">
-              <iconset resource="icons.qrc">
+              <iconset resource="../icons.qrc">
                <normaloff>:/icons/resources/brush.svg</normaloff>:/icons/resources/brush.svg</iconset>
              </property>
              <property name="iconSize">
@@ -412,7 +412,7 @@
               <string>...</string>
              </property>
              <property name="icon">
-              <iconset resource="icons.qrc">
+              <iconset resource="../icons.qrc">
                <normaloff>:/icons/resources/refresh square.svg</normaloff>:/icons/resources/refresh square.svg</iconset>
              </property>
              <property name="iconSize">
@@ -618,7 +618,7 @@
               <string>...</string>
              </property>
              <property name="icon">
-              <iconset resource="icons.qrc">
+              <iconset resource="../icons.qrc">
                <normaloff>:/icons/resources/add square.svg</normaloff>:/icons/resources/add square.svg</iconset>
              </property>
              <property name="iconSize">
@@ -635,7 +635,7 @@
               <string>...</string>
              </property>
              <property name="icon">
-              <iconset resource="icons.qrc">
+              <iconset resource="../icons.qrc">
                <normaloff>:/icons/resources/brush.svg</normaloff>:/icons/resources/brush.svg</iconset>
              </property>
              <property name="iconSize">
@@ -721,12 +721,10 @@
    <addaction name="actionNew_connection"/>
    <addaction name="actionNew_schema"/>
    <addaction name="actionNew_table"/>
-   <addaction name="actionNew_query"/>
    <addaction name="separator"/>
    <addaction name="actionInformation"/>
    <addaction name="actionUsers"/>
    <addaction name="actionStatistics"/>
-   <addaction name="actionVariables"/>
    <addaction name="actionProcesses"/>
    <addaction name="separator"/>
    <addaction name="actionTile"/>
@@ -735,7 +733,7 @@
   </widget>
   <action name="actionNew_connection">
    <property name="icon">
-    <iconset resource="icons.qrc">
+    <iconset resource="../icons.qrc">
      <normaloff>:/icons/resources/cloud connection.svg</normaloff>:/icons/resources/cloud connection.svg</iconset>
    </property>
    <property name="text">
@@ -744,7 +742,7 @@
   </action>
   <action name="actionNew_schema">
    <property name="icon">
-    <iconset resource="icons.qrc">
+    <iconset resource="../icons.qrc">
      <normaloff>:/icons/resources/layer.svg</normaloff>:/icons/resources/layer.svg</iconset>
    </property>
    <property name="text">
@@ -753,25 +751,16 @@
   </action>
   <action name="actionNew_table">
    <property name="icon">
-    <iconset resource="icons.qrc">
+    <iconset resource="../icons.qrc">
      <normaloff>:/icons/resources/copy.svg</normaloff>:/icons/resources/copy.svg</iconset>
    </property>
    <property name="text">
     <string>New table</string>
    </property>
   </action>
-  <action name="actionNew_query">
-   <property name="icon">
-    <iconset resource="icons.qrc">
-     <normaloff>:/icons/resources/receipt.svg</normaloff>:/icons/resources/receipt.svg</iconset>
-   </property>
-   <property name="text">
-    <string>New query</string>
-   </property>
-  </action>
   <action name="actionInformation">
    <property name="icon">
-    <iconset resource="icons.qrc">
+    <iconset resource="../icons.qrc">
      <normaloff>:/icons/resources/information.svg</normaloff>:/icons/resources/information.svg</iconset>
    </property>
    <property name="text">
@@ -780,7 +769,7 @@
   </action>
   <action name="actionPreferences">
    <property name="icon">
-    <iconset resource="icons.qrc">
+    <iconset resource="../icons.qrc">
      <normaloff>:/icons/resources/setting (1).svg</normaloff>:/icons/resources/setting (1).svg</iconset>
    </property>
    <property name="text">
@@ -789,7 +778,7 @@
   </action>
   <action name="actionQuit">
    <property name="icon">
-    <iconset resource="icons.qrc">
+    <iconset resource="../icons.qrc">
      <normaloff>:/icons/resources/login.svg</normaloff>:/icons/resources/login.svg</iconset>
    </property>
    <property name="text">
@@ -798,7 +787,7 @@
   </action>
   <action name="actionUsers">
    <property name="icon">
-    <iconset resource="icons.qrc">
+    <iconset resource="../icons.qrc">
      <normaloff>:/icons/resources/profile user.svg</normaloff>:/icons/resources/profile user.svg</iconset>
    </property>
    <property name="text">
@@ -807,25 +796,16 @@
   </action>
   <action name="actionStatistics">
    <property name="icon">
-    <iconset resource="icons.qrc">
+    <iconset resource="../icons.qrc">
      <normaloff>:/icons/resources/diagram.svg</normaloff>:/icons/resources/diagram.svg</iconset>
    </property>
    <property name="text">
     <string>Statistics</string>
    </property>
   </action>
-  <action name="actionVariables">
-   <property name="icon">
-    <iconset resource="icons.qrc">
-     <normaloff>:/icons/resources/shapes.svg</normaloff>:/icons/resources/shapes.svg</iconset>
-   </property>
-   <property name="text">
-    <string>Variables</string>
-   </property>
-  </action>
   <action name="actionProcesses">
    <property name="icon">
-    <iconset resource="icons.qrc">
+    <iconset resource="../icons.qrc">
      <normaloff>:/icons/resources/bubble.svg</normaloff>:/icons/resources/bubble.svg</iconset>
    </property>
    <property name="text">
@@ -834,7 +814,7 @@
   </action>
   <action name="actionTile">
    <property name="icon">
-    <iconset resource="icons.qrc">
+    <iconset resource="../icons.qrc">
      <normaloff>:/icons/resources/element.svg</normaloff>:/icons/resources/element.svg</iconset>
    </property>
    <property name="text">
@@ -846,7 +826,7 @@
   </action>
   <action name="actionCascade">
    <property name="icon">
-    <iconset resource="icons.qrc">
+    <iconset resource="../icons.qrc">
      <normaloff>:/icons/resources/square.svg</normaloff>:/icons/resources/square.svg</iconset>
    </property>
    <property name="text">
@@ -861,7 +841,7 @@
     <bool>true</bool>
    </property>
    <property name="icon">
-    <iconset resource="icons.qrc">
+    <iconset resource="../icons.qrc">
      <normaloff>:/icons/resources/sun.svg</normaloff>
      <normalon>:/icons/resources/moon.svg</normalon>:/icons/resources/sun.svg</iconset>
    </property>
@@ -877,19 +857,23 @@
   </action>
  </widget>
  <tabstops>
-  <tabstop>lineEditTables</tabstop>
-  <tabstop>buttonFilterTables</tabstop>
-  <tabstop>buttonEditTables</tabstop>
-  <tabstop>buttonUpdateTables</tabstop>
+  <tabstop>lineEditConns</tabstop>
+  <tabstop>buttonNewConns</tabstop>
+  <tabstop>buttonEditConns</tabstop>
+  <tabstop>listViewConns</tabstop>
   <tabstop>lineEditSchemas</tabstop>
   <tabstop>buttonFilterSchemas</tabstop>
   <tabstop>buttonEditSchemas</tabstop>
   <tabstop>buttonUpdateSchemas</tabstop>
-  <tabstop>lineEditConns</tabstop>
-  <tabstop>buttonNewConns</tabstop>
+  <tabstop>lineEditTables</tabstop>
+  <tabstop>buttonFilterTables</tabstop>
+  <tabstop>listViewTables</tabstop>
+  <tabstop>listViewSchemas</tabstop>
+  <tabstop>buttonEditTables</tabstop>
+  <tabstop>buttonUpdateTables</tabstop>
  </tabstops>
  <resources>
-  <include location="icons.qrc"/>
+  <include location="../icons.qrc"/>
  </resources>
  <connections/>
 </ui>

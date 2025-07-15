@@ -1,7 +1,7 @@
 [Desktop Entry]
 Name=SequelFast
-Exec=SequelFast
+Exec=/home/USER/Applications/SequelFast/SequelFast
+Icon=/home/USER/.local/share/icons/hicolor/1024x1024/apps/org.sequelFast.SequelFast.png
 Type=Application
-Icon=org.sequelFast.SequelFast
-Categories=Utility;Database;
+Categories=Utility;Database;Development;
 Comment=Fast and Clean Database Client Application

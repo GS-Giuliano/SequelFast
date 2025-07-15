@@ -16,9 +16,11 @@ class MainWindow : public QMainWindow
 
 public:
     void changeTheme();
+    void createDatabaseDialog(QWidget *parent);
+    void createTableDialog(QWidget *parent);
     bool host_connect(QString selectedHost);
     void refresh_connections();
-    void refresh_schemas(QString selectedHost);
+    void refresh_schemas(QString selectedHost, bool jumpToTables);
     void refresh_schema(QString selectedSchema);
     void refresh_tables(QString selectedHost);
     void startSSH(QString &selectedHost);
@@ -69,6 +71,12 @@ private slots:
     void on_listViewTables_doubleClicked(const QModelIndex &index);
 
     void on_actionTheme_triggered();
+
+    void on_actionNew_schema_triggered();
+
+    void on_actionNew_table_triggered();
+
+    void on_actionUsers_triggered();
 
 private:
     Ui::MainWindow *ui;

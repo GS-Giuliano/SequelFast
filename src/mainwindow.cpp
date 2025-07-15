@@ -21,6 +21,7 @@
 #include <QFile>
 #include <QPainter>
 #include <QPixmap>
+#include <QFormLayout>
 
 #include <QSortFilterProxyModel>
 #include <QMap>
@@ -37,6 +38,7 @@
 #include <structure.h>
 #include <tunnelsqlmanager.h>
 #include <statistics.h>
+#include <users.h>
 
 extern QJsonArray connections;
 extern QSqlDatabase dbPreferences;
@@ -63,17 +65,22 @@ MainWindow::MainWindow(QWidget *parent)
 {
     ui->setupUi(this);
 
+    ui->actionNew_schema->setDisabled(true);
+    ui->actionNew_table->setDisabled(true);
+    ui->actionUsers->setDisabled(true);
+    ui->actionInformation->setDisabled(true);
+    ui->actionStatistics->setDisabled(true);
+    ui->actionProcesses->setDisabled(true);
+
     if (openPreferences())
     {
         currentTheme = getStringPreference("theme");
-        qDebug() << "tema salvo: " << currentTheme;
         if (currentTheme == "")
         {
             currentTheme = "light";
         }
         changeTheme();
 
-        // Menus de contexto
         ui->listViewConns->setContextMenuPolicy(Qt::CustomContextMenu);
         connect(ui->listViewConns, &QListView::customContextMenuRequested,
                 this, &MainWindow::mostrarMenuContextoConns);
@@ -91,11 +98,9 @@ MainWindow::MainWindow(QWidget *parent)
 
     } else {
         customAlert("Error","Can't create preferences file! Check permissions and try again...");
-        // QMessageBox::warning(this, "Error", "Can't create preferences file! Check permissions and try again...");
         QTimer::singleShot(0, qApp, &QApplication::quit);
     }
-    // qDebug() << "Version:" << APP_VERSION << "Build:" << APP_BUILD_DATE << APP_BUILD_TIME;
-    ui->statusbar->showMessage("Version: " + QString(APP_VERSION) + " - Build:" + QString(APP_BUILD_DATE) + QString(APP_BUILD_TIME));
+    ui->statusbar->showMessage("Version: " + QString(APP_VERSION) + " - Build:" + QString(APP_BUILD_DATE) + " " + QString(APP_BUILD_TIME));
 
 }
 
@@ -104,25 +109,6 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
-void MainWindow::customAlert(QString title, QString message)
-{
-    QMessageBox msgBox;
-    msgBox.setWindowTitle(title);
-    msgBox.setText(message);
-    msgBox.setStandardButtons(QMessageBox::Ok);
-    msgBox.setStyleSheet(
-        "QLabel {"
-        "    padding: 10px;"
-        "   min-height: 30px;"
-        "   min-width: 300px;"
-        "}"
-        "QPushButton {"
-        "    padding: 5px;"
-        "    margin: 5px"
-        "}"
-        );
-    msgBox.exec();
-}
 
 void MainWindow::changeTheme()
 {
@@ -167,6 +153,113 @@ void MainWindow::changeTheme()
             ui->mdiArea->setBackground(QBrush(pixmap));
         }
 
+    }
+}
+
+void MainWindow::customAlert(QString title, QString message)
+{
+    QMessageBox msgBox;
+    msgBox.setWindowTitle(title);
+    msgBox.setText(message);
+    msgBox.setStandardButtons(QMessageBox::Ok);
+    msgBox.setStyleSheet(
+        "QLabel {"
+        "    padding: 10px;"
+        "   min-height: 30px;"
+        "   min-width: 300px;"
+        "}"
+        "QPushButton {"
+        "    padding: 5px;"
+        "    margin: 5px"
+        "}"
+        );
+    msgBox.exec();
+}
+
+
+void MainWindow::createDatabaseDialog(QWidget *parent)
+{
+    QDialog dialog(parent);
+    dialog.setWindowTitle("Create database");
+
+    QFormLayout *formLayout = new QFormLayout(&dialog);
+
+    QLineEdit *editNome = new QLineEdit();
+    QLineEdit *editCharset = new QLineEdit();
+    QLineEdit *editCollate = new QLineEdit();
+
+    editCharset->setText("utf8mb4");
+    editCollate->setText("utf8mb4_general_ci");
+
+    formLayout->addRow("Database name:", editNome);
+    formLayout->addRow("Character Set:", editCharset);
+    formLayout->addRow("Collation:", editCollate);
+
+    QDialogButtonBox *buttons = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
+    formLayout->addWidget(buttons);
+
+    QObject::connect(buttons, &QDialogButtonBox::accepted, &dialog, &QDialog::accept);
+    QObject::connect(buttons, &QDialogButtonBox::rejected, &dialog, &QDialog::reject);
+
+    if (dialog.exec() == QDialog::Accepted) {
+        QString nome = editNome->text().trimmed();
+        QString charset = editCharset->text().trimmed();
+        QString collate = editCollate->text().trimmed();
+
+        if (nome.isEmpty()) {
+            customAlert("Error", "");
+            customAlert("Error", "Database name is mandatory");
+            return;
+        }
+
+        QString sql = QString("CREATE DATABASE `%1` CHARACTER SET %2 COLLATE %3;")
+                          .arg(nome, charset, collate);
+        QSqlQuery query(QSqlDatabase::database("mysql_connection_" + actual_host));
+        if (!query.exec(sql)) {
+            customAlert("Create database error", query.lastError().text());
+        } else {
+            refresh_schemas(actual_host, false);
+            // customAlert("Success", "Database created!");
+        }
+    }
+}
+
+
+void MainWindow::createTableDialog(QWidget *parent)
+{
+    QDialog dialog(parent);
+    dialog.setWindowTitle("Create table");
+
+    QFormLayout *formLayout = new QFormLayout(&dialog);
+
+    QLineEdit *editName = new QLineEdit();
+
+
+    formLayout->addRow("Table name:", editName);
+
+    QDialogButtonBox *buttons = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
+    formLayout->addWidget(buttons);
+
+    QObject::connect(buttons, &QDialogButtonBox::accepted, &dialog, &QDialog::accept);
+    QObject::connect(buttons, &QDialogButtonBox::rejected, &dialog, &QDialog::reject);
+
+    if (dialog.exec() == QDialog::Accepted) {
+        QString name = editName->text().trimmed();
+
+        if (name.isEmpty()) {
+            customAlert("Error", "");
+            customAlert("Error", "Table name is mandatory");
+            return;
+        }
+
+        QString sql = QString("CREATE TABLE %1 ( id INT AUTO_INCREMENT PRIMARY KEY )").arg(name);
+        QSqlQuery query(QSqlDatabase::database("mysql_connection_" + actual_host));
+        if (!query.exec(sql)) {
+            customAlert("Create table error", query.lastError().text());
+        } else {
+            refresh_tables(actual_host);
+            // customAlert("Success", "Database created!");
+        }
     }
 }
 
@@ -230,7 +323,7 @@ bool MainWindow::host_connect(QString selectedHost)
         return(false);
     } else {
         ui->statusbar->showMessage("Host connected!");
-        refresh_schemas(selectedHost);
+        refresh_schemas(selectedHost, true);
     }
     return(true);
 }
@@ -280,7 +373,7 @@ void MainWindow::refresh_connections() {
     ui->statusbar->showMessage("Connections updated");
 }
 
-void MainWindow::refresh_schemas(QString selectedHost)
+void MainWindow::refresh_schemas(QString selectedHost, bool jumpToTables)
 {
     if (!dbMysql.open()) {
         ui->statusbar->showMessage("Connection failed!");
@@ -295,7 +388,8 @@ void MainWindow::refresh_schemas(QString selectedHost)
         QJsonObject item = getConnection(selectedHost);
         QSqlQuery query(QSqlDatabase::database("mysql_connection_" + selectedHost));
 
-        if (query.exec("SHOW DATABASES")) {
+        if (query.exec("SHOW DATABASES"))
+        {
             ui->lineEditSchemas->setText("");
             QStandardItemModel *modelo = new QStandardItemModel(this);
             int sel = -1;
@@ -337,7 +431,7 @@ void MainWindow::refresh_schemas(QString selectedHost)
 
             if (item["schema"].toString() == "")
             {
-                refresh_schema(actual_first_schema);
+                // refresh_schema(actual_first_schema);
             }
 
             // Proxy de filtro
@@ -357,13 +451,11 @@ void MainWindow::refresh_schemas(QString selectedHost)
             if (sel > -1) {
                 QModelIndex index = proxy->index(sel, 0);
                 ui->listViewSchemas->setCurrentIndex(index);
-                QApplication::restoreOverrideCursor();
-                QApplication::processEvents();
-                refresh_tables(selectedHost);
+                if (jumpToTables)
+                {
+                    refresh_tables(selectedHost);
+                }
             }
-
-
-
         }
         QApplication::restoreOverrideCursor();
         QApplication::processEvents();
@@ -460,6 +552,8 @@ void MainWindow::on_listViewConns_doubleClicked(const QModelIndex &index)
     {
         listViewConns_edit(index);
     } else {
+        ui->actionNew_schema->setDisabled(false);
+        ui->actionUsers->setDisabled(false);
         listViewConns_open(index);
     }
 }
@@ -497,6 +591,7 @@ void MainWindow::on_listViewSchemas_clicked(const QModelIndex &index)
 void MainWindow::on_listViewSchemas_doubleClicked(const QModelIndex &index)
 {
     actual_schema = index.data(Qt::DisplayRole).toString();
+    ui->actionNew_table->setDisabled(false);
     refresh_schema(actual_schema);
 }
 
@@ -571,13 +666,13 @@ void MainWindow::on_buttonEditTables_clicked()
 
 void MainWindow::on_buttonEditSchemas_clicked()
 {
-    refresh_schemas(actual_host);
+    refresh_schemas(actual_host, false);
 }
 
 
 void MainWindow::on_buttonUpdateSchemas_clicked()
 {
-    refresh_schemas(actual_host);
+    refresh_schemas(actual_host, false);
 }
 
 
@@ -793,6 +888,8 @@ void MainWindow::mostrarMenuContextoSchemas(const QPoint &pos)
 
     QMenu menu(this);
     QAction *schemaOpen = menu.addAction("Open");
+    QAction *schemaCreate = menu.addAction("Create");
+    QAction *schemaDrop = menu.addAction("Drop");
     menu.addSeparator();
     QAction *schemaUsers = menu.addAction("Users");
     QAction *schemaStatistics = menu.addAction("Statistics");
@@ -814,7 +911,50 @@ void MainWindow::mostrarMenuContextoSchemas(const QPoint &pos)
     // TODO
     }
     else if (selectedAction == schemaBatchRun) {
-    // TODO
+        // TODO
+    }
+    else if (selectedAction == schemaCreate) {
+        createDatabaseDialog(this);
+    }
+    else if (selectedAction == schemaDrop) {
+        QString dbName = index.data(Qt::DisplayRole).toString();
+
+        QMessageBox msgBox;
+        msgBox.setStyleSheet(
+            "QLabel:last {"
+            "   padding-right: 10px;"
+            "   min-height: 30px;"
+            "   min-width: 200px;"
+            "}"
+            "QPushButton {"
+            "    padding: 10px;"
+            "    margin: 10px;"
+            "    min-height: 16px;"
+            "}"
+            );
+        msgBox.setWindowTitle("Confirm Deletion");
+        msgBox.setIcon(QMessageBox::Question);
+        msgBox.setStandardButtons(QMessageBox::Yes | QMessageBox::No);
+        msgBox.setDefaultButton(QMessageBox::No);
+
+        QString message = QString("Are you sure you want to drop database\n\"%1\"?").arg(dbName);
+        msgBox.setText(message);
+
+        // Mostra a caixa de mensagem e captura a resposta
+        QMessageBox::StandardButton reply = static_cast<QMessageBox::StandardButton>(msgBox.exec());
+
+        if (reply == QMessageBox::Yes) {
+            QSqlQuery query(QSqlDatabase::database("mysql_connection_" + actual_host));
+            QString sql = QString("DROP DATABASE `%1`;").arg(dbName);
+
+            if (!query.exec(sql)) {
+                customAlert("Error", "Failed to delete database:\n" + query.lastError().text());
+            } else {
+                refresh_schemas(actual_host, false);
+                // customAlert("Success", "Database deleted successfully.");
+
+            }
+        }
     }
 }
 
@@ -878,6 +1018,8 @@ void MainWindow::mostrarMenuContextoTables(const QPoint &pos)
     QMenu menu(this);
     QAction *tableOpen = menu.addAction("Open");
     QAction *tableEdit = menu.addAction("Edit");
+    QAction *tableCreate = menu.addAction("Create");
+    QAction *tableDrop = menu.addAction("Drop");
     menu.addSeparator();
     QAction *tableExportSQL = menu.addAction("Export as SQL");
     QAction *tableExportCSV = menu.addAction("Export as CSV");
@@ -891,7 +1033,94 @@ void MainWindow::mostrarMenuContextoTables(const QPoint &pos)
     else if (selectedAction == tableEdit) {
         on_listViewTables_edit(index); // TODO
     }
+    else if (selectedAction == tableCreate) {
+        createTableDialog(this);
+    }
+    else if (selectedAction == tableDrop) {
+        QString dbTable = index.data(Qt::DisplayRole).toString();
+
+        QMessageBox msgBox;
+        msgBox.setStyleSheet(
+            "QLabel:last {"
+            "   padding-right: 10px;"
+            "   min-height: 30px;"
+            "   min-width: 200px;"
+            "}"
+            "QPushButton {"
+            "    padding: 10px;"
+            "    margin: 10px;"
+            "    min-height: 16px;"
+            "}"
+            );
+        msgBox.setWindowTitle("Confirm Delete");
+        msgBox.setIcon(QMessageBox::Question);
+        msgBox.setStandardButtons(QMessageBox::Yes | QMessageBox::No);
+        msgBox.setDefaultButton(QMessageBox::No);
+
+        QString message = QString("Are you sure you want to drop table\n\"%1\"?").arg(dbTable);
+        msgBox.setText(message);
+
+        QMessageBox::StandardButton reply = static_cast<QMessageBox::StandardButton>(msgBox.exec());
+
+        if (reply == QMessageBox::Yes) {
+            QSqlQuery query(QSqlDatabase::database("mysql_connection_" + actual_host));
+            QString sql = QString("DROP TABLE `%1`;").arg(dbTable);
+
+            if (!query.exec(sql)) {
+                customAlert("Error", "Failed to delete table:\n" + query.lastError().text());
+            } else {
+                refresh_tables(actual_host);
+                // customAlert("Success", "Table deleted successfully.");
+
+            }
+        }
+    }
+
 }
 
 
+
+
+void MainWindow::on_actionNew_schema_triggered()
+{
+    if (actual_host != "")
+    {
+        createDatabaseDialog(this);
+    }
+}
+
+
+void MainWindow::on_actionNew_table_triggered()
+{
+    if (actual_host != "")
+    {
+        createTableDialog(this);
+    }
+}
+
+
+void MainWindow::on_actionUsers_triggered()
+{
+    QMdiSubWindow *prev = ui->mdiArea->activeSubWindow();
+    bool maximize = true;
+
+    if (prev) {
+        if (!prev->isMaximized()) {
+            maximize = false;
+        }
+    }
+
+    Users *form = new Users(actual_host, actual_schema, this);
+
+    QMdiSubWindow *sub = new QMdiSubWindow;
+    sub->setWidget(form);
+    sub->setAttribute(Qt::WA_DeleteOnClose);  // subjanela será destruída ao fechar
+    ui->mdiArea->addSubWindow(sub);
+    sub->resize(500, 360);
+    if (maximize)
+        sub->showMaximized();
+    else
+        sub->show();
+
+}
 

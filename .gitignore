@@ -2,8 +2,12 @@
 /SequelFast.app/
 SequelFast.app
 SequelFast.dmg
-/install_macos_intel/
+/installer_macos_intel/
+/installer_macos_silicon/
 .DS_Store
+# Linux
+.flatpak-builder
+/installer_linux/
 # C++ objects and libs
 /build/
 *.slo

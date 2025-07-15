@@ -1,6 +1,6 @@
 app-id: org.sequelFast.SequelFast
 runtime: org.kde.Platform
-runtime-version: '6.7'
+runtime-version: '6.9'
 sdk: org.kde.Sdk
 command: SequelFast
 finish-args:
@@ -10,14 +10,18 @@ finish-args:
   - --device=dri
   - --share=network
   - --filesystem=home
+
 modules:
+  # Módulo para copiar libmysqlclient
   - name: mysql
     buildsystem: simple
     build-commands:
-      - install -D /usr/lib/x86_64-linux-gnu/libmysqlclient.so.21 /app/lib/libmysqlclient.so.21
+      - install -Dm644 libs/libmysqlclient.so.21.2.42 /app/lib/libmysqlclient.so.21
     sources:
       - type: file
-        path: /usr/lib/x86_64-linux-gnu/libmysqlclient.so.21
+        path: libs/libmysqlclient.so.21.2.42
+
+  # Módulo principal do aplicativo
   - name: SequelFast
     buildsystem: cmake-ninja
     config-opts:
@@ -33,12 +37,16 @@ modules:
       - install -Dm644 themes/light/* -t /app/share/SequelFast/themes/light/
       - install -Dm644 org.sequelFast.SequelFast.desktop -t /app/share/applications/
       - install -Dm644 org.sequelFast.SequelFast.metainfo.xml -t /app/share/metainfo/
-  - name: qt-sqldrivers
-    buildsystem: cmake-ninja
-    config-opts:
-      - -DCMAKE_BUILD_TYPE=RelWithDebInfo
-      - -DCMAKE_INSTALL_PREFIX=/app
-      - -DMySQL_ROOT=/usr
+
+  # Instala os plugins SQL do Qt já compilados
+  - name: qt-sqldrivers-prebuilt
+    buildsystem: simple
+    build-commands:
+      - install -Dm755 libqsqlmysql.so /app/lib/plugins/sqldrivers/libqsqlmysql.so
+      - install -Dm755 libqsqlite.so /app/lib/plugins/sqldrivers/libqsqlite.so
     sources:
-      - type: dir
-        path: /path/to/qt6-source/qtbase/src/plugins/sqldrivers
+      - type: file
+        path: /home/giuliano/Qt/6.9.1/gcc_64/plugins/sqldrivers/libqsqlmysql.so
+      - type: file
+        path: /home/giuliano/Qt/6.9.1/gcc_64/plugins/sqldrivers/libqsqlite.so
+

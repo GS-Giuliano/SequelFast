@@ -19,7 +19,8 @@ src/sql.cpp \
 src/sqlhighlighter.cpp \
 src/statistics.cpp \
 src/structure.cpp \
-src/tunnelsqlmanager.cpp
+src/tunnelsqlmanager.cpp \
+src/users.cpp
 
 HEADERS += \
 src/connection.h \
@@ -29,14 +30,16 @@ src/sql.h \
 src/sqlhighlighter.h \
 src/statistics.h \
 src/structure.h \
-src/tunnelsqlmanager.h
+src/tunnelsqlmanager.h \
+src/users.h
 
 FORMS += \
 src/connection.ui \
 src/mainwindow.ui \
 src/sql.ui \
 src/statistics.ui \
-src/structure.ui
+src/structure.ui \
+src/users.ui
 
 TRANSLATIONS += \
     SequelFast_pt_BR.ts

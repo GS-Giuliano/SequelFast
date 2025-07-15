@@ -23,9 +23,10 @@ public:
     void setInterfaceSize(int increase);
     void refresh_structure();
     void formatSqlText();
-    void statusMessage(QString msg);
 
 private slots:
+    void statusMessage(QString msg);
+
     void on_actionRun_triggered();
 
     void on_actionFormat_triggered();
@@ -72,6 +73,7 @@ private:
     bool hasJoin = false;
     bool hasSubquery = false;
     int idPosition = -1;
+    int rowsAffected = 0;
 
     QString tableName = "", tableAlias = "";
     QStringList selectFields;

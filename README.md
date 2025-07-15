@@ -1,72 +1,119 @@
 # SequelFast
 OpenSource MySQL and MariaDB Client focused on speed
 
-Para executar:
-
-## macOS Intel
-
-Abra o arquivo SequelFast.dmb e copie o arquivo para a pasta /Applications (Aplicativos)
-
-Certifique-se de que a pasta abaixo existe:
-
-~/Library/Application\ Support/SequelFastTeam/SequelFast/
-
 ## Technology
 
-Qt 6.9.1
-C++ 17
-Iconsax
-GNU GPL 3.0
+* Qt 6.9.1
+* C++ 17
+* Iconsax GNU GPL 3.0
+
 By Lusaxweb
 https://www.freeicons.org/icons/iconsax
 https://iconsax.io/?ref=freeicons.org
 
-### Qt
+## Install (Deploy)
 
-Baixe e execute o instalador no link: https://www.qt.io/download-open-source
-Atenção para a seleção de instalação dos fontes (Sources).
+### macOS Intel
 
-## Instalação no Linux (Ubuntu / Zorin)
+- Download SequelFast.dmg on "release"
+- Open SequelFast.dmg and move SequelFast.app to folder /Applications
 
-### Drivers do MySQL
+
+### Linux 
+
+Unzip SequelFast.zip and run 
 
 ```bash
-sudo apt install libmysqlclient-dev cmake ninja
-
-# entre na pasta dos fontes do qt
-cd ~/Qt/6.9.1/Src/qtbase
-./configure.sh -sql-mysql
-cmake --build . --parallel
-sudo cmake --install .
+./install_linux.sh
 ```
 
-## Instalação no macOS
+## Developing
 
-## Pré-requisitos
+### Qt
 
-Certifique-se de ter instalado "Command Line Tools" do Xcode, e requisitos para o módulo MySQL:
+Download and run Qt installer 
+
+https://www.qt.io/download-open-source
+
+Beware to select right software:
+
+*Qt Design Studio*
+
+- Qt Design Studio 4.7.2 (or newer)
+
+*Extensions*
+
+- Qt PDF
+- Qt WebEngine
+
+*Qt*
+
+- Qt 6.9.1
+  - Desktop (at least)
+  - Sources
+  - Additional Libraries
+  - Build Tools
+    - Qt Installer Framework 4.10
+    - CMake 3.30.5
+    - Ninja 1.12.1
+    - OpenSSL 3.0.16 Toolkit
+
+*Qt Creator*
+
+- Qt Creator 17.0.0
+
+
+## Requirements
+
+### MySQL/MariaDB Drivers 
+
+Use *mariadb* drivers for better compatibility.
+
+#### Linux
+
+```bash
+sudo apt install patchelf mariadb cmake ninja
+mkdir build-sqldrivers
+cd build-sqldrivers
+
+~/Qt/6.9.1/macos/bin/qt-cmake -G Ninja \
+~/Qt/6.9.1/Src/qtbase/src/plugins/sqldrivers \
+-DCMAKE_INSTALL_PREFIX=~/Qt/6.9.1/macos \
+-DCMAKE_OSX_ARCHITECTURES=arm64 \
+-DCMAKE_BUILD_TYPE=Debug \
+-DCMAKE_CXX_STANDARD=17 \
+-DCMAKE_CXX_EXTENSIONS=OFF \
+-DFEATURE_sql_mysql=ON \
+-DMySQL_ROOT="$(brew --prefix mariadb)" \
+-DMySQL_INCLUDE_DIR="$(brew --prefix mariadb)/include/mysql" \
+-DMySQL_LIBRARY="$(brew --prefix mariadb)/lib/libmysqlclient.dylib"
+
+cmake --build . --parallel
+cmake --install .
+cp plugins/sqldrivers/libqsqlmysql.dylib ~/Qt/6.9.1/macos/plugins/sqldrivers/
+```
+
+#### macOS
+
+Check for Command Line Build Tools and install MariaDB drivers:
 
 ```bash
 xcode-select --install
-brew install mariadb cmake ninja
 ```
 
-## Ambiente
+Environment setup:
 
-Configure corretamente o ambiente:
-
-Adicione as linhas no arquivo ~/.zshrc
+Add to ~/.zshrc:
 
 ```bash
 export QTDIR=~/Qt/6.9.1/macos
 export PATH=$PATH:$QTDIR/bin
 ```
 
-### Drivers do MySQL - macOS Intel
-
-Para maior compatibilidade, instale os drivers do MariaDB aon invés do MySQL.
+#### macOS Intel
 
 ```bash
+brew install mariadb cmake ninja
 mkdir build-sqldrivers
 cd build-sqldrivers
 
@@ -84,9 +131,7 @@ cmake --install .
 cp plugins/sqldrivers/libqsqlmysql.dylib ~/Qt/6.9.1/macos/plugins/sqldrivers/
 ```
 
-### Drivers do MySQL - macOS Silicon
-
-Para maior compatibilidade, instale os drivers do MariaDB aon invés do MySQL.
+#### macOS Silicon
 
 ```bash
 brew install mariadb cmake ninja
@@ -108,46 +153,6 @@ cd build-sqldrivers
 cmake --build . --parallel
 cmake --install .
 cp plugins/sqldrivers/libqsqlmysql.dylib ~/Qt/6.9.1/macos/plugins/sqldrivers/
-```
-
-
-
-## Instalação do sistema no Linux
-
-Se você quiser que o ícone apareça no menu de aplicativos, Dock (como no KDE, GNOME, etc.):
-
-Crie um arquivo .desktop, por exemplo:
-```
-[Desktop Entry]
-Version=1.0
-Name=SequelFast
-Comment=Ferramenta SQL
-Exec=/caminho/para/SequelFast
-Icon=/caminho/absoluto/para/icons/icon_128.png
-Terminal=false
-Type=Application
-Categories=Development;Database;
-```
-
-Salve como:
-
-~/.local/share/applications/sequelfast.desktop (usuário)
-ou /usr/share/applications/sequelfast.desktop (global)
-
-Depois, rode:
-
-```bash
-chmod +x ~/.local/share/applications/sequelfast.desktop
-update-desktop-database ~/.local/share/applications/
-```
-
-📦 Instalação recomendada dos ícones no sistema (opcional)
-
-Você pode instalar ícones com múltiplas resoluções nas pastas padrão:
-
-```bash
-sudo cp icons/icon_128.png /usr/share/icons/hicolor/128x128/apps/sequelfast.png
-sudo gtk-update-icon-cache /usr/share/icons/hicolor
 ```
 
 
