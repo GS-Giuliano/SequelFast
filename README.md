@@ -1,6 +1,69 @@
 # SequelFast
 OpenSource MySQL and MariaDB Client focused on speed
 
+First release version.
+
+What is working now:
+
+## Workspace
+
+- Dark and light themes
+- Tabs, tile or cascade child windows
+
+## Connections
+
+- Add, edit, clone and delete
+- Connect over pipe, TCP/IP and SSH
+- Select color (for list and for SQL Editor)
+- Filter
+
+## Users
+
+- Add, edit and delete
+- Auto FLUSH PRIVILEGES
+- Easy way to check permissions
+
+## Statistics
+
+- Show charset, collation, encryption, size (mb) and tables count
+- Show environment variables 
+
+## Schemes
+
+- Open, add (create), delete (drop)
+- Statistics
+- Filter
+- Save filter favorite
+
+## Tables
+
+- Open, add (create), edit (table format), delete (drop)
+- Filter
+- Save filter favorite
+
+## Table editor
+
+- Add, edit and delete fields
+- Log
+
+## SQL editor
+
+- Syntax highlight
+- Format
+- Save default query for open table
+- Font size option (increase and decrease)
+- Save actual font size (optionally)
+- Timer: auto execute queries for many times at specific intervals 
+
+## Data editor
+
+- Edit directly on table (if query doesn't have JOINs and have Id field)
+- Calendar for date and date time fields
+- Large text editor for large varchar or text fields
+- Masked number for numeric fields
+- Copy only selected data (columns or rows) to clipboard as CSV, Insert, Update
+
+
 ## Technology
 
 * Qt 6.9.1
