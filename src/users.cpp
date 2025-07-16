@@ -300,7 +300,8 @@ void Users::delete_selected_user()
         "QPushButton {"
         "    padding: 4px;"
         "    margin: 20px;"
-        "    min-height: 16px;"
+        "    min-height: 18px;"
+        "    min-width: 80px;"
         "}"
         );
     msgBox.setWindowTitle("Confirm Delete");
