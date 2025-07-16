@@ -214,6 +214,8 @@ Sql::Sql(const QString &host, const QString &schema, const QString &table, const
     QLabel *labelSeconds = new QLabel("second(s) ", this);
     QLabel *labelTimes = new QLabel(" time(s)", this);
 
+    spacer->setStyleSheet("QWidget {background-color: transparent}");
+
     edit = new QLineEdit(this);
     edit->setText("1");
     edit->setFixedWidth(50);

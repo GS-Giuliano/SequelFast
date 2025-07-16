@@ -140,7 +140,7 @@ QStatusBar QToolTip {
 
 QStatusBar QLabel {
   /* Fixes Spyder #9120, #9121 */
-  background: transparent;
+  background-color: transparent;
 }
 
 /* QCheckBox --------------------------------------------------------------
@@ -275,7 +275,7 @@ https://doc.qt.io/qt-5/stylesheet-examples.html#customizing-qradiobutton
 
 --------------------------------------------------------------------------- */
 QRadioButton {
-  background-color: #FAFAFA;
+  background-color: #E8E8E8;
   color: #19232D;
   spacing: 4px;
   padding-top: 4px;
@@ -289,14 +289,14 @@ QRadioButton:focus {
 }
 
 QRadioButton:disabled {
-  background-color: #FAFAFA;
+  background-color: #E8E8E8;
   color: #9DA9B5;
   border: none;
   outline: none;
 }
 
 QRadioButton QWidget {
-  background-color: #FAFAFA;
+  background-color: #E8E8E8;
   color: #19232D;
   spacing: 0px;
   padding: 0px;
@@ -882,7 +882,7 @@ https://doc.qt.io/qt-5/stylesheet-examples.html#customizing-qframe
 
 --------------------------------------------------------------------------- */
 QLabel {
-  background-color: #E8E8E8;
+  background-color: transparent;
   border: 0px solid #C0C4C8;
   padding: 2px;
   margin: 0px;
@@ -890,7 +890,7 @@ QLabel {
 }
 
 QLabel:disabled {
-  background-color: #FAFAFA;
+  background-color: transparent;
   border: 0px solid #C0C4C8;
   color: #9DA9B5;
 }
