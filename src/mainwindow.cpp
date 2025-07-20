@@ -39,6 +39,7 @@
 #include <tunnelsqlmanager.h>
 #include <statistics.h>
 #include <users.h>
+#include <batch.h>
 
 extern QJsonArray connections;
 extern QSqlDatabase dbPreferences;
@@ -862,6 +863,7 @@ void MainWindow::mostrarMenuContextoConns(const QPoint &pos)
     QAction *schemaEdit = menu.addAction("Edit");
     QAction *schemaClone = menu.addAction("Clone");
     QAction *schemaRemove = menu.addAction("Remove");
+    QAction *schemaBatchRun = menu.addAction("Batch run");
 
     QAction *selectedAction = menu.exec(ui->listViewConns->viewport()->mapToGlobal(pos));
 
@@ -877,6 +879,10 @@ void MainWindow::mostrarMenuContextoConns(const QPoint &pos)
     else if (selectedAction == schemaRemove) {
         listViewConns_remove(index);
     }
+    else if (selectedAction == schemaBatchRun) {
+        batch_run();
+    }
+
 }
 
 
@@ -907,11 +913,9 @@ void MainWindow::mostrarMenuContextoSchemas(const QPoint &pos)
         actual_schema = index.data(Qt::DisplayRole).toString();
         Statistics *janela = new Statistics(actual_host, actual_schema, this);
         janela->exec();
-
-    // TODO
     }
     else if (selectedAction == schemaBatchRun) {
-        // TODO
+        batch_run();
     }
     else if (selectedAction == schemaCreate) {
         createDatabaseDialog(this);
@@ -1124,3 +1128,28 @@ void MainWindow::on_actionUsers_triggered()
 
 }
 
+void MainWindow::batch_run()
+{
+    QMdiSubWindow *prev = ui->mdiArea->activeSubWindow();
+    bool maximize = true;
+
+    if (prev) {
+        if (!prev->isMaximized()) {
+            maximize = false;
+        }
+    }
+
+    Batch *form = new Batch(actual_host, actual_schema, this);
+
+    QMdiSubWindow *sub = new QMdiSubWindow;
+    sub->setWidget(form);
+    sub->setAttribute(Qt::WA_DeleteOnClose);  // subjanela será destruída ao fechar
+    ui->mdiArea->addSubWindow(sub);
+    sub->resize(500, 360);
+    if (maximize)
+        sub->showMaximized();
+    else
+        sub->show();
+
+
+}

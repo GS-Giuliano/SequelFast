@@ -78,7 +78,7 @@
      <x>0</x>
      <y>0</y>
      <width>800</width>
-     <height>24</height>
+     <height>21</height>
     </rect>
    </property>
   </widget>
@@ -134,7 +134,7 @@
   </widget>
   <action name="actionRun">
    <property name="icon">
-    <iconset resource="icons.qrc">
+    <iconset resource="../icons.qrc">
      <normaloff>:/icons/resources/square.svg</normaloff>:/icons/resources/square.svg</iconset>
    </property>
    <property name="text">
@@ -152,7 +152,7 @@
   </action>
   <action name="actionFormat">
    <property name="icon">
-    <iconset resource="icons.qrc">
+    <iconset resource="../icons.qrc">
      <normaloff>:/icons/resources/autobrightness.svg</normaloff>:/icons/resources/autobrightness.svg</iconset>
    </property>
    <property name="text">
@@ -170,7 +170,7 @@
   </action>
   <action name="actionSave">
    <property name="icon">
-    <iconset resource="icons.qrc">
+    <iconset resource="../icons.qrc">
      <normaloff>:/icons/resources/heart tick.svg</normaloff>:/icons/resources/heart tick.svg</iconset>
    </property>
    <property name="text">
@@ -188,7 +188,7 @@
   </action>
   <action name="actionFavorites">
    <property name="icon">
-    <iconset resource="icons.qrc">
+    <iconset resource="../icons.qrc">
      <normaloff>:/icons/resources/lovely.svg</normaloff>:/icons/resources/lovely.svg</iconset>
    </property>
    <property name="text">
@@ -206,7 +206,7 @@
   </action>
   <action name="actionIncrease">
    <property name="icon">
-    <iconset resource="icons.qrc">
+    <iconset resource="../icons.qrc">
      <normaloff>:/icons/resources/search zoom-2.svg</normaloff>:/icons/resources/search zoom-2.svg</iconset>
    </property>
    <property name="text">
@@ -224,7 +224,7 @@
   </action>
   <action name="actionReduce">
    <property name="icon">
-    <iconset resource="icons.qrc">
+    <iconset resource="../icons.qrc">
      <normaloff>:/icons/resources/search zoom.svg</normaloff>:/icons/resources/search zoom.svg</iconset>
    </property>
    <property name="text">
@@ -242,7 +242,7 @@
   </action>
   <action name="actionExport">
    <property name="icon">
-    <iconset resource="icons.qrc">
+    <iconset resource="../icons.qrc">
      <normaloff>:/icons/resources/export.svg</normaloff>:/icons/resources/export.svg</iconset>
    </property>
    <property name="text">
@@ -257,7 +257,7 @@
   </action>
   <action name="actionImport">
    <property name="icon">
-    <iconset resource="icons.qrc">
+    <iconset resource="../icons.qrc">
      <normaloff>:/icons/resources/frame.svg</normaloff>:/icons/resources/frame.svg</iconset>
    </property>
    <property name="text">
@@ -272,7 +272,7 @@
   </action>
   <action name="actionEdit">
    <property name="icon">
-    <iconset resource="icons.qrc">
+    <iconset resource="../icons.qrc">
      <normaloff>:/icons/resources/path.svg</normaloff>:/icons/resources/path.svg</iconset>
    </property>
    <property name="text">
@@ -287,7 +287,7 @@
   </action>
  </widget>
  <resources>
-  <include location="icons.qrc"/>
+  <include location="../icons.qrc"/>
  </resources>
  <connections/>
 </ui>

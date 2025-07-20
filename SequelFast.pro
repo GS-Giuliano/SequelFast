@@ -11,6 +11,7 @@ INCLUDEPATH += src
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
+    src/batch.cpp \
 src/connection.cpp \
 src/functions.cpp \
 src/main.cpp \
@@ -23,6 +24,7 @@ src/tunnelsqlmanager.cpp \
 src/users.cpp
 
 HEADERS += \
+    src/batch.h \
 src/connection.h \
 src/functions.h \
 src/mainwindow.h \
@@ -34,6 +36,7 @@ src/tunnelsqlmanager.h \
 src/users.h
 
 FORMS += \
+    src/batch.ui \
 src/connection.ui \
 src/mainwindow.ui \
 src/sql.ui \

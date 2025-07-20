@@ -78,6 +78,8 @@ private slots:
 
     void on_actionUsers_triggered();
 
+    void batch_run();
+
 private:
     Ui::MainWindow *ui;
 
