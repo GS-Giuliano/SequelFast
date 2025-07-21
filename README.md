@@ -1,7 +1,7 @@
 # SequelFast
 
 ![License](https://img.shields.io/badge/license-GPL--3.0-blue.svg)
-![Platform](https://img.shields.io/badge/platform-Linux%20%7C%20macOS-brightgreen%20%7C%20Windows-brightgreen)
+![Platform](https://img.shields.io/badge/platform-Linux%20%7C%20macOS%20%7C%20Windows-brightgreen)
 ![Qt](https://img.shields.io/badge/Qt-6.9.1-blue)
 
 **Open-source MySQL and MariaDB client focused on speed**
