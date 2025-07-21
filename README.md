@@ -1,189 +1,207 @@
 # SequelFast
 
+![License](https://img.shields.io/badge/license-GPL--3.0-blue.svg)
+![Platform](https://img.shields.io/badge/platform-Linux%20%7C%20macOS-brightgreen)
+![Qt](https://img.shields.io/badge/Qt-6.9.1-blue)
+
+**Open-source MySQL and MariaDB client focused on speed**
+
 ![Screenshot of light theme](assets/shot1.png)
 
 ![Screenshot of dark theme](assets/shot2.png)
 
-OpenSource MySQL and MariaDB Client focused on speed
+---
 
-First release version.
+## 🚀 Current Features
 
-What is working now:
+<details>
+<summary><strong>🖥️ Workspace</strong></summary>
 
-## Workspace
+- Light and dark themes
+- Support for tabs, tiled, or cascaded child windows
 
-- Dark and light themes
-- Tabs, tile or cascade child windows
+</details>
 
-## Connections
+<details>
+<summary><strong>🔌 Connections</strong></summary>
 
-- Add, edit, clone and delete
-- Connect over pipe, TCP/IP and SSH
-- Select color (for list and for SQL Editor)
-- Filter
+- Add, edit, clone, and delete connections
+- Connect via named pipe, TCP/IP, or SSH
+- Assign custom colors (for connection list and SQL Editor)
+- Filter connections easily
 
-## Users
+</details>
 
-- Add, edit and delete
-- Auto FLUSH PRIVILEGES
-- Easy way to check permissions
+<details>
+<summary><strong>👤 Users</strong></summary>
 
-## Statistics
+- Add, edit, and delete users
+- Automatically runs `FLUSH PRIVILEGES`
+- Easy permission inspection and management
 
-- Show charset, collation, encryption, size (mb) and tables count
-- Show environment variables 
+</details>
 
-## Schemes
+<details>
+<summary><strong>📊 Statistics</strong></summary>
 
-- Open, add (create), delete (drop)
-- Statistics
-- Filter
-- Save filter favorite
+- View charset, collation, encryption, size (MB), and table count
+- Display environment variables
 
-## Tables
+</details>
 
-- Open, add (create), edit (table format), delete (drop)
-- Filter
-- Save filter favorite
+<details>
+<summary><strong>📁 Schemas</strong></summary>
 
-## Table editor
+- Open, create, and drop schemas
+- View schema statistics
+- Apply filters
+- Save favorite filters
 
-- Add, edit and delete fields
-- Log
+</details>
 
-## SQL editor
+<details>
+<summary><strong>📂 Tables</strong></summary>
 
-- Syntax highlight
-- Format
-- Save default query for open table
-- Font size option (increase and decrease)
-- Save actual font size (optionally)
-- Timer: auto execute queries for many times at specific intervals 
+- Open, create, edit (table format), and drop tables
+- Apply filters
+- Save favorite filters
 
-## Data editor
+</details>
 
-- Edit directly on table (if query doesn't have JOINs and have Id field)
-- Calendar for date and date time fields
-- Large text editor for large varchar or text fields
-- Masked number for numeric fields
-- Copy only selected data (columns or rows) to clipboard as CSV, Insert, Update
+<details>
+<summary><strong>🛠️ Table Editor</strong></summary>
 
+- Add, edit, and delete fields
+- View change log
 
-## Technology
+</details>
 
-* Qt 6.9.1
-* C++ 17
-* Iconsax GNU GPL 3.0
+<details>
+<summary><strong>📝 SQL Editor</strong></summary>
 
-By Lusaxweb
-https://www.freeicons.org/icons/iconsax
-https://iconsax.io/?ref=freeicons.org
+- Syntax highlighting
+- Query formatting
+- Save default queries per table
+- Adjustable font size (with option to persist size)
+- Timer feature to auto-execute queries at specific intervals
 
-## Install (Deploy)
+</details>
 
-### macOS Intel
+<details>
+<summary><strong>✏️ Data Editor</strong></summary>
 
-- Download SequelFast.dmg on "release"
-- Open SequelFast.dmg and move SequelFast.app to folder /Applications
+- Inline editing for query results (when query has `Id` field and no `JOIN`s)
+- Calendar widget for `DATE` and `DATETIME` fields
+- Expanded text editor for large text fields
+- Input masks for numeric fields
+- Copy selected data (columns or rows) to clipboard in CSV, `INSERT`, or `UPDATE` format
 
+</details>
 
-### Linux 
+---
 
-Unzip SequelFast.zip and run 
+## 🧱 Technology Stack
 
+- **Qt 6.9.1**
+- **C++17**
+- **Iconsax** (GNU GPL 3.0 License)
+
+Icons by Lusaxweb:  
+🔗 [Free Icons](https://www.freeicons.org/icons/iconsax)  
+🔗 [Iconsax](https://iconsax.io/?ref=freeicons.org)
+
+---
+
+## 📦 Installation (Deployment)
+
+### macOS (Intel)
+1. Download `SequelFast.dmg` from the [Releases](https://github.com/seu-usuario/sequelfast/releases)
+2. Open the `.dmg` and move `SequelFast.app` to `/Applications`
+
+### Linux
+Unzip the package and run the install script:
 ```bash
 ./install_linux.sh
 ```
 
-## Developing
+### Running the App
+```bash
+SequelFast
+```
+Or double-click the `.app`/binary file depending on your platform.
 
-### Qt
+---
 
-Download and run Qt installer 
+## 👨‍💻 Development Setup
 
-https://www.qt.io/download-open-source
+### Qt Installation
+Download the Qt installer:
+👉 [https://www.qt.io/download-open-source](https://www.qt.io/download-open-source)
 
-Beware to select right software:
+Be sure to include the following during installation:
 
-*Qt Design Studio*
-
+#### Qt Design Studio
 - Qt Design Studio 4.7.2 (or newer)
 
-*Extensions*
-
+#### Extensions
 - Qt PDF
 - Qt WebEngine
 
-*Qt*
-
+#### Qt Components
 - Qt 6.9.1
-  - Desktop (at least)
+  - Desktop components
   - Sources
   - Additional Libraries
-  - Build Tools
+  - Build Tools:
     - Qt Installer Framework 4.10
     - CMake 3.30.5
     - Ninja 1.12.1
-    - OpenSSL 3.0.16 Toolkit
+    - OpenSSL Toolkit 3.0.16
 
-*Qt Creator*
-
+#### Qt Creator
 - Qt Creator 17.0.0
 
+---
 
-## Requirements
+## ✅ Requirements
 
-### MySQL/MariaDB Drivers 
+### MySQL / MariaDB Drivers
+> It is recommended to use **MariaDB** drivers for better compatibility.
 
-Use *mariadb* drivers for better compatibility.
-
-#### Linux
-
+### Linux
 ```bash
-sudo apt -y install mariadb-server cmake build-essential libxcb-cursor0 libxcb-cursor-dev
-patchelf mariadb cmake ninja
+sudo apt -y install mariadb-server cmake build-essential libxcb-cursor0 libxcb-cursor-dev patchelf mariadb cmake ninja
 
 mkdir build-sqldrivers
 cd build-sqldrivers
 
-~/Qt/6.9.1/gcc_64/bin/qt-cmake -G Ninja ~/Qt/6.9.1/Src/qtbase/src/plugins/sqldrivers -DCMAKE_INSTALL_PREFIX=~/Qt/6.9.1/gcc_64/ 
+~/Qt/6.9.1/gcc_64/bin/qt-cmake -G Ninja ~/Qt/6.9.1/Src/qtbase/src/plugins/sqldrivers -DCMAKE_INSTALL_PREFIX=~/Qt/6.9.1/gcc_64/
 cmake --build . --parallel
 cmake --install .
-cp plugins/sqldrivers/libqsqlmysql.dylib ~/Qt/6.9.1/macos/plugins/sqldrivers/
+cp plugins/sqldrivers/libqsqlmysql.so ~/Qt/6.9.1/gcc_64/plugins/sqldrivers/
 ```
 
-#### macOS
+### macOS
 
-Check for Command Line Build Tools and install MariaDB drivers:
-
+**Install Command Line Tools and MariaDB**
 ```bash
 xcode-select --install
+brew install mariadb cmake ninja
 ```
 
-Environment setup:
-
-Add to ~/.zshrc:
-
+**Environment Setup**
+Add this to your `~/.zshrc`:
 ```bash
 export QTDIR=~/Qt/6.9.1/macos
-export PATH=$PATH:$QTDIR/bin
+export PATH="$PATH:$QTDIR/bin"
 ```
 
 #### macOS Intel
-
 ```bash
-brew install mariadb cmake ninja
 mkdir build-sqldrivers
 cd build-sqldrivers
 
-~/Qt/6.9.1/macos/bin/qt-cmake -G Ninja \
-~/Qt/6.9.1/Src/qtbase/src/plugins/sqldrivers \
--DCMAKE_INSTALL_PREFIX=~/Qt/6.9.1/macos \
--DFEATURE_sql_mysql=ON \
--DMySQL_ROOT="$(brew --prefix mariadb)" \
--DMySQL_INCLUDE_DIR=$(brew --prefix mariadb)/include/mysql \
--DMySQL_LIBRARY=$(brew --prefix mariadb)/lib/libmysqlclient.dylib \
--DCMAKE_BUILD_TYPE=Debug
+~/Qt/6.9.1/macos/bin/qt-cmake -G Ninja ~/Qt/6.9.1/Src/qtbase/src/plugins/sqldrivers -DCMAKE_INSTALL_PREFIX=~/Qt/6.9.1/macos -DFEATURE_sql_mysql=ON -DMySQL_ROOT="$(brew --prefix mariadb)" -DMySQL_INCLUDE_DIR="$(brew --prefix mariadb)/include/mysql" -DMySQL_LIBRARY="$(brew --prefix mariadb)/lib/libmysqlclient.dylib" -DCMAKE_BUILD_TYPE=Debug
 
 cmake --build . --parallel
 cmake --install .
@@ -191,28 +209,19 @@ cp plugins/sqldrivers/libqsqlmysql.dylib ~/Qt/6.9.1/macos/plugins/sqldrivers/
 ```
 
 #### macOS Silicon
-
 ```bash
-brew install mariadb cmake ninja
 mkdir build-sqldrivers
 cd build-sqldrivers
 
-~/Qt/6.9.1/macos/bin/qt-cmake -G Ninja \
-~/Qt/6.9.1/Src/qtbase/src/plugins/sqldrivers \
--DCMAKE_INSTALL_PREFIX=~/Qt/6.9.1/macos \
--DCMAKE_OSX_ARCHITECTURES=arm64 \
--DCMAKE_BUILD_TYPE=Debug \
--DCMAKE_CXX_STANDARD=17 \
--DCMAKE_CXX_EXTENSIONS=OFF \
--DFEATURE_sql_mysql=ON \
--DMySQL_ROOT="$(brew --prefix mariadb)" \
--DMySQL_INCLUDE_DIR="$(brew --prefix mariadb)/include/mysql" \
--DMySQL_LIBRARY="$(brew --prefix mariadb)/lib/libmysqlclient.dylib"
+~/Qt/6.9.1/macos/bin/qt-cmake -G Ninja ~/Qt/6.9.1/Src/qtbase/src/plugins/sqldrivers -DCMAKE_INSTALL_PREFIX=~/Qt/6.9.1/macos -DCMAKE_OSX_ARCHITECTURES=arm64 -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_STANDARD=17 -DCMAKE_CXX_EXTENSIONS=OFF -DFEATURE_sql_mysql=ON -DMySQL_ROOT="$(brew --prefix mariadb)" -DMySQL_INCLUDE_DIR="$(brew --prefix mariadb)/include/mysql" -DMySQL_LIBRARY="$(brew --prefix mariadb)/lib/libmysqlclient.dylib"
 
 cmake --build . --parallel
 cmake --install .
 cp plugins/sqldrivers/libqsqlmysql.dylib ~/Qt/6.9.1/macos/plugins/sqldrivers/
 ```
 
+---
 
+## 🤝 Contributing
 
+Contributions are welcome! If you’d like to fix a bug, add a feature, or improve the docs, feel free to open an issue or pull request.
