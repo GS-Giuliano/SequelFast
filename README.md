@@ -1,4 +1,9 @@
 # SequelFast
+
+![Screenshot of light theme](assets/shot1.png)
+
+![Screenshot of dark theme](assets/shot2.png)
+
 OpenSource MySQL and MariaDB Client focused on speed
 
 First release version.
