@@ -214,7 +214,10 @@ mkdir build-sqldrivers
 cd build-sqldrivers
 
 ~/Qt/6.9.1/macos/bin/qt-cmake -G Ninja ~/Qt/6.9.1/Src/qtbase/src/plugins/sqldrivers -DCMAKE_INSTALL_PREFIX=~/Qt/6.9.1/macos -DCMAKE_OSX_ARCHITECTURES=arm64 -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_STANDARD=17 -DCMAKE_CXX_EXTENSIONS=OFF -DFEATURE_sql_mysql=ON -DMySQL_ROOT="$(brew --prefix mariadb)" -DMySQL_INCLUDE_DIR="$(brew --prefix mariadb)/include/mysql" -DMySQL_LIBRARY="$(brew --prefix mariadb)/lib/libmysqlclient.dylib"
+```
+Before build, you *must replace* "-arch x86_64" mentions on build.ninja file to "-arch arm64"!
 
+```bash
 cmake --build . --parallel
 cmake --install .
 cp plugins/sqldrivers/libqsqlmysql.dylib ~/Qt/6.9.1/macos/plugins/sqldrivers/
