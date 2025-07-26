@@ -14,6 +14,7 @@ SOURCES += \
     src/batch.cpp \
 src/connection.cpp \
 src/functions.cpp \
+    src/macroinputdialog.cpp \
 src/main.cpp \
 src/mainwindow.cpp \
 src/sql.cpp \
@@ -27,6 +28,7 @@ HEADERS += \
     src/batch.h \
 src/connection.h \
 src/functions.h \
+    src/macroinputdialog.h \
 src/mainwindow.h \
 src/sql.h \
 src/sqlhighlighter.h \

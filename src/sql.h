@@ -7,6 +7,7 @@
 #include <QSqlDatabase>
 #include <QSqlRecord>
 #include <QTableView>
+#include <macroinputdialog.h>
 
 namespace Ui {
 class Sql;
@@ -23,6 +24,8 @@ public:
     void setInterfaceSize(int increase);
     void refresh_structure();
     void formatSqlText();
+    QVector<MacroField> extractFields(const QString &queryStr);
+    QString processQueryWithMacros(QString queryStr, QWidget *parent);
 
 private slots:
     void statusMessage(QString msg);
@@ -76,6 +79,7 @@ private:
     int rowsAffected = 0;
 
     QString tableName = "", tableAlias = "";
+    QString queryTimer = "";
     QStringList selectFields;
     QStringList whereFields;
     QStringList orderByFields;

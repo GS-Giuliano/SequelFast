@@ -20,6 +20,8 @@
 #include <QAction>
 #include <QClipboard>
 #include <QMessageBox>
+#include <QFormLayout>
+#include <QDoubleSpinBox>
 
 #include <QSqlDatabase>
 #include <QSqlError>
@@ -37,6 +39,7 @@
 #include <QJsonValue>
 
 #include <functions.h>
+#include <macroinputdialog.h>
 
 extern QJsonArray connections;
 extern QSqlDatabase dbPreferences;
@@ -47,6 +50,7 @@ extern int pref_sql_limit;
 extern int pref_table_row_height;
 extern int pref_table_font_size;
 extern int pref_sql_font_size;
+
 
 class CustomDelegate : public QStyledItemDelegate {
 public:
@@ -605,20 +609,29 @@ void Sql::on_actionRun_triggered()
     QApplication::processEvents();
 
     // executa a query
-    // QSqlQueryModel *model = new QSqlQueryModel(this);
+    // QSqlQueryModel *model = new QSqlQueryModel(this);        
     QString queryStr = ui->textQuery->textCursor().selectedText();
+    if (queryTimer != "")
+    {
+        queryStr = queryTimer;
+    }
+
     if (queryStr == "")
     {
         // queryStr = ui->textQuery->toPlainText();
 
-        QTextCursor cursor = ui->textQuery->textCursor();  // textEdit é um ponteiro para QTextEdit
+        QTextCursor cursor = ui->textQuery->textCursor();
         int cursorPos = cursor.position();
         queryStr = extractCurrentQuery(ui->textQuery->toPlainText(), cursorPos);
-        // qDebug() << "Query sob o cursor:" << queryStr;
     }
     if (queryStr != "")
     {
         queryStr = queryStr.trimmed();
+        if (queryTimer == "")
+        {
+            queryStr = processQueryWithMacros(queryStr, this);
+        }
+
         editEnabled = false;
 
         QSqlDatabase db = QSqlDatabase::database("mysql_connection_" + sql_host);
@@ -772,6 +785,7 @@ void Sql::on_timer_tick()
 
         if (remaining <= 1)
         {
+            queryTimer = "";
             timer->stop();
             editTimes->setText("0");  // opcional, para refletir que chegou a zero
             edit->setEnabled(true);
@@ -779,6 +793,13 @@ void Sql::on_timer_tick()
         }
         else
         {
+            if (queryTimer == "")
+            {
+                queryTimer = ui->textQuery->toPlainText();
+                queryTimer = queryTimer.trimmed();
+                queryTimer = processQueryWithMacros(queryTimer, this); // this = ponteiro para QWidget
+            }
+
             on_actionRun_triggered();
             if (ui->textQuery->styleSheet() == "QTextEdit {background-color: " + getRgbFromColorName(sql_color) + "}")
             {
@@ -1115,5 +1136,42 @@ void Sql::show_context_menu(const QPoint &pos)
     else if (selectedAction == tableCRUDLaravel) {
         on_tableCRUDLaravel_triggered();
     }
+}
+
+QVector<MacroField> Sql::extractFields(const QString &queryStr) {
+    QVector<MacroField> fields;
+    QRegularExpression regex(R"(:([A-Za-z0-9_çÇáàâãéèêíïóôõöúçñÁÀÂÃÉÈÊÍÏÓÔÕÖÚÑ]+)(?:@([a-zA-Z]+))?)");
+    auto it = regex.globalMatch(queryStr);
+    while (it.hasNext()) {
+        auto match = it.next();
+        fields.append({
+            match.captured(1),
+            match.captured(2).isEmpty() ? "string" : match.captured(2).toLower(),
+            match.captured(0)
+        });
+    }
+    return fields;
+}
+
+
+QString Sql::processQueryWithMacros(QString queryStr, QWidget *parent) {
+    auto fields = extractFields(queryStr);
+
+    if (fields.isEmpty())
+        return queryStr;
+
+    MacroInputDialog dialog(fields, parent);
+    if (dialog.exec() == QDialog::Accepted) {
+        QMap<QString, QVariant> values = dialog.getValues();
+        for (const auto &field : fields) {
+            QString value = values[field.name].toString();
+            // Escapa aspas simples dentro do valor para evitar erro de SQL
+            value.replace('\'', "''");
+            queryStr.replace(field.fullMatch, QString("'%1'").arg(value));
+        }
+    }
+
+    qDebug() << queryStr;
+    return queryStr;
 }
 

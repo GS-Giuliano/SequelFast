@@ -2,7 +2,7 @@
 # Caminho para o diretório de plugins SQL dentro do bundle
 PROJECT_NAME=SequelFast
 QTBINPATH=~/Qt/6.9.1/macos/bin
-INSTAPATH=installer_macos_intel
+INSTAPATH=installer_macos_silicon
 #make clean
 mkdir $INSTAPATH
 cd $INSTAPATH
