@@ -18,7 +18,7 @@ class Sql : public QMainWindow
     Q_OBJECT
 
 public:
-    explicit Sql(const QString &host, const QString &schema, const QString &table, const QString &color, QWidget *parent = nullptr);
+    explicit Sql(const QString &host, const QString &schema, const QString &table, const QString &color, const QString &favName, const QString &favValue, QWidget *parent = nullptr);
     ~Sql();
     void query2TableView(QTableView *tableView, const QString &queryStr, const QString &comando);
     void setInterfaceSize(int increase);
@@ -46,6 +46,7 @@ private slots:
 
     bool on_tableData_edit_trigger(QString &id, QString &fieldName, QString &newValue);
 
+    void on_tableAppend_triggered();
     void on_tableClone_triggered();
     void on_tableDelete_triggered();
     void on_tableCopyInsert_triggered();
@@ -57,6 +58,8 @@ private slots:
     void show_context_menu(const QPoint &pos);
 
 
+
+    void on_actionFavorites_triggered();
 
 private:
     Ui::Sql *ui;

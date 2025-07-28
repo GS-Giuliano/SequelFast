@@ -112,5 +112,11 @@
         <file>resources/icon.png</file>
         <file>resources/moon.svg</file>
         <file>resources/sun.svg</file>
+        <file>resources/heart.svg</file>
+        <file>resources/heart 2.svg</file>
+    </qresource>
+    <qresource prefix="/">
+        <file>resources/heart.svg</file>
+        <file>resources/heart 2.svg</file>
     </qresource>
 </RCC>

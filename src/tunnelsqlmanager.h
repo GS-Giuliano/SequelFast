@@ -16,7 +16,7 @@ public:
     explicit TunnelSqlManager(QObject *parent = nullptr);
     ~TunnelSqlManager();
 
-    bool conectar(const QString &id,
+    bool conectar(const QString &id, int &porta,
                         QString usuarioSsh,
                         QString servidorSsh,
                         QString portaSsh,

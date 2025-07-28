@@ -17,6 +17,7 @@
 #include <QStandardPaths>
 #include <QDir>
 #include <QMessageBox>
+#include <tunnelsqlmanager.h>
 
 QJsonArray connections;
 
@@ -66,6 +67,7 @@ QString actual_schema = "";
 QString actual_table = "";
 QString actual_color = "";
 
+int sshPort = 3307;
 int pref_sql_limit = 100;
 int pref_table_row_height = 40;
 int pref_table_font_size = 10;
@@ -174,7 +176,6 @@ bool openPreferences()
                 }
             }
         }
-
     }
 
     if (!query.exec("SELECT * FROM conns")) {
@@ -519,3 +520,42 @@ QString extractCurrentQuery(const QString &text, int cursorPos)
     return query;
 }
 
+bool connectMySQL(const QString selectedHost, QObject *parent)
+{
+    QJsonObject item = getConnection(selectedHost);
+    dbMysql = QSqlDatabase::addDatabase("QMYSQL", "mysql_connection_"+selectedHost);
+
+    if (item["ssh_host"] != "")
+    {
+        TunnelSqlManager *manager = new TunnelSqlManager(parent);
+
+        bool ok = manager->conectar(
+            item["name"].toVariant().toString(),
+            sshPort,
+            item["ssh_user"].toVariant().toString(),
+            item["ssh_host"].toVariant().toString(),
+            item["ssh_port"].toVariant().toString(),
+            item["ssh_pass"].toVariant().toString(),
+            item["ssh_keyfile"].toVariant().toString(),
+            item["host"].toVariant().toString(),
+            item["port"].toVariant().toString(),
+            item["user"].toVariant().toString(),
+            item["pass"].toVariant().toString(),
+            item["schema"].toVariant().toString());
+        if (!ok) {
+            return(false);
+        }
+    } else {
+        dbMysql.setHostName(item["host"].toVariant().toString());
+        dbMysql.setDatabaseName(item["schema"].toVariant().toString());
+        dbMysql.setPort(item["port"].toVariant().toInt());
+        dbMysql.setUserName(item["user"].toVariant().toString());
+        dbMysql.setPassword(item["pass"].toVariant().toString());
+    }
+    if (!dbMysql.open()) {
+        return(true);
+        qDebug() << dbMysql.lastError();
+        return(false);
+    }
+    return(false);
+}

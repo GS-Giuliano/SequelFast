@@ -59,6 +59,9 @@ extern QJsonArray colorThemes;
 
 int newConnectionCount = 0;
 
+QStringList favName;
+QStringList favValue;
+
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -94,6 +97,11 @@ MainWindow::MainWindow(QWidget *parent)
         connect(ui->listViewTables, &QListView::customContextMenuRequested,
                 this, &MainWindow::mostrarMenuContextoTables);
 
+        ui->listViewFavorites->setContextMenuPolicy(Qt::CustomContextMenu);
+        connect(ui->listViewFavorites, &QListView::customContextMenuRequested,
+                this, &MainWindow::mostrarMenuContextoFavorites);
+
+
         refresh_connections();
         getPreferences();
 
@@ -101,6 +109,7 @@ MainWindow::MainWindow(QWidget *parent)
         customAlert("Error","Can't create preferences file! Check permissions and try again...");
         QTimer::singleShot(0, qApp, &QApplication::quit);
     }
+    refresh_favorites();
     ui->statusbar->showMessage("Version: " + QString(APP_VERSION) + " - Build:" + QString(APP_BUILD_DATE) + " " + QString(APP_BUILD_TIME));
 
 }
@@ -276,44 +285,48 @@ bool MainWindow::host_connect(QString selectedHost)
 
     QApplication::setOverrideCursor(Qt::WaitCursor);
     QApplication::processEvents();
-    dbMysql = QSqlDatabase::addDatabase("QMYSQL", "mysql_connection_"+selectedHost);
 
-    if (item["ssh_host"] != "")
-    {
-        // QProgressDialog progress("Conectando...", "Cancelar", 0, 0, this);
-        // progress.setWindowModality(Qt::ApplicationModal);
-        // progress.setCancelButton(nullptr);
-        // progress.show();
 
-        TunnelSqlManager *manager = new TunnelSqlManager(this);
+    connectMySQL(selectedHost, this);
 
-        bool ok = manager->conectar(
-            item["name"].toVariant().toString(),
-            item["ssh_user"].toVariant().toString(),
-            item["ssh_host"].toVariant().toString(),
-            item["ssh_port"].toVariant().toString(),
-            item["ssh_pass"].toVariant().toString(),
-            item["ssh_keyfile"].toVariant().toString(),
-            item["host"].toVariant().toString(),
-            item["port"].toVariant().toString(),
-            item["user"].toVariant().toString(),
-            item["pass"].toVariant().toString(),
-            item["schema"].toVariant().toString());
-        // progress.close();
-        if (!ok) {
-            QApplication::restoreOverrideCursor();
-            QApplication::processEvents();
-            return(false);
-            // dbMysql = manager->obterConexao(item["name"].toVariant().toString());
-            // manager->obterConexao(item["name"].toVariant().toString());
-        }
-    } else {
-        dbMysql.setHostName(item["host"].toVariant().toString());
-        dbMysql.setDatabaseName(item["schema"].toVariant().toString());
-        dbMysql.setPort(item["port"].toVariant().toInt());
-        dbMysql.setUserName(item["user"].toVariant().toString());
-        dbMysql.setPassword(item["pass"].toVariant().toString());
-    }
+    // dbMysql = QSqlDatabase::addDatabase("QMYSQL", "mysql_connection_"+selectedHost);
+
+    // if (item["ssh_host"] != "")
+    // {
+    //     // QProgressDialog progress("Conectando...", "Cancelar", 0, 0, this);
+    //     // progress.setWindowModality(Qt::ApplicationModal);
+    //     // progress.setCancelButton(nullptr);
+    //     // progress.show();
+
+    //     TunnelSqlManager *manager = new TunnelSqlManager(this);
+
+    //     bool ok = manager->conectar(
+    //         item["name"].toVariant().toString(),
+    //         item["ssh_user"].toVariant().toString(),
+    //         item["ssh_host"].toVariant().toString(),
+    //         item["ssh_port"].toVariant().toString(),
+    //         item["ssh_pass"].toVariant().toString(),
+    //         item["ssh_keyfile"].toVariant().toString(),
+    //         item["host"].toVariant().toString(),
+    //         item["port"].toVariant().toString(),
+    //         item["user"].toVariant().toString(),
+    //         item["pass"].toVariant().toString(),
+    //         item["schema"].toVariant().toString());
+    //     // progress.close();
+    //     if (!ok) {
+    //         QApplication::restoreOverrideCursor();
+    //         QApplication::processEvents();
+    //         return(false);
+    //         // dbMysql = manager->obterConexao(item["name"].toVariant().toString());
+    //         // manager->obterConexao(item["name"].toVariant().toString());
+    //     }
+    // } else {
+    //     dbMysql.setHostName(item["host"].toVariant().toString());
+    //     dbMysql.setDatabaseName(item["schema"].toVariant().toString());
+    //     dbMysql.setPort(item["port"].toVariant().toInt());
+    //     dbMysql.setUserName(item["user"].toVariant().toString());
+    //     dbMysql.setPassword(item["pass"].toVariant().toString());
+    // }
     QApplication::restoreOverrideCursor();
     QApplication::processEvents();
     if (!dbMysql.open()) {
@@ -330,7 +343,7 @@ bool MainWindow::host_connect(QString selectedHost)
 }
 
 void MainWindow::refresh_connections() {
-    ui->toolBoxLeft->setCurrentIndex(2);
+    ui->toolBoxLeft->setCurrentIndex(3);
     ui->lineEditConns->setText("");
 
     QStandardItemModel *modelo = new QStandardItemModel(this);
@@ -477,10 +490,89 @@ void MainWindow::refresh_schema(QString selectedSchema)
 
         if (query.exec("USE "+selectedSchema)) {
             refresh_tables(actual_host);
-            ui->toolBoxLeft->setCurrentIndex(0);
+            ui->toolBoxLeft->setCurrentIndex(1);
             ui->buttonFilterTables->setChecked(false);
         }
     }
+}
+
+void MainWindow::refresh_favorites()
+{
+    QString name = "";
+    QString value = "";
+    QSqlQuery query(QSqlDatabase::database("pref_connection"));
+
+    query.prepare("SELECT name, value FROM prefs WHERE name LIKE :name");
+    query.bindValue(":name", "fav:%");
+
+    if (!query.exec()) {
+        qCritical() << "Erro ao consultar dados:" << query.lastError().text();
+    }
+
+
+    ui->lineEditFavorites->setText("");
+
+    QStandardItemModel *modelo = new QStandardItemModel(this);
+    QIcon iconeTabela;
+    if (ui->buttonEditFavorites->isChecked())
+    {
+        iconeTabela = QIcon(":/icons/resources/heart 2.svg");
+    } else {
+        iconeTabela = QIcon(":/icons/resources/heart.svg");
+    }
+
+    int sel = -1;
+    int cnt = 0;
+
+    favName.clear();
+    favValue.clear();
+
+    while (query.next()) {
+
+        name = query.value(0).toString();
+        value = query.value(1).toString();
+        // fav:host:schema:table:name
+
+        favName.append(name);
+        favValue.append(value);
+
+        QStringList favList = name.split(":");
+        QStandardItem *linha = new QStandardItem(iconeTabela, favList[5]);
+
+        QString corDeFundo = favList[4];
+
+        // Define a cor de fundo com base no texto
+        linha->setBackground(QColor(getRgbFromColorName(corDeFundo)));
+
+        modelo->appendRow(linha);
+
+        if (false) {
+            sel = cnt;
+        }
+        cnt++;
+    }
+    qDebug() << favName;
+    QSortFilterProxyModel *proxy = new QSortFilterProxyModel(this);
+    proxy->setSourceModel(modelo);
+    proxy->setFilterCaseSensitivity(Qt::CaseInsensitive);
+
+    ui->listViewFavorites->setModel(proxy);
+
+    connect(ui->lineEditFavorites, &QLineEdit::textChanged, this, [=](const QString &texto) {
+        QString pattern = QString("(%1)").arg(texto);
+        QRegularExpression re(pattern, QRegularExpression::CaseInsensitiveOption);
+        proxy->setFilterRegularExpression(re);
+    });
+
+    if (sel > -1) {
+        QModelIndex index = ui->listViewFavorites->model()->index(sel, 0);
+        ui->listViewFavorites->setCurrentIndex(index);
+    }
+
+    ui->statusbar->showMessage("Favorites updated");
+
+    qDebug() << name << value;
+
 }
 
 void MainWindow::refresh_tables(QString selectedHost) {
@@ -560,7 +652,6 @@ void MainWindow::on_listViewConns_doubleClicked(const QModelIndex &index)
 }
 
 
-
 void MainWindow::on_listViewSchemas_clicked(const QModelIndex &index)
 {
     actual_schema = index.data(Qt::DisplayRole).toString();
@@ -631,26 +722,63 @@ void MainWindow::on_listViewTables_doubleClicked(const QModelIndex &index)
 
 
 
-void MainWindow::on_buttonFilterSchemas_clicked()
+void MainWindow::on_listViewFavorites_doubleClicked(const QModelIndex &index)
 {
-    QString pref_name = "fav_"+actual_host;
+    QString a_host = "";
+    QString a_schema = "";
+    QString a_table = "";
+    QString a_color = "";
 
-    if (ui->buttonFilterSchemas->isChecked())
+    QString name = "";
+    QString value = "";
+
+    qDebug() << index.row();
+
+    if (index.row() > -1)
     {
-        if (ui->lineEditSchemas->text() == "")
-        {
-            QString value = getStringPreference(pref_name);
-            if (value != "")
-            {
-                ui->lineEditSchemas->setText(value);
+        QString fav = favName[index.row()];
+        qDebug() <<  "fav" << fav;
+
+        QStringList favList = fav.split(":");
+
+        QMdiSubWindow *prev = ui->mdiArea->activeSubWindow();
+        bool maximize = true;
+
+        if (prev) {
+            if (!prev->isMaximized()) {
+                maximize = false;
             }
-        } else {
-            setStringPreference(pref_name, ui->lineEditSchemas->text());
         }
-    } else {
-        ui->lineEditSchemas->setText("");
+
+        a_host = favList[1];
+        a_schema = favList[2];
+        a_table = favList[3];
+        a_color = favList[4];
+
+        qDebug() <<  "a_host" << a_host;
+        qDebug() <<  "a_schema" << a_schema;
+        qDebug() <<  "a_table" << a_table;
+        qDebug() <<  "a_color" << a_color;
+
+        Sql *form = new Sql(a_host, a_schema, a_table, a_color, favName[index.row()], favValue[index.row()]);
+
+        QMdiSubWindow *sub = new QMdiSubWindow;
+        sub->setWidget(form);
+        sub->setAttribute(Qt::WA_DeleteOnClose);  // subjanela será destruída ao fechar
+        ui->mdiArea->addSubWindow(sub);
+        sub->resize(500, 360);
+        if (maximize)
+            sub->showMaximized();
+        else
+            sub->show();
     }
 }
+
+void MainWindow::on_listViewFavorites_clicked(const QModelIndex &index)
+{
+
+}
+
 
 
 void MainWindow::on_buttonEditConns_clicked()
@@ -670,6 +798,11 @@ void MainWindow::on_buttonEditSchemas_clicked()
     refresh_schemas(actual_host, false);
 }
 
+void MainWindow::on_buttonEditFavorites_clicked()
+{
+    refresh_favorites();
+}
+
 
 void MainWindow::on_buttonUpdateSchemas_clicked()
 {
@@ -681,6 +814,12 @@ void MainWindow::on_buttonUpdateTables_clicked()
 {
     refresh_tables(actual_host);
 }
+
+void MainWindow::on_buttonUpdateFavorites_clicked()
+{
+    refresh_favorites();
+}
+
 
 void MainWindow::on_buttonNewConns_clicked()
 {
@@ -706,9 +845,50 @@ void MainWindow::on_buttonFilterTables_clicked()
     } else {
         ui->lineEditTables->setText("");
     }
-
 }
 
+
+void MainWindow::on_buttonFilterSchemas_clicked()
+{
+    QString pref_name = "fav_"+actual_host;
+
+    if (ui->buttonFilterSchemas->isChecked())
+    {
+        if (ui->lineEditSchemas->text() == "")
+        {
+            QString value = getStringPreference(pref_name);
+            if (value != "")
+            {
+                ui->lineEditSchemas->setText(value);
+            }
+        } else {
+            setStringPreference(pref_name, ui->lineEditSchemas->text());
+        }
+    } else {
+        ui->lineEditSchemas->setText("");
+    }
+}
+
+void MainWindow::on_buttonFilterFavorites_clicked()
+{
+    QString pref_name = "fav_fav";
+
+    if (ui->buttonFilterFavorites->isChecked())
+    {
+        if (ui->lineEditFavorites->text() == "")
+        {
+            QString value = getStringPreference(pref_name);
+            if (value != "")
+            {
+                ui->lineEditFavorites->setText(value);
+            }
+        } else {
+            setStringPreference(pref_name, ui->lineEditFavorites->text());
+        }
+    } else {
+        ui->lineEditFavorites->setText("");
+    }
+}
 
 
 
@@ -793,7 +973,7 @@ void MainWindow::listViewConns_open(const QModelIndex &index)
     {
         ui->buttonFilterSchemas->setChecked(false);
         ui->buttonFilterTables->setChecked(false);
-        ui->toolBoxLeft->setCurrentIndex(1);
+        ui->toolBoxLeft->setCurrentIndex(2);
         QJsonObject item = getConnection(actual_host);
         actual_color = item["color"].toString();
     }
@@ -896,6 +1076,7 @@ void MainWindow::mostrarMenuContextoSchemas(const QPoint &pos)
     QAction *schemaOpen = menu.addAction("Open");
     QAction *schemaCreate = menu.addAction("Create");
     QAction *schemaDrop = menu.addAction("Drop");
+    QAction *schemaRefresh = menu.addAction("Refresh");
     menu.addSeparator();
     QAction *schemaUsers = menu.addAction("Users");
     QAction *schemaStatistics = menu.addAction("Statistics");
@@ -916,6 +1097,9 @@ void MainWindow::mostrarMenuContextoSchemas(const QPoint &pos)
     }
     else if (selectedAction == schemaBatchRun) {
         batch_run();
+    }
+    else if (selectedAction == schemaRefresh) {
+        refresh_schemas(actual_host, false);
     }
     else if (selectedAction == schemaCreate) {
         createDatabaseDialog(this);
@@ -962,57 +1146,6 @@ void MainWindow::mostrarMenuContextoSchemas(const QPoint &pos)
     }
 }
 
-void MainWindow::on_listViewTables_open(const QModelIndex &index)
-{
-    actual_table= index.data(Qt::DisplayRole).toString();
-    QMdiSubWindow *prev = ui->mdiArea->activeSubWindow();
-    bool maximize = true;
-
-    if (prev) {
-        if (!prev->isMaximized()) {
-            maximize = false;
-        }
-    }
-
-    Sql *form = new Sql(actual_host, actual_schema, actual_table, actual_color);
-
-    QMdiSubWindow *sub = new QMdiSubWindow;
-    sub->setWidget(form);
-    sub->setAttribute(Qt::WA_DeleteOnClose);  // subjanela será destruída ao fechar
-    ui->mdiArea->addSubWindow(sub);
-    sub->resize(500, 360);
-    if (maximize)
-        sub->showMaximized();
-    else
-        sub->show();
-
-}
-
-void MainWindow::on_listViewTables_edit(const QModelIndex &index)
-{
-    actual_table= index.data(Qt::DisplayRole).toString();
-    QMdiSubWindow *prev = ui->mdiArea->activeSubWindow();
-    bool maximize = true;
-
-    if (prev) {
-        if (!prev->isMaximized()) {
-            maximize = false;
-        }
-    }
-    Structure *form = new Structure(actual_host, actual_schema, actual_table);
-
-    QMdiSubWindow *sub = new QMdiSubWindow;
-    sub->setWidget(form);
-    sub->setAttribute(Qt::WA_DeleteOnClose);  // subjanela será destruída ao fechar
-
-    ui->mdiArea->addSubWindow(sub);
-    sub->resize(500, 360);
-    if (maximize)
-        sub->showMaximized();
-    else
-        sub->show();
-}
-
 void MainWindow::mostrarMenuContextoTables(const QPoint &pos)
 {
     QModelIndex index = ui->listViewTables->indexAt(pos);
@@ -1024,6 +1157,7 @@ void MainWindow::mostrarMenuContextoTables(const QPoint &pos)
     QAction *tableEdit = menu.addAction("Edit");
     QAction *tableCreate = menu.addAction("Create");
     QAction *tableDrop = menu.addAction("Drop");
+    QAction *tableRefresh = menu.addAction("Refresh");
     menu.addSeparator();
     QAction *tableExportSQL = menu.addAction("Export as SQL");
     QAction *tableExportCSV = menu.addAction("Export as CSV");
@@ -1032,10 +1166,22 @@ void MainWindow::mostrarMenuContextoTables(const QPoint &pos)
     QAction *selectedAction = menu.exec(ui->listViewTables->viewport()->mapToGlobal(pos));
 
     if (selectedAction == tableOpen) {
-        on_listViewTables_open(index); // TODO
+        on_listViewTables_open(index);
+    }
+    else if (selectedAction == tableExportSQL) {
+
+    }
+    else if (selectedAction == tableExportCSV) {
+
+    }
+    else if (selectedAction == tableExportPDF) {
+
+    }
+    else if (selectedAction == tableRefresh) {
+        refresh_tables(actual_host);
     }
     else if (selectedAction == tableEdit) {
-        on_listViewTables_edit(index); // TODO
+        on_listViewTables_edit(index);
     }
     else if (selectedAction == tableCreate) {
         createTableDialog(this);
@@ -1080,6 +1226,129 @@ void MainWindow::mostrarMenuContextoTables(const QPoint &pos)
         }
     }
 
+}
+
+
+void MainWindow::mostrarMenuContextoFavorites(const QPoint &pos)
+{
+    QModelIndex index = ui->listViewFavorites->indexAt(pos);
+    if (!index.isValid())
+        return;
+
+    QMenu menu(this);
+    QAction *favoritesOpen = menu.addAction("Open");
+    QAction *favoritesEdit = menu.addAction("Edit");
+    QAction *favoritesRename = menu.addAction("Rename");
+    QAction *favoritesDelete = menu.addAction("Delete");
+    menu.addSeparator();
+    QAction *favoritesRefresh = menu.addAction("Refresh");
+
+    QAction *selectedAction = menu.exec(ui->listViewFavorites->viewport()->mapToGlobal(pos));
+
+    if (selectedAction == favoritesOpen) {
+
+    }
+    else if (selectedAction == favoritesEdit) {
+
+    }
+    else if (selectedAction == favoritesRename) {
+
+    }
+    else if (selectedAction == favoritesDelete) {
+        QString dbName = index.data(Qt::DisplayRole).toString();
+
+        QMessageBox msgBox;
+        msgBox.setStyleSheet(
+            "QLabel:last {"
+            "   padding-right: 10px;"
+            "   min-height: 30px;"
+            "   min-width: 280px;"
+            "}"
+            "QPushButton {"
+            "    padding: 4px;"
+            "    margin: 20px;"
+            "    min-height: 16px;"
+            "}"
+            );
+        msgBox.setWindowTitle("Confirm Deletion");
+        msgBox.setIcon(QMessageBox::Question);
+        msgBox.setStandardButtons(QMessageBox::Yes | QMessageBox::No);
+        msgBox.setDefaultButton(QMessageBox::No);
+
+        QString message = QString("Are you sure you want to delete favorite\n\"%1\"?").arg(dbName);
+        msgBox.setText(message);
+
+        QMessageBox::StandardButton reply = static_cast<QMessageBox::StandardButton>(msgBox.exec());
+
+        if (reply == QMessageBox::Yes) {
+            QSqlQuery query(QSqlDatabase::database("pref_connection"));
+
+            query.prepare("DELETE FROM prefs WHERE name = :name");
+            query.bindValue(":name", favName[index.row()]);
+
+            if (!query.exec()) {
+                qCritical() << "Erro ao excluir favorito:" << query.lastError().text();
+                return;
+            }
+            refresh_favorites();
+        }
+    }
+    else if (selectedAction == favoritesRefresh) {
+        refresh_favorites();
+    }
+}
+
+
+
+void MainWindow::on_listViewTables_open(const QModelIndex &index)
+{
+    actual_table= index.data(Qt::DisplayRole).toString();
+    QMdiSubWindow *prev = ui->mdiArea->activeSubWindow();
+    bool maximize = true;
+
+    if (prev) {
+        if (!prev->isMaximized()) {
+            maximize = false;
+        }
+    }
+
+    Sql *form = new Sql(actual_host, actual_schema, actual_table, actual_color, "", "");
+
+    QMdiSubWindow *sub = new QMdiSubWindow;
+    sub->setWidget(form);
+    sub->setAttribute(Qt::WA_DeleteOnClose);  // subjanela será destruída ao fechar
+    ui->mdiArea->addSubWindow(sub);
+    sub->resize(500, 360);
+    if (maximize)
+        sub->showMaximized();
+    else
+        sub->show();
+
+}
+
+void MainWindow::on_listViewTables_edit(const QModelIndex &index)
+{
+    actual_table= index.data(Qt::DisplayRole).toString();
+    QMdiSubWindow *prev = ui->mdiArea->activeSubWindow();
+    bool maximize = true;
+
+    if (prev) {
+        if (!prev->isMaximized()) {
+            maximize = false;
+        }
+    }
+    Structure *form = new Structure(actual_host, actual_schema, actual_table);
+
+    QMdiSubWindow *sub = new QMdiSubWindow;
+    sub->setWidget(form);
+    sub->setAttribute(Qt::WA_DeleteOnClose);  // subjanela será destruída ao fechar
+
+    ui->mdiArea->addSubWindow(sub);
+    sub->resize(500, 360);
+    if (maximize)
+        sub->showMaximized();
+    else
+        sub->show();
 }
 
 
@@ -1153,3 +1422,5 @@ void MainWindow::batch_run()
 
 
 }
+
+

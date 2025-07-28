@@ -22,6 +22,8 @@
 #include <QMessageBox>
 #include <QFormLayout>
 #include <QDoubleSpinBox>
+#include <QInputDialog>
+#include <QString>
 
 #include <QSqlDatabase>
 #include <QSqlError>
@@ -177,7 +179,7 @@ private:
 
 
 
-Sql::Sql(const QString &host, const QString &schema, const QString &table, const QString &color, QWidget *parent)
+Sql::Sql(const QString &host, const QString &schema, const QString &table, const QString &color, const QString &favName, const QString &favValue, QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::Sql)
 {
@@ -188,11 +190,49 @@ Sql::Sql(const QString &host, const QString &schema, const QString &table, const
 
     ui->setupUi(this);
 
-    dbMysqlLocal = dbMysql;
+    QString param;
+    QString queryStr;
+    QString databaseName = "";
+
+    if (favValue != "")
+    {
+        QApplication::setOverrideCursor(Qt::WaitCursor);
+        QApplication::processEvents();
+
+        queryStr = favValue;
+
+        QStringList fav = favName.split(":");
+
+        this->setWindowTitle(schema+" • "+table +" • " + fav[5]);
+        connectMySQL(fav[1], this);
+        dbMysqlLocal = dbMysql;
+        QSqlQuery query(dbMysqlLocal);
+        qDebug() << "USE "+fav[2]+";";
+        QString consulta = "USE "+fav[2]+" ";
+        databaseName = fav[2];
+        if (!query.exec( consulta )) {
+
+        }
+        QApplication::restoreOverrideCursor();
+        QApplication::processEvents();
+
+    } else {
+        // Clicou na tabela
+        this->setWindowTitle(schema+" • "+table);
+        dbMysqlLocal = dbMysql;
+        databaseName = sql_schema;
+        param = sql_host + ":" + sql_schema + ":" + sql_table;
+        queryStr = getStringPreference(param);
+    }
+    if (queryStr == "")
+    {
+        queryStr = "SELECT * FROM "+table+" LIMIT " + QString::number(pref_sql_limit)+ ";";
+    }
+
+
 
     setInterfaceSize(0);
 
-    this->setWindowTitle(schema+" • "+table);
     QString style = "QTextEdit {background-color: " + getRgbFromColorName(sql_color) + "}";
     ui->textQuery->setStyleSheet(style);
 
@@ -203,17 +243,12 @@ Sql::Sql(const QString &host, const QString &schema, const QString &table, const
 
     new SqlHighlighter(ui->textQuery->document());
 
-    QString param = sql_host + ":" + sql_schema + ":" + sql_table;
-    QString queryStr = getStringPreference(param);
-    if (queryStr == "")
-    {
-        queryStr = "SELECT * FROM "+table+" LIMIT " + QString::number(pref_sql_limit)+ ";";
-    }
     ui->textQuery->setText(queryStr);
 
     // Espaçador invisível que "empurra" o conteúdo para a esquerda
     QWidget *spacer = new QWidget(this);
     spacer->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
+    QLabel *labelFavName = new QLabel(databaseName, this);
     QLabel *label = new QLabel("Every ", this);
     QLabel *labelSeconds = new QLabel("second(s) ", this);
     QLabel *labelTimes = new QLabel(" time(s)", this);
@@ -248,7 +283,7 @@ Sql::Sql(const QString &host, const QString &schema, const QString &table, const
 
     connect(timer, &QTimer::timeout, this, &Sql::on_timer_tick);
 
-
+    ui->toolBarQuery->addWidget(labelFavName);
     ui->toolBarQuery->addWidget(spacer);
     ui->toolBarQuery->addWidget(label);
     ui->toolBarQuery->addWidget(edit);
@@ -839,6 +874,19 @@ void Sql::on_button_clicked()
 
 // Menu de contexto
 
+void Sql::on_tableAppend_triggered()
+{
+    QString insert = QString("INSERT INTO %1 () VALUES ()")
+                         .arg(sql_table);
+
+    QSqlQuery query(QSqlDatabase::database("mysql_connection_" + sql_host));
+    if (!query.exec(insert)) {
+        qWarning() << "Erro ao adicionar linha:" << query.lastError().text();
+    } else {
+        refresh_structure();
+    }
+}
+
 void Sql::on_tableClone_triggered()
 {
     QModelIndexList selection = ui->tableData->selectionModel()->selectedIndexes();
@@ -1100,6 +1148,7 @@ void Sql::on_tableCRUDLaravel_triggered()
 void Sql::show_context_menu(const QPoint &pos)
 {
     QMenu menu(this);
+    QAction *tableAppend = menu.addAction("Append row");
     QAction *tableClone = menu.addAction("Clone row");
     QAction *tableDelete = menu.addAction("Delete row(s)");
     menu.addSeparator();
@@ -1117,6 +1166,9 @@ void Sql::show_context_menu(const QPoint &pos)
 
     if (selectedAction == tableClone) {
         on_tableClone_triggered();
+    }
+    else if (selectedAction == tableAppend) {
+        on_tableAppend_triggered();
     }
     else if (selectedAction == tableDelete) {
         on_tableDelete_triggered();
@@ -1175,3 +1227,44 @@ QString Sql::processQueryWithMacros(QString queryStr, QWidget *parent) {
     return queryStr;
 }
 
+
+void Sql::on_actionFavorites_triggered()
+{
+    QDialog dialog(this);
+    dialog.setWindowTitle(tr("Add favorite"));
+
+    QVBoxLayout *layout = new QVBoxLayout(&dialog);
+
+    QLabel *label = new QLabel(tr("Name:"), &dialog);
+    layout->addWidget(label);
+
+    QLineEdit *lineEdit = new QLineEdit(&dialog);
+    layout->addWidget(lineEdit);
+
+    lineEdit->setStyleSheet(
+        "QLabel:last {"
+        "   padding-right: 10px;"
+        "   min-height: 30px;"
+        "   min-width: 280px;"
+        "}"
+        "QPushButton {"
+        "    padding: 4px;"
+        "    margin: 20px;"
+        "    min-height: 16px;"
+        "}"
+        );
+
+    QDialogButtonBox *buttons = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, &dialog);
+    layout->addWidget(buttons);
+
+    QObject::connect(buttons, &QDialogButtonBox::accepted, &dialog, &QDialog::accept);
+    QObject::connect(buttons, &QDialogButtonBox::rejected, &dialog, &QDialog::reject);
+
+    if (dialog.exec() == QDialog::Accepted) {
+        QString name = lineEdit->text().trimmed();
+        if (!name.isEmpty()) {
+            QString value = ui->textQuery->toPlainText();
+            setStringPreference("fav:"+sql_host+":"+sql_schema+":"+sql_table+":"+sql_color+":"+name, value);
+        }
+    }
+}

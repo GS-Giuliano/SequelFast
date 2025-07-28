@@ -17,7 +17,7 @@ TunnelSqlManager::~TunnelSqlManager()
     }
 }
 
-bool TunnelSqlManager::conectar(const QString &id,
+bool TunnelSqlManager::conectar(const QString &id, int &porta,
                                      QString usuarioSsh,
                                      QString servidorSsh,
                                      QString portaSsh,
@@ -44,10 +44,11 @@ bool TunnelSqlManager::conectar(const QString &id,
     }
 
     // Criar túnel SSH
-    int portaLocal = 3307 + sshTunnels.size();
+    int portaLocal = porta + sshTunnels.size();
+    porta++;
     if (!sshTunnels.contains(id)) {
 
-        // tunnel: ssh -T -L 3307:localhost:3306 usuario@servidor_ssh
+        // tunnel: ssh -o ConnectTimeout=60 -o ServerAliveInterval=30 -o ServerAliveCountMax=5 -T -L 3307:localhost:3306 usuario@servidor_ssh
 
         QProcess *tunnel = new QProcess(this);
 
@@ -69,12 +70,12 @@ bool TunnelSqlManager::conectar(const QString &id,
         } else {
             // sshpass -p 'senhaAqui' ssh -T -L 3307:localhost:3306 usuario@servidor_ssh
             QString comSenha = QString("'%1'").arg(senhaSsh);
-            QStringList args { "-p", comSenha,"ssh", "-T", "-L", portaArg, key, porta , destino};
+            QStringList args { "-p", comSenha,"ssh", "-o", "ConnectTimeout=20", "-o", "ServerAliveInterval=30", "-o", "ServerAliveCountMax=5", "-T", "-L", portaArg, key, porta , destino};
             qDebug() << "sshpass" << args;
             tunnel->start("sshpass", args);
         }
 
-        if (!tunnel->waitForStarted(10000)) {
+        if (!tunnel->waitForStarted(20000)) {
             qWarning() << "Erro ao iniciar túnel SSH para" << id << ":" << tunnel->errorString();
             delete tunnel;
             return false;
@@ -87,7 +88,7 @@ bool TunnelSqlManager::conectar(const QString &id,
         sshTunnels[id] = tunnel;
         qDebug() << "Túnel SSH iniciado para" << id;
     }
-    QThread::sleep(2); // Pode ser substituído por mecanismo assíncrono se necessário
+    QThread::sleep(2);
     // if (!QSqlDatabase::contains("mysql_connection_"+id)) {
     //     QSqlDatabase dbMysql = QSqlDatabase::addDatabase("QMYSQL", "mysql_connection_"+id);
         dbMysql.setHostName("127.0.0.1");

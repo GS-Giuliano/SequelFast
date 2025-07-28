@@ -192,10 +192,10 @@
      <normaloff>:/icons/resources/lovely.svg</normaloff>:/icons/resources/lovely.svg</iconset>
    </property>
    <property name="text">
-    <string>Favorites</string>
+    <string>Add to favorites</string>
    </property>
    <property name="toolTip">
-    <string>Favorites (CTRL+Y)</string>
+    <string>Add to favorites (CTRL+Y)</string>
    </property>
    <property name="shortcut">
     <string>Ctrl+Y</string>

@@ -45,5 +45,5 @@ void updatePreferences();
 QString getRgbFromColorName(const QString &colorName);
 QStringList extractFieldsWithPrefix(const QStringList &fields, const QString &tableName, const QString &alias);
 QString extractCurrentQuery(const QString &text, int cursorPos);
-
+bool connectMySQL(const QString selectedHost, QObject *parent);
 #endif // FUNCTIONS_H
