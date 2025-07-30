@@ -187,7 +187,7 @@ bool openPreferences()
             obj["name"] = query.value("name").toString();
             obj["color"] = query.value("color").toString();
             obj["host"] = query.value("host").toString();
-            obj["port"] = query.value("port").toInt();
+            obj["port"] = query.value("port").toString();
             obj["user"] = query.value("user").toString();
             obj["pass"] = query.value("pass").toString();
             obj["schema"] = query.value("schema").toString();
@@ -562,12 +562,12 @@ bool connectMySQL(const QString selectedHost, QObject *parent)
     {
         dbMysql.setHostName(item["host"].toString());
         dbMysql.setDatabaseName(item["schema"].toString());
-        dbMysql.setPort(item["port"].toInt());
+        dbMysql.setPort(item["port"].toVariant().toInt());
         dbMysql.setUserName(item["user"].toString());
         dbMysql.setPassword(item["pass"].toString());
         qDebug() << "host" << item["host"].toString();
         qDebug() << "schema" << item["schema"].toString();
-        qDebug() << "port" << item["port"].toInt();
+        qDebug() << "port" << item["port"].toVariant().toInt();
         qDebug() << "user" << item["user"].toString();
         qDebug() << "pass" << item["pass"].toString();
     }
