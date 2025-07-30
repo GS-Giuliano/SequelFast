@@ -14,6 +14,9 @@
    <string>MainWindow</string>
   </property>
   <widget class="QWidget" name="centralwidget">
+   <property name="styleSheet">
+    <string notr="true"/>
+   </property>
    <layout class="QVBoxLayout" name="verticalLayout">
     <property name="spacing">
      <number>5</number>
@@ -56,7 +59,7 @@
         </font>
        </property>
        <property name="alternatingRowColors">
-        <bool>true</bool>
+        <bool>false</bool>
        </property>
        <property name="selectionMode">
         <enum>QAbstractItemView::SelectionMode::ExtendedSelection</enum>
@@ -78,8 +81,11 @@
      <x>0</x>
      <y>0</y>
      <width>800</width>
-     <height>21</height>
+     <height>24</height>
     </rect>
+   </property>
+   <property name="styleSheet">
+    <string notr="true"/>
    </property>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
@@ -112,6 +118,9 @@
   <widget class="QToolBar" name="toolBarData">
    <property name="windowTitle">
     <string>toolBar_2</string>
+   </property>
+   <property name="styleSheet">
+    <string notr="true"/>
    </property>
    <property name="iconSize">
     <size>

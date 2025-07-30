@@ -18,7 +18,7 @@ class Sql : public QMainWindow
     Q_OBJECT
 
 public:
-    explicit Sql(const QString &host, const QString &schema, const QString &table, const QString &color, const QString &favName, const QString &favValue, QWidget *parent = nullptr);
+    explicit Sql(const QString &host, const QString &schema, const QString &table, const QString &color, const QString &favName, const QString &favValue, const bool &run, QWidget *parent = nullptr);
     ~Sql();
     void query2TableView(QTableView *tableView, const QString &queryStr, const QString &comando);
     void setInterfaceSize(int increase);
@@ -81,8 +81,10 @@ private:
     int idPosition = -1;
     int rowsAffected = 0;
 
+    QString databaseName = "";
     QString tableName = "", tableAlias = "";
     QString queryTimer = "";
+    QString favoriteName = "";
     QStringList selectFields;
     QStringList whereFields;
     QStringList orderByFields;

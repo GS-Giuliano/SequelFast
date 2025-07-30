@@ -27,6 +27,7 @@ public:
     void startSSH(QString &selectedHost);
     void endSSH(QString &selectedHost);
     void customAlert(QString title, QString message);
+    void open_selected_favorite(const QModelIndex &index, const bool &run);
 
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();

@@ -64,7 +64,7 @@ bool TunnelSqlManager::conectar(const QString &id, int &porta,
 
         if (senhaSsh == "")
         {
-            QStringList args { "-T", "-L", portaArg, key, porta , destino};
+            QStringList args { "-o", "ConnectTimeout=20", "-o", "ServerAliveInterval=30", "-o", "ServerAliveCountMax=5", "-T", "-L", portaArg, key, porta , destino};
             qDebug() << "ssh" << args;
             tunnel->start("ssh", args);
         } else {

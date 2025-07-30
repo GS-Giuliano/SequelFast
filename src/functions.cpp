@@ -522,8 +522,20 @@ QString extractCurrentQuery(const QString &text, int cursorPos)
 
 bool connectMySQL(const QString selectedHost, QObject *parent)
 {
+    QString connectionName = "mysql_connection_" + selectedHost;
+
+    // Verifica se já existe uma conexão ativa com esse nome
+    if (QSqlDatabase::contains(connectionName)) {
+        QSqlDatabase existingDb = QSqlDatabase::database(connectionName);
+        if (existingDb.isOpen()) {
+            dbMysql = existingDb;
+            return true; // Já está conectada
+        }
+    }
+
+    // Cria nova conexão se não estiver ativa
+    dbMysql = QSqlDatabase::addDatabase("QMYSQL", connectionName);
     QJsonObject item = getConnection(selectedHost);
-    dbMysql = QSqlDatabase::addDatabase("QMYSQL", "mysql_connection_"+selectedHost);
 
     if (item["ssh_host"] != "")
     {
@@ -543,19 +555,22 @@ bool connectMySQL(const QString selectedHost, QObject *parent)
             item["pass"].toVariant().toString(),
             item["schema"].toVariant().toString());
         if (!ok) {
-            return(false);
+            return false;
         }
-    } else {
-        dbMysql.setHostName(item["host"].toVariant().toString());
-        dbMysql.setDatabaseName(item["schema"].toVariant().toString());
-        dbMysql.setPort(item["port"].toVariant().toInt());
-        dbMysql.setUserName(item["user"].toVariant().toString());
-        dbMysql.setPassword(item["pass"].toVariant().toString());
     }
+    else
+    {
+        dbMysql.setHostName(item["host"].toString());
+        dbMysql.setDatabaseName(item["schema"].toString());
+        dbMysql.setPort(item["port"].toInt());
+        dbMysql.setUserName(item["user"].toString());
+        dbMysql.setPassword(item["pass"].toString());
+    }
+
     if (!dbMysql.open()) {
-        return(true);
         qDebug() << dbMysql.lastError();
-        return(false);
+        return false;
     }
-    return(false);
+
+    return true;
 }

@@ -23,7 +23,7 @@ SqlHighlighter::SqlHighlighter(QTextDocument *parent)
         "\\bGROUP\\b", "\\bLIMIT\\b", "\\bOFFSET\\b", "\\bAS\\b", "\\bDISTINCT\\b",
         "\\bAND\\b", "\\bOR\\b", "\\bNOT\\b", "\\bNULL\\b", "\\bIS\\b", "\\bCASE\\b",
         "\\bSHOW\\b","\\bDATABASE\\b","\\bTABLE\\b","\\bDESCRIBE\\b","\\bSET\\b",
-        "\\bLIKE\\b","\\bTRUNCATE\\b"
+        "\\bLIKE\\b","\\bTRUNCATE\\b","\\bASC\\b","\\bDESC\\b"
 
     };
 
@@ -71,6 +71,24 @@ SqlHighlighter::SqlHighlighter(QTextDocument *parent)
         rule.format = functionFormat;
         rules.append(rule);
     }
+
+
+    // Macros do tipo :nome ou :nome@tipo (azul claro)
+    QTextCharFormat macroFormat;
+    if (currentTheme == "light")
+        macroFormat.setForeground(QColor("#1E90FF")); // azul claro
+    else
+        macroFormat.setForeground(QColor("#87CEFA")); // azul mais claro no modo escuro
+    macroFormat.setFontItalic(true);
+
+    // Expressão: dois grupos possíveis — :nome ou :nome@tipo
+    // rule.pattern = QRegularExpression(":[a-zA-Z_][a-zA-Z0-9_]*(?:@[a-zA-Z_][a-zA-Z0-9_]*)?");
+    // rule.pattern = QRegularExpression(R"(:[a-zA-Z_][a-zA-Z0-9_]*(?:@[a-zA-Z_][a-zA-Z0-9_]*)(?:~[a-zA-Z0-9_]+){0,5}?(?=\b|\W))");
+    rule.pattern = QRegularExpression(R"(:[a-zA-Z_][a-zA-Z0-9_]*(?:@[a-zA-Z_][a-zA-Z0-9_]*(?:~[a-zA-Z0-9_]+){0,5})?(?=\b|\W))");
+
+
+    rule.format = macroFormat;
+    rules.append(rule);
 
 
     // Identificadores entre `backticks` (tabelas, colunas)

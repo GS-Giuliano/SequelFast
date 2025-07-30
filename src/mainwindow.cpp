@@ -122,7 +122,7 @@ MainWindow::~MainWindow()
 
 void MainWindow::changeTheme()
 {
-    qDebug() << "mudar tema: " << currentTheme;
+    // qDebug() << "mudar tema: " << currentTheme;
     QFile f(QString(":themes/%1/%2style.qss").arg(currentTheme).arg(currentTheme));
 
     if (!f.exists())   {
@@ -278,57 +278,14 @@ bool MainWindow::host_connect(QString selectedHost)
 {
     QJsonObject item = getConnection(selectedHost);
 
-    // qDebug() << "Tentando conexao...";
-    // qDebug() << " Host: " << item["host"].toVariant().toString();
-    // qDebug() << " User: " << item["user"].toVariant().toString();
-    // qDebug() << " Pass: " << item["pass"].toVariant().toString();
-
     QApplication::setOverrideCursor(Qt::WaitCursor);
     QApplication::processEvents();
 
-
     connectMySQL(selectedHost, this);
 
-    // dbMysql = QSqlDatabase::addDatabase("QMYSQL", "mysql_connection_"+selectedHost);
-
-    // if (item["ssh_host"] != "")
-    // {
-    //     // QProgressDialog progress("Conectando...", "Cancelar", 0, 0, this);
-    //     // progress.setWindowModality(Qt::ApplicationModal);
-    //     // progress.setCancelButton(nullptr);
-    //     // progress.show();
-
-    //     TunnelSqlManager *manager = new TunnelSqlManager(this);
-
-    //     bool ok = manager->conectar(
-    //         item["name"].toVariant().toString(),
-    //         item["ssh_user"].toVariant().toString(),
-    //         item["ssh_host"].toVariant().toString(),
-    //         item["ssh_port"].toVariant().toString(),
-    //         item["ssh_pass"].toVariant().toString(),
-    //         item["ssh_keyfile"].toVariant().toString(),
-    //         item["host"].toVariant().toString(),
-    //         item["port"].toVariant().toString(),
-    //         item["user"].toVariant().toString(),
-    //         item["pass"].toVariant().toString(),
-    //         item["schema"].toVariant().toString());
-    //     // progress.close();
-    //     if (!ok) {
-    //         QApplication::restoreOverrideCursor();
-    //         QApplication::processEvents();
-    //         return(false);
-    //         // dbMysql = manager->obterConexao(item["name"].toVariant().toString());
-    //         // manager->obterConexao(item["name"].toVariant().toString());
-    //     }
-    // } else {
-    //     dbMysql.setHostName(item["host"].toVariant().toString());
-    //     dbMysql.setDatabaseName(item["schema"].toVariant().toString());
-    //     dbMysql.setPort(item["port"].toVariant().toInt());
-    //     dbMysql.setUserName(item["user"].toVariant().toString());
-    //     dbMysql.setPassword(item["pass"].toVariant().toString());
-    // }
     QApplication::restoreOverrideCursor();
     QApplication::processEvents();
+
     if (!dbMysql.open()) {
         qDebug() << dbMysql.lastError();
         ui->statusbar->showMessage("Database connection failed!");
@@ -399,6 +356,7 @@ void MainWindow::refresh_schemas(QString selectedHost, bool jumpToTables)
     } else {
         QApplication::setOverrideCursor(Qt::WaitCursor);
         QApplication::processEvents();
+
         QJsonObject item = getConnection(selectedHost);
         QSqlQuery query(QSqlDatabase::database("mysql_connection_" + selectedHost));
 
@@ -576,6 +534,7 @@ void MainWindow::refresh_favorites()
 }
 
 void MainWindow::refresh_tables(QString selectedHost) {
+
     QApplication::setOverrideCursor(Qt::WaitCursor);
     QApplication::processEvents();
 
@@ -630,6 +589,7 @@ void MainWindow::refresh_tables(QString selectedHost) {
         ui->statusbar->showMessage("Find tables error!");
         qDebug() << "Erro ao buscar tabelas";
     }
+
     QApplication::restoreOverrideCursor();
     QApplication::processEvents();
 }
@@ -720,9 +680,7 @@ void MainWindow::on_listViewTables_doubleClicked(const QModelIndex &index)
     }
 }
 
-
-
-void MainWindow::on_listViewFavorites_doubleClicked(const QModelIndex &index)
+void MainWindow::open_selected_favorite(const QModelIndex &index, const bool &run)
 {
     QString a_host = "";
     QString a_schema = "";
@@ -732,12 +690,9 @@ void MainWindow::on_listViewFavorites_doubleClicked(const QModelIndex &index)
     QString name = "";
     QString value = "";
 
-    qDebug() << index.row();
-
     if (index.row() > -1)
     {
         QString fav = favName[index.row()];
-        qDebug() <<  "fav" << fav;
 
         QStringList favList = fav.split(":");
 
@@ -755,12 +710,7 @@ void MainWindow::on_listViewFavorites_doubleClicked(const QModelIndex &index)
         a_table = favList[3];
         a_color = favList[4];
 
-        qDebug() <<  "a_host" << a_host;
-        qDebug() <<  "a_schema" << a_schema;
-        qDebug() <<  "a_table" << a_table;
-        qDebug() <<  "a_color" << a_color;
-
-        Sql *form = new Sql(a_host, a_schema, a_table, a_color, favName[index.row()], favValue[index.row()]);
+        Sql *form = new Sql(a_host, a_schema, a_table, a_color, favName[index.row()], favValue[index.row()], run);
 
         QMdiSubWindow *sub = new QMdiSubWindow;
         sub->setWidget(form);
@@ -772,6 +722,16 @@ void MainWindow::on_listViewFavorites_doubleClicked(const QModelIndex &index)
         else
             sub->show();
     }
+}
+
+void MainWindow::on_listViewFavorites_doubleClicked(const QModelIndex &index)
+{
+    bool run = true;
+    if (ui->buttonEditFavorites->isChecked())
+    {
+        run = false;
+    }
+    open_selected_favorite(index, run);
 }
 
 void MainWindow::on_listViewFavorites_clicked(const QModelIndex &index)
@@ -1234,10 +1194,12 @@ void MainWindow::mostrarMenuContextoFavorites(const QPoint &pos)
     QModelIndex index = ui->listViewFavorites->indexAt(pos);
     if (!index.isValid())
         return;
+    QString selectedFavoriteName = index.data(Qt::DisplayRole).toString();
 
     QMenu menu(this);
     QAction *favoritesOpen = menu.addAction("Open");
     QAction *favoritesEdit = menu.addAction("Edit");
+    QAction *favoritesClone = menu.addAction("Clone");
     QAction *favoritesRename = menu.addAction("Rename");
     QAction *favoritesDelete = menu.addAction("Delete");
     menu.addSeparator();
@@ -1246,16 +1208,115 @@ void MainWindow::mostrarMenuContextoFavorites(const QPoint &pos)
     QAction *selectedAction = menu.exec(ui->listViewFavorites->viewport()->mapToGlobal(pos));
 
     if (selectedAction == favoritesOpen) {
-
+        open_selected_favorite(index, true);
     }
     else if (selectedAction == favoritesEdit) {
+        open_selected_favorite(index, false);
+    }
+    else if (selectedAction == favoritesClone) {
+        QDialog dialog(this);
+        dialog.setWindowTitle(tr("Clone favorite"));
 
+        QVBoxLayout *layout = new QVBoxLayout(&dialog);
+
+        QLabel *label = new QLabel(tr("Name:"), &dialog);
+        layout->addWidget(label);
+
+        QLineEdit *lineEdit = new QLineEdit(&dialog);
+        lineEdit->setText(selectedFavoriteName);
+        layout->addWidget(lineEdit);
+
+        lineEdit->setStyleSheet(
+            "QLabel:last {"
+            "   padding-right: 10px;"
+            "   min-height: 30px;"
+            "   min-width: 280px;"
+            "}"
+            "QPushButton {"
+            "    padding: 4px;"
+            "    margin: 20px;"
+            "    min-height: 16px;"
+            "}"
+            );
+
+        QDialogButtonBox *buttons = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, &dialog);
+        layout->addWidget(buttons);
+
+        QObject::connect(buttons, &QDialogButtonBox::accepted, &dialog, &QDialog::accept);
+        QObject::connect(buttons, &QDialogButtonBox::rejected, &dialog, &QDialog::reject);
+
+        if (dialog.exec() == QDialog::Accepted) {
+            QString name = lineEdit->text().trimmed();
+            if (!name.isEmpty() && name != selectedFavoriteName) {
+                QString value = getStringPreference(favName[index.row()]);
+                QString newFavName = favName[index.row()].replace(selectedFavoriteName, name);
+                setStringPreference(newFavName, value);
+
+                QSqlQuery query(QSqlDatabase::database("pref_connection"));
+
+                refresh_favorites();
+            }
+        }
     }
     else if (selectedAction == favoritesRename) {
+        QDialog dialog(this);
+        dialog.setWindowTitle(tr("Rename favorite"));
 
+        QVBoxLayout *layout = new QVBoxLayout(&dialog);
+
+        QLabel *label = new QLabel(tr("Name:"), &dialog);
+        layout->addWidget(label);
+
+        QLineEdit *lineEdit = new QLineEdit(&dialog);
+        lineEdit->setText(selectedFavoriteName);
+        layout->addWidget(lineEdit);
+
+        lineEdit->setStyleSheet(
+            "QLabel:last {"
+            "   padding-right: 10px;"
+            "   min-height: 30px;"
+            "   min-width: 280px;"
+            "}"
+            "QPushButton {"
+            "    padding: 4px;"
+            "    margin: 20px;"
+            "    min-height: 16px;"
+            "}"
+            );
+
+        QDialogButtonBox *buttons = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, &dialog);
+        layout->addWidget(buttons);
+
+        QObject::connect(buttons, &QDialogButtonBox::accepted, &dialog, &QDialog::accept);
+        QObject::connect(buttons, &QDialogButtonBox::rejected, &dialog, &QDialog::reject);
+
+        if (dialog.exec() == QDialog::Accepted) {
+            QString name = lineEdit->text().trimmed();
+            if (!name.isEmpty() && name != selectedFavoriteName) {
+                QString value = getStringPreference(favName[index.row()]);
+                QString newFavName = favName[index.row()];
+                newFavName.replace(selectedFavoriteName, name);
+
+                qDebug() << "nome antigo: " << favName[index.row()];
+                qDebug() << "nome novo: " << newFavName;
+                setStringPreference(newFavName, value);
+
+
+                QSqlQuery query(QSqlDatabase::database("pref_connection"));
+
+                query.prepare("DELETE FROM prefs WHERE name = :name");
+                query.bindValue(":name", favName[index.row()]);
+
+                if (!query.exec()) {
+                    qCritical() << "Erro ao excluir favorito:" << query.lastError().text();
+                    return;
+                }
+
+                refresh_favorites();
+            }
+        }
     }
     else if (selectedAction == favoritesDelete) {
-        QString dbName = index.data(Qt::DisplayRole).toString();
 
         QMessageBox msgBox;
         msgBox.setStyleSheet(
@@ -1275,7 +1336,7 @@ void MainWindow::mostrarMenuContextoFavorites(const QPoint &pos)
         msgBox.setStandardButtons(QMessageBox::Yes | QMessageBox::No);
         msgBox.setDefaultButton(QMessageBox::No);
 
-        QString message = QString("Are you sure you want to delete favorite\n\"%1\"?").arg(dbName);
+        QString message = QString("Are you sure you want to delete favorite\n\"%1\"?").arg(selectedFavoriteName);
         msgBox.setText(message);
 
         QMessageBox::StandardButton reply = static_cast<QMessageBox::StandardButton>(msgBox.exec());
@@ -1312,7 +1373,7 @@ void MainWindow::on_listViewTables_open(const QModelIndex &index)
         }
     }
 
-    Sql *form = new Sql(actual_host, actual_schema, actual_table, actual_color, "", "");
+    Sql *form = new Sql(actual_host, actual_schema, actual_table, actual_color, "", "", true);
 
     QMdiSubWindow *sub = new QMdiSubWindow;
     sub->setWidget(form);

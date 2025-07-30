@@ -42,6 +42,7 @@
 
 #include <functions.h>
 #include <macroinputdialog.h>
+#include "mainwindow.h"
 
 extern QJsonArray connections;
 extern QSqlDatabase dbPreferences;
@@ -179,7 +180,7 @@ private:
 
 
 
-Sql::Sql(const QString &host, const QString &schema, const QString &table, const QString &color, const QString &favName, const QString &favValue, QWidget *parent)
+Sql::Sql(const QString &host, const QString &schema, const QString &table, const QString &color, const QString &favName, const QString &favValue, const bool &run, QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::Sql)
 {
@@ -190,36 +191,34 @@ Sql::Sql(const QString &host, const QString &schema, const QString &table, const
 
     ui->setupUi(this);
 
+    // this->setStyleSheet("border-color: transparent;");
+
+
     QString param;
     QString queryStr;
-    QString databaseName = "";
+
+    QApplication::setOverrideCursor(Qt::WaitCursor);
+    QApplication::processEvents();
 
     if (favValue != "")
     {
-        QApplication::setOverrideCursor(Qt::WaitCursor);
-        QApplication::processEvents();
 
         queryStr = favValue;
 
         QStringList fav = favName.split(":");
-
-        this->setWindowTitle(schema+" • "+table +" • " + fav[5]);
+        favoriteName = fav[5];
+        this->setWindowTitle(favoriteName);
         connectMySQL(fav[1], this);
-        dbMysqlLocal = dbMysql;
+        dbMysqlLocal = QSqlDatabase::database("mysql_connection_" + sql_host);
         QSqlQuery query(dbMysqlLocal);
-        qDebug() << "USE "+fav[2]+";";
-        QString consulta = "USE "+fav[2]+" ";
         databaseName = fav[2];
-        if (!query.exec( consulta )) {
 
-        }
-        QApplication::restoreOverrideCursor();
-        QApplication::processEvents();
 
     } else {
         // Clicou na tabela
         this->setWindowTitle(schema+" • "+table);
-        dbMysqlLocal = dbMysql;
+        connectMySQL(sql_host, parent);
+        dbMysqlLocal = QSqlDatabase::database("mysql_connection_" + sql_host);
         databaseName = sql_schema;
         param = sql_host + ":" + sql_schema + ":" + sql_table;
         queryStr = getStringPreference(param);
@@ -229,6 +228,13 @@ Sql::Sql(const QString &host, const QString &schema, const QString &table, const
         queryStr = "SELECT * FROM "+table+" LIMIT " + QString::number(pref_sql_limit)+ ";";
     }
 
+    QSqlQuery query(dbMysqlLocal);
+    QString consulta = "USE "+databaseName+" ";
+    if (!query.exec( consulta )) {
+    }
+
+    QApplication::restoreOverrideCursor();
+    QApplication::processEvents();
 
 
     setInterfaceSize(0);
@@ -292,12 +298,16 @@ Sql::Sql(const QString &host, const QString &schema, const QString &table, const
     ui->toolBarQuery->addWidget(labelTimes);
     ui->toolBarQuery->addWidget(button);
 
-    on_actionRun_triggered();
-
     // Menu de contexto
     ui->tableData->setContextMenuPolicy(Qt::CustomContextMenu);
     connect(ui->tableData, &QTableView::customContextMenuRequested,
             this, &Sql::show_context_menu);
+
+    QApplication::processEvents();
+    if (run)
+    {
+        on_actionRun_triggered();
+    }
 
 }
 
@@ -350,7 +360,6 @@ void Sql::refresh_structure()
 
     if (dbMysqlLocal.open())
     {
-
         QSqlQuery query(QSqlDatabase::database("mysql_connection_" + sql_host));
         QString queryStr = QString("USE %1;").arg(sql_schema);
         if (query.exec(queryStr)) {
@@ -445,7 +454,6 @@ void Sql::formatSqlText()
 void Sql::query2TableView(QTableView *tableView, const QString &queryStr, const QString &comando)
 {
     QStandardItemModel *model = new QStandardItemModel(tableView);
-
     QSqlQuery query(dbMysqlLocal);
     if (!query.exec(queryStr)) {
         statusMessage("Query error: "+query.lastError().text());
@@ -669,7 +677,11 @@ void Sql::on_actionRun_triggered()
 
         editEnabled = false;
 
-        QSqlDatabase db = QSqlDatabase::database("mysql_connection_" + sql_host);
+        QSqlQuery query(dbMysqlLocal);
+        QString consulta = "USE "+databaseName+" ";
+        if (!query.exec( consulta )) {
+        }
+
         QString comando = queryStr.trimmed().split(QRegularExpression("\\s+"), Qt::SkipEmptyParts).value(0).toUpper();
 
         if (comando == "SELECT")
@@ -757,7 +769,7 @@ void Sql::on_actionRun_triggered()
             ui->tableData->setEditTriggers(QAbstractItemView::NoEditTriggers);
 
             // comandos como INSERT, UPDATE, DELETE, etc.
-            QSqlQuery query(db);
+            QSqlQuery query(dbMysqlLocal);
             if (!query.exec(queryStr)) {
                 statusMessage("Command error: " + query.lastError().text());
             } else {
@@ -1192,18 +1204,45 @@ void Sql::show_context_menu(const QPoint &pos)
 
 QVector<MacroField> Sql::extractFields(const QString &queryStr) {
     QVector<MacroField> fields;
-    QRegularExpression regex(R"(:([A-Za-z0-9_çÇáàâãéèêíïóôõöúçñÁÀÂÃÉÈÊÍÏÓÔÕÖÚÑ]+)(?:@([a-zA-Z]+))?)");
-    auto it = regex.globalMatch(queryStr);
+
+    // Regex para capturar:
+    // :campo
+    // :campo@tipo
+    // :campo@tipo~tabela
+    // :campo@tipo~tabela~chave
+    // :campo@tipo~tabela~chave~campo
+    // :campo@tipo~tabela~chave~campo~ordenacao
+
+    QRegularExpression regex(R"(:([A-Za-z0-9_çÇáàâãéèêíïóôõöúñÁÀÂÃÉÈÊÍÏÓÔÕÖÚÑ]+)(?:@([a-zA-Z_][a-zA-Z0-9_]*))?(?:~([A-Za-z0-9_]+))?(?:~([A-Za-z0-9_]+))?(?:~([A-Za-z0-9_]+))?(?:~([A-Za-z0-9_]+))?(?=\b|\W))");
+
+    QRegularExpressionMatchIterator it = regex.globalMatch(queryStr);
     while (it.hasNext()) {
-        auto match = it.next();
-        fields.append({
-            match.captured(1),
-            match.captured(2).isEmpty() ? "string" : match.captured(2).toLower(),
-            match.captured(0)
-        });
+        QRegularExpressionMatch match = it.next();
+        if (!match.hasMatch()) continue;
+
+        MacroField field;
+        field.name    = match.captured(1);  // :campo
+        field.type    = match.captured(2).isEmpty() ? "string" : match.captured(2).toLower(); // @tipo
+        field.table   = match.captured(3);  // ~tabela
+        field.key     = match.captured(4);  // ~chave
+        field.display = match.captured(5);  // ~campo
+        field.order   = match.captured(6);  // ~ordenacao
+        field.full    = match.captured(0);  // macro completa
+
+        qDebug() << "field.name"    << field.name    ;
+        qDebug() << "field.type"    << field.type    ;
+        qDebug() << "field.table"   << field.table   ;
+        qDebug() << "field.key"     << field.key     ;
+        qDebug() << "field.display" << field.display ;
+        qDebug() << "field.order"   << field.order   ;
+        qDebug() << "field.full"    << field.full   ;
+
+        fields.append(field);
     }
+
     return fields;
 }
+
 
 
 QString Sql::processQueryWithMacros(QString queryStr, QWidget *parent) {
@@ -1212,14 +1251,14 @@ QString Sql::processQueryWithMacros(QString queryStr, QWidget *parent) {
     if (fields.isEmpty())
         return queryStr;
 
-    MacroInputDialog dialog(fields, parent);
+    MacroInputDialog dialog(fields, sql_host, sql_schema, parent);
     if (dialog.exec() == QDialog::Accepted) {
         QMap<QString, QVariant> values = dialog.getValues();
         for (const auto &field : fields) {
             QString value = values[field.name].toString();
             // Escapa aspas simples dentro do valor para evitar erro de SQL
             value.replace('\'', "''");
-            queryStr.replace(field.fullMatch, QString("'%1'").arg(value));
+            queryStr.replace(field.full, QString("'%1'").arg(value));
         }
     }
 
@@ -1239,6 +1278,7 @@ void Sql::on_actionFavorites_triggered()
     layout->addWidget(label);
 
     QLineEdit *lineEdit = new QLineEdit(&dialog);
+    lineEdit->setText(favoriteName);
     layout->addWidget(lineEdit);
 
     lineEdit->setStyleSheet(
@@ -1265,6 +1305,15 @@ void Sql::on_actionFavorites_triggered()
         if (!name.isEmpty()) {
             QString value = ui->textQuery->toPlainText();
             setStringPreference("fav:"+sql_host+":"+sql_schema+":"+sql_table+":"+sql_color+":"+name, value);
+
+
+            // ✅ Acessa a MainWindow e chama o método refresh_favorites()
+            MainWindow *mainWin = qobject_cast<MainWindow *>(this->window());
+            if (mainWin) {
+                mainWin->refresh_favorites();
+            } else {
+                qWarning() << "MainWindow not found from Sql::on_actionFavorites_triggered";
+            }
         }
     }
 }
