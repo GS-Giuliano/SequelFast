@@ -2,7 +2,7 @@
 PROJECT_NAME=SequelFast
 QTBINPATH=~/Qt/6.9.1/gcc_64/bin
 QTDIRPATH=~/Qt/6.9.1/gcc_64
-INSTAPATH=installer_linux
+INSTAPATH=release_linux
 
 if ! python3 --version > /dev/null 2>&1; then
 	echo "Python 3 needs to be installed"

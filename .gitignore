@@ -2,8 +2,12 @@
 /SequelFast.app/
 SequelFast.app
 SequelFast.dmg
+/installer_linux/
 /installer_macos_intel/
 /installer_macos_silicon/
+/release_linux/
+/release_macos_intel/
+/release_macos_silicon/
 .DS_Store
 # Linux
 .flatpak-builder
