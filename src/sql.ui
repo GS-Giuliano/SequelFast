@@ -81,7 +81,7 @@
      <x>0</x>
      <y>0</y>
      <width>800</width>
-     <height>24</height>
+     <height>21</height>
     </rect>
    </property>
    <property name="styleSheet">
@@ -114,32 +114,6 @@
    <addaction name="actionIncrease"/>
    <addaction name="actionReduce"/>
    <addaction name="actionSave"/>
-  </widget>
-  <widget class="QToolBar" name="toolBarData">
-   <property name="windowTitle">
-    <string>toolBar_2</string>
-   </property>
-   <property name="styleSheet">
-    <string notr="true"/>
-   </property>
-   <property name="iconSize">
-    <size>
-     <width>20</width>
-     <height>20</height>
-    </size>
-   </property>
-   <property name="toolButtonStyle">
-    <enum>Qt::ToolButtonStyle::ToolButtonIconOnly</enum>
-   </property>
-   <attribute name="toolBarArea">
-    <enum>BottomToolBarArea</enum>
-   </attribute>
-   <attribute name="toolBarBreak">
-    <bool>false</bool>
-   </attribute>
-   <addaction name="actionEdit"/>
-   <addaction name="actionExport"/>
-   <addaction name="actionImport"/>
   </widget>
   <action name="actionRun">
    <property name="icon">
@@ -244,36 +218,6 @@
    </property>
    <property name="shortcut">
     <string>Ctrl+-</string>
-   </property>
-   <property name="menuRole">
-    <enum>QAction::MenuRole::NoRole</enum>
-   </property>
-  </action>
-  <action name="actionExport">
-   <property name="icon">
-    <iconset resource="../icons.qrc">
-     <normaloff>:/icons/resources/export.svg</normaloff>:/icons/resources/export.svg</iconset>
-   </property>
-   <property name="text">
-    <string>Export</string>
-   </property>
-   <property name="toolTip">
-    <string>Export</string>
-   </property>
-   <property name="menuRole">
-    <enum>QAction::MenuRole::NoRole</enum>
-   </property>
-  </action>
-  <action name="actionImport">
-   <property name="icon">
-    <iconset resource="../icons.qrc">
-     <normaloff>:/icons/resources/frame.svg</normaloff>:/icons/resources/frame.svg</iconset>
-   </property>
-   <property name="text">
-    <string>Import</string>
-   </property>
-   <property name="toolTip">
-    <string>Import</string>
    </property>
    <property name="menuRole">
     <enum>QAction::MenuRole::NoRole</enum>

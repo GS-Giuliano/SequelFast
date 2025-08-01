@@ -81,7 +81,6 @@ Statistics::Statistics(QString &host, QString &schema, QWidget *parent)
             ui->lineCollation->setText(query.value("DEFAULT_COLLATION_NAME").toString());
             ui->lineEncrypt->setText(query.value("DEFAULT_ENCRYPTION").toString());
 
-            // QSqlQuery query(db);
             consulta = "SELECT table_schema AS name, ROUND(SUM(data_length + index_length) / 1024 / 1024, 2) size "
                        "FROM information_schema.TABLES "
                        "WHERE table_schema = '"+sql_schema+"' "
@@ -145,34 +144,4 @@ void Statistics::on_tableView_cellClicked(const QModelIndex &index)
     hlayout->addItem(horizontalSpacer, hlayout->rowCount(), 0, 1, hlayout->columnCount());
 
     msgBox.exec();
-
-    // if (!index.isValid())
-    //     return;
-
-    // QString columnName = index.model()->headerData(index.column(), Qt::Horizontal).toString();
-    // QString value = index.data(Qt::DisplayRole).toString();
-
-    // QMessageBox msgBox(this);
-    // // msgBox.setFixedHeight(600);
-    // // msgBox.setFixedWidth(500);
-    // // msgBox.setMinimumHeight(600);
-    // // msgBox.setMaximumHeight(800);
-
-    // msgBox.setWindowTitle(columnName);
-    // msgBox.setText("Value");
-    // msgBox.setInformativeText(value);
-    // msgBox.setDetailedText(value);
-    // msgBox.setStandardButtons(QMessageBox::Ok);
-    // msgBox.setDefaultButton(QMessageBox::Ok);
-    // msgBox.setEscapeButton(QMessageBox::Ok);
-    // msgBox.setIcon(QMessageBox::Information);
-
-    // // msgBox.setStyleSheet("QLabel{min-width: 100px; min-height: 22px}");
-    // msgBox.setStyleSheet("QLabel {margin: 8px; min-height: 20px}");
-
-    // QSpacerItem* horizontalSpacer = new QSpacerItem(400, 0, QSizePolicy::Minimum, QSizePolicy::Expanding);
-    // QGridLayout* hlayout = (QGridLayout*)msgBox.layout();
-    // hlayout->addItem(horizontalSpacer, hlayout->rowCount(), 0, 1, hlayout->columnCount());
-
-    // msgBox.exec();
 }

@@ -22,6 +22,7 @@
 #include <QPainter>
 #include <QPixmap>
 #include <QFormLayout>
+#include <QClipboard>
 
 #include <QSortFilterProxyModel>
 #include <QMap>
@@ -32,6 +33,7 @@
 #include <QJsonArray>
 #include <QJsonValue>
 
+#include <backup.h>
 #include <functions.h>
 #include <connection.h>
 #include <sql.h>
@@ -1029,6 +1031,7 @@ void MainWindow::mostrarMenuContextoConns(const QPoint &pos)
 void MainWindow::mostrarMenuContextoSchemas(const QPoint &pos)
 {
     QModelIndex index = ui->listViewSchemas->indexAt(pos);
+    QString selSchema = index.data(Qt::DisplayRole).toString();
     if (!index.isValid())
         return;
 
@@ -1051,9 +1054,13 @@ void MainWindow::mostrarMenuContextoSchemas(const QPoint &pos)
         on_listViewSchemas_clicked(index);
     }
     else if (selectedAction == schemaStatistics) {
-        actual_schema = index.data(Qt::DisplayRole).toString();
-        Statistics *janela = new Statistics(actual_host, actual_schema, this);
+        Statistics *janela = new Statistics(actual_host, selSchema, this);
         janela->exec();
+    }
+    else if (selectedAction == schemaBackup) {
+        Backup dialog(actual_host, selSchema, this);       // Cria a janela, com MainWindow como pai
+        dialog.exec();             // Abre como modal (trava a janela principal até fechar)
+
     }
     else if (selectedAction == schemaBatchRun) {
         batch_run();
@@ -1077,6 +1084,7 @@ void MainWindow::mostrarMenuContextoSchemas(const QPoint &pos)
             "QPushButton {"
             "    padding: 4px;"
             "    margin: 20px;"
+            "    min-width: 90px;"
             "    min-height: 16px;"
             "}"
             );
@@ -1119,22 +1127,54 @@ void MainWindow::mostrarMenuContextoTables(const QPoint &pos)
     QAction *tableDrop = menu.addAction("Drop");
     QAction *tableRefresh = menu.addAction("Refresh");
     menu.addSeparator();
-    QAction *tableExportSQL = menu.addAction("Export as SQL");
-    QAction *tableExportCSV = menu.addAction("Export as CSV");
-    QAction *tableExportPDF = menu.addAction("Export as PDF");
+    QAction *tableCopySQL = menu.addAction("Copy as SQL");
+    QAction *tableCopyCSV = menu.addAction("Copy as CSV");
 
     QAction *selectedAction = menu.exec(ui->listViewTables->viewport()->mapToGlobal(pos));
 
     if (selectedAction == tableOpen) {
         on_listViewTables_open(index);
     }
-    else if (selectedAction == tableExportSQL) {
+    else if (selectedAction == tableCopySQL) {
+        QString tableName = index.data(Qt::DisplayRole).toString();
+        QString connectionName = "mysql_connection_" + actual_host;
 
-    }
-    else if (selectedAction == tableExportCSV) {
+        // Gera o comando CREATE TABLE
+        QString createTableSql = generateCreateTableStatement(tableName, connectionName);
 
+        if (!createTableSql.isEmpty()) {
+            qDebug() << "Comando gerado:\n" << createTableSql;
+
+            // Copia o comando para o clipboard
+            QClipboard *clipboard = QApplication::clipboard();
+            clipboard->setText(createTableSql);
+            qDebug() << "Comando CREATE TABLE copiado para a área de transferência";
+
+            // Exemplo de execução do comando CREATE TABLE (para uma nova tabela, se necessário)
+            QSqlQuery query(QSqlDatabase::database(connectionName));
+            if (query.exec(createTableSql)) {
+                qDebug() << "Tabela criada com sucesso";
+            } else {
+                qDebug() << "Falha ao criar tabela:" << query.lastError().text();
+            }
+        } else {
+            qDebug() << "Falha ao gerar o comando CREATE TABLE";
+        }
     }
-    else if (selectedAction == tableExportPDF) {
+    else if (selectedAction == tableCopyCSV) {
+        QString tableName = index.data(Qt::DisplayRole).toString();
+        QString connectionName = "mysql_connection_" + actual_host;
+        // Gera o CSV com os campos
+        QString csvContent = generateColumnsCsv(tableName, connectionName);
+
+        if (!csvContent.isEmpty()) {
+            // Copia o conteúdo CSV para o clipboard
+            QClipboard *clipboard = QApplication::clipboard();
+            clipboard->setText(csvContent);
+            qDebug() << "Campos da tabela copiados para a área de transferência em formato CSV:\n" << csvContent;
+        } else {
+            qDebug() << "Falha ao gerar o CSV dos campos da tabela";
+        }
 
     }
     else if (selectedAction == tableRefresh) {

@@ -579,3 +579,78 @@ bool connectMySQL(const QString selectedHost, QObject *parent)
 
     return true;
 }
+
+// Função para gerar uma QString com o comando CREATE TABLE a partir de SHOW CREATE TABLE
+QString generateCreateTableStatement(const QString& tableName, const QString& connectionName) {
+    // Acessa a conexão com o banco de dados
+    QSqlDatabase db = QSqlDatabase::database(connectionName);
+    if (!db.isValid()) {
+        qDebug() << "Erro: Conexão com o banco de dados inválida para" << connectionName;
+        return QString();
+    }
+
+    // Cria a query SHOW CREATE TABLE
+    QSqlQuery query(db);
+    QString showCreateTableQuery = QString("SHOW CREATE TABLE %1").arg(tableName);
+
+    // Executa a query
+    if (!query.exec(showCreateTableQuery)) {
+        qDebug() << "Erro ao executar SHOW CREATE TABLE:" << query.lastError().text();
+        return QString();
+    }
+
+    // Extrai o resultado
+    if (query.next()) {
+        // A coluna 1 contém o comando CREATE TABLE
+        QString createTableStmt = query.value(1).toString();
+        qDebug() << "Comando CREATE TABLE obtido com sucesso para" << tableName;
+        return createTableStmt;
+    } else {
+        qDebug() << "Nenhum resultado retornado para SHOW CREATE TABLE" << tableName;
+        return QString();
+    }
+}
+
+QString generateColumnsCsv(const QString& tableName, const QString& connectionName) {
+    // Acessa a conexão com o banco de dados
+    QSqlDatabase db = QSqlDatabase::database(connectionName);
+    if (!db.isValid()) {
+        qDebug() << "Erro: Conexão com o banco de dados inválida para" << connectionName;
+        return QString();
+    }
+
+    // Cria a query DESCRIBE
+    QSqlQuery query(db);
+    QString describeQuery = QString("DESCRIBE %1").arg(tableName);
+
+    // Executa a query
+    if (!query.exec(describeQuery)) {
+        qDebug() << "Erro ao executar DESCRIBE:" << query.lastError().text();
+        return QString();
+    }
+
+    // Monta a string CSV
+    QStringList csvLines;
+    csvLines << "Field,Type,Default"; // Cabeçalho do CSV
+
+    while (query.next()) {
+        QString field = query.value("Field").toString();
+        QString type = query.value("Type").toString();
+        QString defaultValue = query.value("Default").isNull() ? "NULL" : query.value("Default").toString();
+
+        // Formata a linha CSV
+        QString csvLine = QString("\"%1\",\"%2\",\"%3\"")
+                              .arg(field.replace("\"", "\"\"")) // Escapa aspas no nome do campo
+                              .arg(type.replace("\"", "\"\""))  // Escapa aspas no tipo
+                              .arg(defaultValue.replace("\"", "\"\"")); // Escapa aspas no valor padrão
+        csvLines << csvLine;
+    }
+
+    if (csvLines.size() == 1) {
+        qDebug() << "Nenhum campo encontrado para a tabela" << tableName;
+        return QString();
+    }
+
+    // Junta as linhas com quebras de linha
+    return csvLines.join("\n");
+}

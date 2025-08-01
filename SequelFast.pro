@@ -11,6 +11,7 @@ INCLUDEPATH += src
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
+    src/backup.cpp \
     src/batch.cpp \
 src/connection.cpp \
 src/functions.cpp \
@@ -22,9 +23,11 @@ src/sqlhighlighter.cpp \
 src/statistics.cpp \
 src/structure.cpp \
 src/tunnelsqlmanager.cpp \
+    src/two_checkbox_delegate.cpp \
 src/users.cpp
 
 HEADERS += \
+    src/backup.h \
     src/batch.h \
 src/connection.h \
 src/functions.h \
@@ -35,6 +38,8 @@ src/sqlhighlighter.h \
 src/statistics.h \
 src/structure.h \
 src/tunnelsqlmanager.h \
+    src/two_checkbox_delegate.h \
+    src/two_checkbox_list_model.h \
 src/users.h
 
 FORMS += \
