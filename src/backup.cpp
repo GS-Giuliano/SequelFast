@@ -7,10 +7,15 @@
 #include <QFileDialog>
 #include <QTableView>
 #include <QLabel>
+#include <QDateTime>
+
+
 #include <QStandardItemModel>
 #include <QSqlDatabase>
 #include <QSqlQuery>
 #include <QSqlRecord>
+#include <QStandardPaths>
+
 
 #include <QDebug>
 #include <QHeaderView>
@@ -23,19 +28,45 @@ Backup::Backup(const QString &host, const QString &schema, QWidget *parent) : QD
     bkp_host = host;
     bkp_schema = schema;
 
+    QString timestamp = QDateTime::currentDateTime().toString("yyyy-MM-dd-HH-mm-ss");
+    QString dumpFile = QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation)
+                       + "/" + schema + "-" + timestamp + ".sql";
+
     auto *layout = new QVBoxLayout(this);
 
     // Linha 1: campo de arquivo + botão
+    auto *fileLabel = new QLabel("To file");
+    fileLabel->setFixedWidth(150);
     auto *fileLayout = new QHBoxLayout;
     lineEdit = new QLineEdit(this);
-    lineEdit->setText("~/Downloads/backup.sql");
+
+    lineEdit->setText(dumpFile);
     btnBrowse = new QPushButton("Select...", this);
+    fileLayout->addWidget(fileLabel);
     fileLayout->addWidget(lineEdit);
     fileLayout->addWidget(btnBrowse);
     layout->addLayout(fileLayout);
     connect(btnBrowse, &QPushButton::clicked, this, &Backup::chooseFile);
 
-    // Linha 2: QTableView
+    // Linha 2: seleção de host
+    auto *connLayout = new QHBoxLayout;
+    auto *connLabel = new QLabel("To connection");
+    connLabel->setFixedWidth(150);
+    auto *connList = new QComboBox();
+    connLayout->addWidget(connLabel);
+    connLayout->addWidget(connList);
+    layout->addLayout(connLayout);
+
+    // Linha 3: seleção de schema
+    auto *schemaLayout = new QHBoxLayout;
+    auto *schemaLabel = new QLabel("To schema");
+    schemaLabel->setFixedWidth(150);
+    auto *schemaEdit = new QLineEdit(bkp_schema);
+    schemaLayout->addWidget(schemaLabel);
+    schemaLayout->addWidget(schemaEdit);
+    layout->addLayout(schemaLayout);
+
+    // Linha 3: seleção de tabelas
     tableView = new QTableView(this);
     layout->addWidget(tableView);
 
@@ -71,7 +102,7 @@ Backup::Backup(const QString &host, const QString &schema, QWidget *parent) : QD
     // Configura o modelo e popula as tabelas
     refresh_tables();
 
-    setMinimumSize(450, 450);
+    setMinimumSize(650, 450);
 }
 
 void Backup::refresh_tables()
@@ -93,8 +124,8 @@ void Backup::refresh_tables()
     }
 
     // Configura o modelo
-    model = new QStandardItemModel(0, 3, this);
-    model->setHorizontalHeaderLabels({"Table", "Structure", "Data"});
+    model = new QStandardItemModel(0, 5, this);
+    model->setHorizontalHeaderLabels({"Table", "Structure", "Data", "Where", "Order by"});
     tableView->setModel(model);
 
     // Aplica o delegate personalizado às colunas 1 e 2
@@ -141,7 +172,7 @@ void Backup::chooseFile()
 
         if (file.isEmpty()) {
             // Usuário cancelou a seleção
-            lineEdit->setText("backup.sql");
+            lineEdit->setText(dumpFile);
             return;
         }
 

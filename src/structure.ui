@@ -51,7 +51,7 @@
              <string>...</string>
             </property>
             <property name="icon">
-             <iconset resource="icons.qrc">
+             <iconset resource="../icons.qrc">
               <normaloff>:/icons/resources/refresh square.svg</normaloff>:/icons/resources/refresh square.svg</iconset>
             </property>
             <property name="iconSize">
@@ -166,7 +166,7 @@
   <widget class="QStatusBar" name="statusbar"/>
  </widget>
  <resources>
-  <include location="icons.qrc"/>
+  <include location="../icons.qrc"/>
  </resources>
  <connections/>
 </ui>

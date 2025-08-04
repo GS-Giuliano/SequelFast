@@ -23,6 +23,7 @@
 #include <QPixmap>
 #include <QFormLayout>
 #include <QClipboard>
+#include <QStandardPaths>
 
 #include <QSortFilterProxyModel>
 #include <QMap>

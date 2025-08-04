@@ -4,6 +4,7 @@
 #include <QDialog>
 #include <QVector>
 #include <QTableView>
+#include <QComboBox>
 #include <QStandardItemModel>
 #include "two_checkbox_delegate.h"
 
@@ -37,9 +38,11 @@ private:
     QPushButton *btnBrowse;
     QPushButton *btnCancel;
     QPushButton *btnConfirm;
+    QComboBox *connList;
+    QLineEdit *schemaEdit;
     TwoCheckboxDelegate *checkboxDelegate;
     QStandardItemModel *model;
-
+    QString dumpFile = "";
     QString bkp_host, bkp_schema;
 };
 
