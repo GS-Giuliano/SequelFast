@@ -5,6 +5,7 @@
 #include <QVector>
 #include <QTableView>
 #include <QComboBox>
+#include <QProgressBar>
 #include <QStandardItemModel>
 #include "two_checkbox_delegate.h"
 
@@ -36,6 +37,7 @@ private:
     QLineEdit *lineEdit;
     QTableView *tableView;
     QPushButton *btnBrowse;
+    QPushButton *btnFavorite;
     QPushButton *btnCancel;
     QPushButton *btnConfirm;
     QComboBox *connList;
@@ -44,6 +46,10 @@ private:
     QStandardItemModel *model;
     QString dumpFile = "";
     QString bkp_host, bkp_schema;
+    QProgressBar *progressBar;
+    QProgressBar *progressBar2;
+    bool abort = false;
+    bool running = false;
 };
 
 #endif // BACKUP_H

@@ -1,5 +1,7 @@
 #include "backup.h"
 #include "two_checkbox_delegate.h"
+
+#include <QApplication>
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QPushButton>
@@ -89,15 +91,29 @@ Backup::Backup(const QString &host, const QString &schema, QWidget *parent) : QD
 
     // Linha 3: botões
     auto *buttonLayout = new QHBoxLayout;
+    btnFavorite = new QPushButton("Favorite", this);
     btnCancel = new QPushButton("Cancel", this);
     btnConfirm = new QPushButton("Run", this);
     buttonLayout->addStretch();
+    buttonLayout->addWidget(btnFavorite);
     buttonLayout->addWidget(btnCancel);
     buttonLayout->addWidget(btnConfirm);
     layout->addLayout(buttonLayout);
 
     connect(btnCancel, &QPushButton::clicked, this, &Backup::onCancel);
     connect(btnConfirm, &QPushButton::clicked, this, &Backup::onConfirm);
+
+    progressBar = new QProgressBar(this);
+    progressBar->setRange(0, 100);
+    progressBar->setValue(0);
+    progressBar->setVisible(false);  // inicialmente oculta
+    layout->addWidget(progressBar);
+
+    progressBar2 = new QProgressBar(this);
+    progressBar2->setRange(0, 100);
+    progressBar2->setValue(0);
+    progressBar2->setVisible(false);  // inicialmente oculta
+    layout->addWidget(progressBar2);
 
     // Configura o modelo e popula as tabelas
     refresh_tables();
@@ -216,11 +232,15 @@ void Backup::chooseFile()
 
 void Backup::onCancel()
 {
-    reject();
+    abort = true;
+    if (!running)
+        reject();
 }
 
 void Backup::onConfirm()
 {
+    running = true;
+
     QFile file(lineEdit->text());
     if (!file.open(QIODevice::WriteOnly | QIODevice::Text)) {
         QMessageBox::warning(this, "Error", "Failed to open file for writing: " + file.errorString());
@@ -236,69 +256,122 @@ void Backup::onConfirm()
     out << "CREATE DATABASE IF NOT EXISTS " << bkp_schema << ";\n";
     out << "USE " << bkp_schema << ";\n\n";
 
-    // Itera sobre as linhas do modelo, começando da linha 1 (índice 1) para pular a primeira linha sem checkboxes
+    progressBar->setVisible(true);
+    progressBar->setValue(0);
+    QApplication::processEvents();
+
+    int totalTables = model->rowCount() - 1; // pula linha 0
+    int processedTables = 0;
+
+
     for (int row = 1; row < model->rowCount(); ++row) {
-        QString table = model->data(model->index(row, 0), Qt::DisplayRole).toString();
-        bool structure = model->data(model->index(row, 1), Qt::UserRole).toBool();
-        bool data = model->data(model->index(row, 2), Qt::UserRole).toBool();
+        if (!abort)
+        {
+            QString table = model->data(model->index(row, 0), Qt::DisplayRole).toString();
+            bool structure = model->data(model->index(row, 1), Qt::UserRole).toBool();
+            bool data = model->data(model->index(row, 2), Qt::UserRole).toBool();
 
-        qDebug() << "Processing table:" << table << "Structure:" << structure << "Data:" << data;
+            qDebug() << "Processing table:" << table << "Structure:" << structure << "Data:" << data;
 
-        if (structure || data) {
-            // Obtém a estrutura da tabela
-            if (structure) {
-                if (query.exec("SHOW CREATE TABLE " + bkp_schema + "." + table)) {
-                    if (query.next()) {
-                        QString createTableStmt = query.value(1).toString();
-                        out << createTableStmt << ";\n\n";
+            processedTables++;
+            int percent = (processedTables * 100) / totalTables;
+            progressBar->setValue(percent);
+            QApplication::processEvents();
+
+
+            if (structure || data) {
+                // Obtém a estrutura da tabela
+                if (structure) {
+                    if (query.exec("SHOW CREATE TABLE " + bkp_schema + "." + table)) {
+                        if (query.next()) {
+                            QString createTableStmt = query.value(1).toString();
+                            out << createTableStmt << ";\n\n";
+                        } else {
+                            progressBar->setVisible(false);
+                            progressBar2->setVisible(false);
+                            qDebug() << "Error: No result for SHOW CREATE TABLE" << table;
+                            out << "-- Error: Could not retrieve structure for table " << table << "\n\n";
+                        }
                     } else {
-                        qDebug() << "Error: No result for SHOW CREATE TABLE" << table;
+                        progressBar->setVisible(false);
+                        progressBar2->setVisible(false);
+                        // qDebug() << "Error executing SHOW CREATE TABLE for" << table << ":" << query.lastError().text();
                         out << "-- Error: Could not retrieve structure for table " << table << "\n\n";
                     }
-                } else {
-                    // qDebug() << "Error executing SHOW CREATE TABLE for" << table << ":" << query.lastError().text();
-                    out << "-- Error: Could not retrieve structure for table " << table << "\n\n";
                 }
-            }
 
-            // Obtém os dados da tabela
-            if (data) {
-                if (query.exec("SELECT * FROM " + bkp_schema + "." + table)) {
-                    QSqlRecord record = query.record();
-                    int columnCount = record.count();
-                    QStringList columnNames;
-                    for (int i = 0; i < columnCount; ++i) {
-                        columnNames << record.fieldName(i);
+                // Obtém os dados da tabela
+                if (data) {
+                    progressBar2->setVisible(true);
+
+                    int totalRows = query.numRowsAffected();
+                    int processedRows = 0;
+                    if (query.exec("SELECT COUNT(*) FROM " + bkp_schema + "." + table) && query.next()) {
+                        totalRows = query.value(0).toInt();
                     }
 
-                    while (query.next()) {
-                        QStringList values;
+                    if (query.exec("SELECT * FROM " + bkp_schema + "." + table)) {
+
+                        progressBar2->setVisible(true);
+
+                        QSqlRecord record = query.record();
+                        int columnCount = record.count();
+                        QStringList columnNames;
                         for (int i = 0; i < columnCount; ++i) {
-                            QVariant value = query.value(i);
-                            if (value.isNull()) {
-                                values << "NULL";
-                            } else if (value.type() == QVariant::String) {
-                                values << "'" + value.toString().replace("'", "''") + "'";
-                            } else {
-                                values << value.toString();
+                            columnNames << record.fieldName(i);
+                        }
+
+                        while (query.next()) {
+                            if (!abort)
+                            {
+                                processedRows++;
+                                int percentRows = (processedRows * 100) / totalRows;
+                                progressBar2->setValue(percentRows);
+                                QApplication::processEvents();
+
+                                QStringList values;
+                                for (int i = 0; i < columnCount; ++i) {
+                                    QVariant value = query.value(i);
+                                    if (value.isNull()) {
+                                        values << "NULL";
+                                    } else if (value.type() == QVariant::String) {
+                                        values << "'" + value.toString().replace("'", "''") + "'";
+                                    } else {
+                                        values << value.toString();
+                                    }
+                                }
+                                out << "INSERT INTO " << table << " (" << columnNames.join(", ") << ") VALUES ("
+                                    << values.join(", ") << ");\n";
                             }
                         }
-                        out << "INSERT INTO " << table << " (" << columnNames.join(", ") << ") VALUES ("
-                            << values.join(", ") << ");\n";
+                        progressBar2->setVisible(false);
+                        out << "\n";
+                    } else {
+                        progressBar->setVisible(false);
+                        progressBar2->setVisible(false);
+
+                        // qDebug() << "Error executing SELECT * FROM" << table << ":" << query.lastError().text();
+                        out << "-- Error: Could not retrieve data for table " << table << "\n\n";
                     }
-                    out << "\n";
-                } else {
-                    // qDebug() << "Error executing SELECT * FROM" << table << ":" << query.lastError().text();
-                    out << "-- Error: Could not retrieve data for table " << table << "\n\n";
+                    progressBar2->setVisible(false);
                 }
             }
         }
     }
-
+    progressBar->setVisible(false);
+    progressBar2->setVisible(false);
     // Fecha o arquivo
     file.close();
-    QMessageBox::information(this, "Success", "Backup file created successfully!");
-    accept();
+    running = false;
+    if (abort)
+    {
+        QMessageBox::information(this, "Failed", "Backup cancelled!");
+        reject();
+
+    } else {
+        QMessageBox::information(this, "Success", "Backup created successfully!");
+        accept();
+    }
 }
 
 
