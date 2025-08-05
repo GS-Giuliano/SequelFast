@@ -31,19 +31,12 @@ private slots:
     void statusMessage(QString msg);
 
     void on_actionRun_triggered();
-
     void on_actionFormat_triggered();
-
     void on_actionIncrease_triggered();
-
     void on_actionReduce_triggered();
-
     void on_actionSave_triggered();
-
     void on_timer_tick();
-
     void on_button_clicked();
-
     bool on_tableData_edit_trigger(QString &id, QString &fieldName, QString &newValue);
 
     void on_tableAppend_triggered();
@@ -54,12 +47,12 @@ private slots:
     void on_tableCopyCsv_triggered();
     void on_tableCRUDGfw_triggered();
     void on_tableCRUDLaravel_triggered();
+    void on_actionFavorites_triggered();
 
     void show_context_menu(const QPoint &pos);
 
-
-
-    void on_actionFavorites_triggered();
+protected:
+    void keyPressEvent(QKeyEvent *event) override;
 
 private:
     Ui::Sql *ui;

@@ -262,7 +262,7 @@ int getIntPreference(QString name)
     if (query.next()) {
         value = query.value(0).toInt();
     } else {
-        qDebug() << "Preferência não encontrada para:" << name;
+        // qDebug() << "Preferência não encontrada para:" << name;
     }
     return(value);
 }
@@ -283,7 +283,7 @@ QString getStringPreference(QString name)
     if (query.next()) {
         value = query.value(0).toString();
     } else {
-        qDebug() << "Preferência não encontrada para:" << name;
+        // qDebug() << "Preferência não encontrada para:" << name;
     }
     return(value);
 }
@@ -520,9 +520,9 @@ QString extractCurrentQuery(const QString &text, int cursorPos)
     return query;
 }
 
-bool connectMySQL(const QString selectedHost, QObject *parent)
+bool connectMySQL(const QString selectedHost, QObject *parent = nullptr, const QString prefix = "mysql_connection_" )
 {
-    QString connectionName = "mysql_connection_" + selectedHost;
+    QString connectionName = prefix + selectedHost;
 
     // Verifica se já existe uma conexão ativa com esse nome
     if (QSqlDatabase::contains(connectionName)) {
@@ -565,11 +565,11 @@ bool connectMySQL(const QString selectedHost, QObject *parent)
         dbMysql.setPort(item["port"].toVariant().toInt());
         dbMysql.setUserName(item["user"].toString());
         dbMysql.setPassword(item["pass"].toString());
-        qDebug() << "host" << item["host"].toString();
-        qDebug() << "schema" << item["schema"].toString();
-        qDebug() << "port" << item["port"].toVariant().toInt();
-        qDebug() << "user" << item["user"].toString();
-        qDebug() << "pass" << item["pass"].toString();
+        // qDebug() << "host" << item["host"].toString();
+        // qDebug() << "schema" << item["schema"].toString();
+        // qDebug() << "port" << item["port"].toVariant().toInt();
+        // qDebug() << "user" << item["user"].toString();
+        // qDebug() << "pass" << item["pass"].toString();
     }
 
     if (!dbMysql.open()) {

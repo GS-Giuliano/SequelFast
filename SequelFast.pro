@@ -18,6 +18,7 @@ src/functions.cpp \
     src/macroinputdialog.cpp \
 src/main.cpp \
 src/mainwindow.cpp \
+    src/restore.cpp \
 src/sql.cpp \
 src/sqlhighlighter.cpp \
 src/statistics.cpp \
@@ -33,6 +34,7 @@ src/connection.h \
 src/functions.h \
     src/macroinputdialog.h \
 src/mainwindow.h \
+    src/restore.h \
 src/sql.h \
 src/sqlhighlighter.h \
 src/statistics.h \

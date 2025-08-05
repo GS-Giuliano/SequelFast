@@ -24,6 +24,7 @@
 #include <QFormLayout>
 #include <QClipboard>
 #include <QStandardPaths>
+#include <QFileDialog>
 
 #include <QSortFilterProxyModel>
 #include <QMap>
@@ -35,6 +36,8 @@
 #include <QJsonValue>
 
 #include <backup.h>
+#include <restore.h>
+
 #include <functions.h>
 #include <connection.h>
 #include <sql.h>
@@ -66,6 +69,27 @@ QStringList favName;
 QStringList favValue;
 
 
+struct InterruptibleProgressDialog : public QDialog {
+    bool &aborted;
+    InterruptibleProgressDialog(bool &abortRef, QWidget *parent = nullptr)
+        : QDialog(parent), aborted(abortRef) {}
+
+protected:
+    void keyPressEvent(QKeyEvent *event) override {
+        if (event->key() == Qt::Key_Escape) {
+            aborted = true;
+            close();  // fecha visualmente a janela
+        } else {
+            QDialog::keyPressEvent(event);
+        }
+    }
+
+    void closeEvent(QCloseEvent *event) override {
+        aborted = true;
+        QDialog::closeEvent(event);
+    }
+};
+
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
@@ -78,6 +102,8 @@ MainWindow::MainWindow(QWidget *parent)
     ui->actionInformation->setDisabled(true);
     ui->actionStatistics->setDisabled(true);
     ui->actionProcesses->setDisabled(true);
+    ui->actionBackup->setDisabled(true);
+    ui->actionRestore->setDisabled(true);
 
     if (openPreferences())
     {
@@ -512,7 +538,7 @@ void MainWindow::refresh_favorites()
         }
         cnt++;
     }
-    qDebug() << favName;
+
     QSortFilterProxyModel *proxy = new QSortFilterProxyModel(this);
     proxy->setSourceModel(modelo);
     proxy->setFilterCaseSensitivity(Qt::CaseInsensitive);
@@ -531,8 +557,6 @@ void MainWindow::refresh_favorites()
     }
 
     ui->statusbar->showMessage("Favorites updated");
-
-    qDebug() << name << value;
 
 }
 
@@ -588,9 +612,8 @@ void MainWindow::refresh_tables(QString selectedHost) {
         }
 
         ui->statusbar->showMessage("Tables updated");
-    } else {
-        ui->statusbar->showMessage("Find tables error!");
-        qDebug() << "Erro ao buscar tabelas";
+    // } else {
+    //     ui->statusbar->showMessage("Find tables error!");
     }
 
     QApplication::restoreOverrideCursor();
@@ -599,7 +622,6 @@ void MainWindow::refresh_tables(QString selectedHost) {
 
 void MainWindow::on_listViewConns_clicked(const QModelIndex &index)
 {
-    qDebug() << index;
 }
 
 void MainWindow::on_listViewConns_doubleClicked(const QModelIndex &index)
@@ -610,6 +632,7 @@ void MainWindow::on_listViewConns_doubleClicked(const QModelIndex &index)
     } else {
         ui->actionNew_schema->setDisabled(false);
         ui->actionUsers->setDisabled(false);
+        ui->actionRestore->setDisabled(false);
         listViewConns_open(index);
     }
 }
@@ -618,6 +641,7 @@ void MainWindow::on_listViewConns_doubleClicked(const QModelIndex &index)
 void MainWindow::on_listViewSchemas_clicked(const QModelIndex &index)
 {
     actual_schema = index.data(Qt::DisplayRole).toString();
+    ui->actionBackup->setDisabled(false);
 
     QSqlDatabase db = QSqlDatabase::database("mysql_connection_" + actual_host);
 
@@ -1059,9 +1083,11 @@ void MainWindow::mostrarMenuContextoSchemas(const QPoint &pos)
         janela->exec();
     }
     else if (selectedAction == schemaBackup) {
-        Backup dialog(actual_host, selSchema, this);       // Cria a janela, com MainWindow como pai
-        dialog.exec();             // Abre como modal (trava a janela principal até fechar)
-
+        backup(actual_host, selSchema, this);
+    }
+    else if (selectedAction == schemaRestore)
+    {
+        restore(actual_host, selSchema, this);
     }
     else if (selectedAction == schemaBatchRun) {
         batch_run();
@@ -1144,22 +1170,20 @@ void MainWindow::mostrarMenuContextoTables(const QPoint &pos)
         QString createTableSql = generateCreateTableStatement(tableName, connectionName);
 
         if (!createTableSql.isEmpty()) {
-            qDebug() << "Comando gerado:\n" << createTableSql;
 
             // Copia o comando para o clipboard
             QClipboard *clipboard = QApplication::clipboard();
             clipboard->setText(createTableSql);
-            qDebug() << "Comando CREATE TABLE copiado para a área de transferência";
 
             // Exemplo de execução do comando CREATE TABLE (para uma nova tabela, se necessário)
             QSqlQuery query(QSqlDatabase::database(connectionName));
             if (query.exec(createTableSql)) {
-                qDebug() << "Tabela criada com sucesso";
+                // qDebug() << "Tabela criada com sucesso";
             } else {
-                qDebug() << "Falha ao criar tabela:" << query.lastError().text();
+                // qDebug() << "Falha ao criar tabela:" << query.lastError().text();
             }
-        } else {
-            qDebug() << "Falha ao gerar o comando CREATE TABLE";
+        // } else {
+        //     qDebug() << "Falha ao gerar o comando CREATE TABLE";
         }
     }
     else if (selectedAction == tableCopyCSV) {
@@ -1172,9 +1196,9 @@ void MainWindow::mostrarMenuContextoTables(const QPoint &pos)
             // Copia o conteúdo CSV para o clipboard
             QClipboard *clipboard = QApplication::clipboard();
             clipboard->setText(csvContent);
-            qDebug() << "Campos da tabela copiados para a área de transferência em formato CSV:\n" << csvContent;
-        } else {
-            qDebug() << "Falha ao gerar o CSV dos campos da tabela";
+            // qDebug() << "Campos da tabela copiados para a área de transferência em formato CSV:\n" << csvContent;
+        // } else {
+        //     qDebug() << "Falha ao gerar o CSV dos campos da tabela";
         }
 
     }
@@ -1338,8 +1362,8 @@ void MainWindow::mostrarMenuContextoFavorites(const QPoint &pos)
                 QString newFavName = favName[index.row()];
                 newFavName.replace(selectedFavoriteName, name);
 
-                qDebug() << "nome antigo: " << favName[index.row()];
-                qDebug() << "nome novo: " << newFavName;
+                // qDebug() << "nome antigo: " << favName[index.row()];
+                // qDebug() << "nome novo: " << newFavName;
                 setStringPreference(newFavName, value);
 
 
@@ -1514,7 +1538,7 @@ void MainWindow::batch_run()
 
     QMdiSubWindow *sub = new QMdiSubWindow;
     sub->setWidget(form);
-    sub->setAttribute(Qt::WA_DeleteOnClose);  // subjanela será destruída ao fechar
+    sub->setAttribute(Qt::WA_DeleteOnClose);
     ui->mdiArea->addSubWindow(sub);
     sub->resize(500, 360);
     if (maximize)
@@ -1525,4 +1549,130 @@ void MainWindow::batch_run()
 
 }
 
+void MainWindow::backup(const QString &bkp_host, const QString &bkp_schema, QWidget *parent)
+{
+    Backup dialog(bkp_host, bkp_schema, this);
+    dialog.exec();
+    refresh_schemas(actual_host, false);
+}
+
+void MainWindow::restore(const QString &bkp_host, const QString &bkp_schema, QWidget *parent)
+{
+    Restore executor;
+    executor.run("", bkp_host, bkp_schema, this);
+    refresh_schemas(actual_host, false);
+
+    // QFile fileLog(QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation)+"/restore.log");
+
+    // if (!fileLog.open(QIODevice::WriteOnly | QIODevice::Text)) {
+    //     QMessageBox::warning(this, "Error", "Failed to open file for writing: " + fileLog.errorString());
+    //     qDebug() << "Error opening file:" << fileLog.errorString();
+    //     return;
+    // }
+
+    // QTextStream out(&fileLog);
+
+    // QString fileName = QFileDialog::getOpenFileName(
+    //     parent,
+    //     "Open query file",
+    //     QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation),
+    //     "SQL files (*.sql);;All files (*)"
+    //     );
+
+    // if (fileName.isEmpty())
+    //     return;
+
+    // QFile file(fileName);
+    // if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+    //     QMessageBox::critical(parent, "Error", "Unable to open the backup file.");
+    //     return;
+    // }
+
+    // // Criar barra de progresso modal
+    // // QDialog progressDialog(parent);
+    // bool aborted = false;
+    // InterruptibleProgressDialog progressDialog(aborted, parent);
+
+
+    // progressDialog.setWindowTitle("Restoring backup...");
+    // QVBoxLayout *layout = new QVBoxLayout(&progressDialog);
+    // QProgressBar *progressBar = new QProgressBar(&progressDialog);
+    // progressBar->setTextVisible(true);
+    // layout->addWidget(progressBar);
+    // progressDialog.setMinimumSize(400, 80);
+    // progressDialog.setModal(true);
+    // progressDialog.show();
+    // QApplication::processEvents();
+
+    // QTextStream in(&file);
+    // QStringList sqlCommands;
+    // QString currentLine;
+
+    // // Carrega comandos SQL do arquivo
+    // while (!in.atEnd()) {
+    //     QString line = in.readLine().trimmed();
+    //     if (line.isEmpty() || line.startsWith("--"))
+    //         continue;
+
+    //     currentLine += line + " ";
+
+    //     if (line.endsWith(";")) {
+    //         sqlCommands << currentLine.trimmed();
+    //         currentLine.clear();
+    //     }
+    // }
+
+    // file.close();
+
+    // progressBar->setRange(0, sqlCommands.size());
+
+    // QSqlDatabase db = QSqlDatabase::database("mysql_connection_" + bkp_host);
+    // if (!db.isOpen()) {
+    //     QMessageBox::critical(parent, "Error", "Database connection is not open.");
+    //     return;
+    // }
+
+    // QSqlQuery query(db);
+    // int i = 0;
+    // int ttl = 0;
+    // for (const QString &cmd : sqlCommands) {
+    //     ttl++;
+    // }
+    // progressBar->setFormat("%v / %m");
+
+    // for (const QString &cmd : sqlCommands) {
+    //     if (aborted)
+    //         break;
+    //     if (!query.exec(cmd)) {
+    //         qWarning() << "Command error:" << cmd;
+    //         qWarning() << query.lastError().text();
+    //         out << "Command error:" << cmd << "\n";
+    //         out << query.lastError().text() << "\n\n";
+    //     }
+    //     i++;
+    //     progressBar->setValue(i);
+    //     QApplication::processEvents();
+    // }
+    // fileLog.close();
+    // refresh_schemas(actual_host, false);
+
+    // progressDialog.accept();
+
+    // if (aborted) {
+    //     QMessageBox::information(parent, "Cancelled", "Backup restoration was aborted by the user.");
+    // } else {
+    //     QMessageBox::information(parent, "Done", "Backup restored successfully.");
+    // }
+}
+
+void MainWindow::on_actionBackup_triggered()
+{
+    backup(actual_host, actual_schema, this);
+}
+
+
+void MainWindow::on_actionRestore_triggered()
+{
+    restore(actual_host, actual_schema, this);
+}
 

@@ -7,6 +7,9 @@
 #include <QComboBox>
 #include <QProgressBar>
 #include <QStandardItemModel>
+#include <QKeyEvent>
+#include <QCloseEvent>
+
 #include "two_checkbox_delegate.h"
 
 class QLineEdit;
@@ -25,13 +28,20 @@ class Backup : public QDialog
     Q_OBJECT
 public:
     explicit Backup(const QString &host, const QString &schema, QWidget *parent = nullptr);
+    void refresh_conns();
     void refresh_tables();
 
 private slots:
     void chooseFile();
+    void onFavorite();
     void onConfirm();
     void onCancel();
     void onHeaderClicked(int section);
+    void onSchemaEditTextChanged(const QString &newText);
+
+protected:
+    void keyPressEvent(QKeyEvent *event) override;
+    void closeEvent(QCloseEvent *event) override;
 
 private:
     QLineEdit *lineEdit;

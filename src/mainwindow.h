@@ -28,6 +28,8 @@ public:
     void endSSH(QString &selectedHost);
     void customAlert(QString title, QString message);
     void open_selected_favorite(const QModelIndex &index, const bool &run);
+    void backup(const QString &bkp_host, const QString &bkp_schema, QWidget *parent);
+    void restore(const QString &bkp_host, const QString &bkp_schema, QWidget *parent);
 
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
@@ -91,6 +93,10 @@ private slots:
     void on_listViewFavorites_doubleClicked(const QModelIndex &index);
 
     void on_buttonUpdateFavorites_clicked();
+
+    void on_actionBackup_triggered();
+
+    void on_actionRestore_triggered();
 
 private:
     Ui::MainWindow *ui;

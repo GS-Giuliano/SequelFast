@@ -1205,17 +1205,28 @@ void Sql::show_context_menu(const QPoint &pos)
 QVector<MacroField> Sql::extractFields(const QString &queryStr) {
     QVector<MacroField> fields;
 
-    // Regex para capturar:
-    // :campo
-    // :campo@tipo
-    // :campo@tipo~tabela
-    // :campo@tipo~tabela~chave
-    // :campo@tipo~tabela~chave~campo
-    // :campo@tipo~tabela~chave~campo~ordenacao
+    QString maskedQuery = queryStr;
+    QRegularExpression stringLiteralRegex(R"('(?:[^']|'')*')");
+    QRegularExpressionMatchIterator stringIt = stringLiteralRegex.globalMatch(queryStr);
 
-    QRegularExpression regex(R"(:([A-Za-z0-9_çÇáàâãéèêíïóôõöúñÁÀÂÃÉÈÊÍÏÓÔÕÖÚÑ]+)(?:@([a-zA-Z_][a-zA-Z0-9_]*))?(?:~([A-Za-z0-9_]+))?(?:~([A-Za-z0-9_]+))?(?:~([A-Za-z0-9_]+))?(?:~([A-Za-z0-9_]+))?(?=\b|\W))");
+    // Substituir conteúdo entre aspas simples por espaços para preservar posição dos caracteres
+    while (stringIt.hasNext()) {
+        QRegularExpressionMatch match = stringIt.next();
+        int start = match.capturedStart();
+        int length = match.capturedLength();
+        maskedQuery.replace(start, length, QString(length, ' '));
+    }
 
-    QRegularExpressionMatchIterator it = regex.globalMatch(queryStr);
+    // Regex para capturar macros
+    QRegularExpression macroRegex(R"(:([A-Za-z0-9_çÇáàâãéèêíïóôõöúñÁÀÂÃÉÈÊÍÏÓÔÕÖÚÑ]+)"
+                                  R"((?:@([a-zA-Z_][a-zA-Z0-9_]*))?"
+                                   R"((?:~([A-Za-z0-9_]+))?"
+                                   R"((?:~([A-Za-z0-9_]+))?"
+                                   R"((?:~([A-Za-z0-9_]+))?"
+                                   R"((?:~([A-Za-z0-9_]+))?)?)?)?)?"
+                                   R"((?=\b|\W))");
+
+    QRegularExpressionMatchIterator it = macroRegex.globalMatch(maskedQuery);
     while (it.hasNext()) {
         QRegularExpressionMatch match = it.next();
         if (!match.hasMatch()) continue;
@@ -1229,20 +1240,19 @@ QVector<MacroField> Sql::extractFields(const QString &queryStr) {
         field.order   = match.captured(6);  // ~ordenacao
         field.full    = match.captured(0);  // macro completa
 
-        qDebug() << "field.name"    << field.name    ;
-        qDebug() << "field.type"    << field.type    ;
-        qDebug() << "field.table"   << field.table   ;
-        qDebug() << "field.key"     << field.key     ;
-        qDebug() << "field.display" << field.display ;
-        qDebug() << "field.order"   << field.order   ;
-        qDebug() << "field.full"    << field.full   ;
+        // qDebug() << "field.name"    << field.name;
+        // qDebug() << "field.type"    << field.type;
+        // qDebug() << "field.table"   << field.table;
+        // qDebug() << "field.key"     << field.key;
+        // qDebug() << "field.display" << field.display;
+        // qDebug() << "field.order"   << field.order;
+        // qDebug() << "field.full"    << field.full;
 
         fields.append(field);
     }
 
     return fields;
 }
-
 
 
 QString Sql::processQueryWithMacros(QString queryStr, QWidget *parent) {
@@ -1315,5 +1325,16 @@ void Sql::on_actionFavorites_triggered()
                 qWarning() << "MainWindow not found from Sql::on_actionFavorites_triggered";
             }
         }
+    }
+}
+
+
+void Sql::keyPressEvent(QKeyEvent *event)
+{
+    if ((event->key() == Qt::Key_Return || event->key() == Qt::Key_Enter) &&
+        event->modifiers() & Qt::ControlModifier) {
+        on_actionRun_triggered();
+    } else {
+        // Sql::keyPressEvent(event);  // comportamento normal para outras teclas
     }
 }

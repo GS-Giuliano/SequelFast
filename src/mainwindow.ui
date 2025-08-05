@@ -67,6 +67,14 @@
         <number>6</number>
        </property>
        <widget class="QWidget" name="pageFavorites">
+        <property name="geometry">
+         <rect>
+          <x>0</x>
+          <y>0</y>
+          <width>218</width>
+          <height>437</height>
+         </rect>
+        </property>
         <attribute name="icon">
          <iconset resource="../icons.qrc">
           <normaloff>:/icons/resources/heart circle.svg</normaloff>:/icons/resources/heart circle.svg</iconset>
@@ -195,7 +203,7 @@
           <x>0</x>
           <y>0</y>
           <width>218</width>
-          <height>438</height>
+          <height>437</height>
          </rect>
         </property>
         <attribute name="icon">
@@ -447,7 +455,7 @@
           <x>0</x>
           <y>0</y>
           <width>218</width>
-          <height>438</height>
+          <height>437</height>
          </rect>
         </property>
         <attribute name="icon">
@@ -693,7 +701,7 @@
           <x>0</x>
           <y>0</y>
           <width>218</width>
-          <height>438</height>
+          <height>437</height>
          </rect>
         </property>
         <attribute name="icon">
@@ -814,7 +822,7 @@
      <x>0</x>
      <y>0</y>
      <width>1117</width>
-     <height>21</height>
+     <height>24</height>
     </rect>
    </property>
    <property name="sizePolicy">
@@ -847,6 +855,9 @@
    <addaction name="actionNew_connection"/>
    <addaction name="actionNew_schema"/>
    <addaction name="actionNew_table"/>
+   <addaction name="separator"/>
+   <addaction name="actionBackup"/>
+   <addaction name="actionRestore"/>
    <addaction name="separator"/>
    <addaction name="actionInformation"/>
    <addaction name="actionUsers"/>
@@ -976,6 +987,33 @@
    </property>
    <property name="toolTip">
     <string>Change theme</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::MenuRole::NoRole</enum>
+   </property>
+  </action>
+  <action name="actionBackup">
+   <property name="icon">
+    <iconset resource="../icons.qrc">
+     <normaloff>:/icons/resources/export.svg</normaloff>:/icons/resources/export.svg</iconset>
+   </property>
+   <property name="text">
+    <string>Backup</string>
+   </property>
+   <property name="toolTip">
+    <string>Backup</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::MenuRole::NoRole</enum>
+   </property>
+  </action>
+  <action name="actionRestore">
+   <property name="icon">
+    <iconset resource="../icons.qrc">
+     <normaloff>:/icons/resources/frame.svg</normaloff>:/icons/resources/frame.svg</iconset>
+   </property>
+   <property name="text">
+    <string>Restore</string>
    </property>
    <property name="menuRole">
     <enum>QAction::MenuRole::NoRole</enum>
