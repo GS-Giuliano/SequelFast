@@ -24,6 +24,7 @@ src/sql.cpp \
 src/sqlhighlighter.cpp \
 src/statistics.cpp \
 src/structure.cpp \
+    src/texteditcompleter.cpp \
 src/tunnelsqlmanager.cpp \
     src/two_checkbox_delegate.cpp \
 src/users.cpp
@@ -41,6 +42,7 @@ src/sql.h \
 src/sqlhighlighter.h \
 src/statistics.h \
 src/structure.h \
+    src/texteditcompleter.h \
 src/tunnelsqlmanager.h \
     src/two_checkbox_delegate.h \
     src/two_checkbox_list_model.h \

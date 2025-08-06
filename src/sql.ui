@@ -41,7 +41,7 @@
       <property name="handleWidth">
        <number>5</number>
       </property>
-      <widget class="QTextEdit" name="textQuery">
+      <widget class="TextEditCompleter" name="textQuery">
        <property name="font">
         <font>
          <family>Courier New</family>
@@ -81,7 +81,7 @@
      <x>0</x>
      <y>0</y>
      <width>800</width>
-     <height>24</height>
+     <height>21</height>
     </rect>
    </property>
    <property name="styleSheet">
@@ -255,6 +255,13 @@
    </property>
   </action>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>TextEditCompleter</class>
+   <extends>QTextEdit</extends>
+   <header>texteditcompleter.h</header>
+  </customwidget>
+ </customwidgets>
  <resources>
   <include location="../icons.qrc"/>
  </resources>
