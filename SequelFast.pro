@@ -15,6 +15,7 @@ SOURCES += \
     src/batch.cpp \
 src/connection.cpp \
 src/functions.cpp \
+    src/macroformatdialog.cpp \
     src/macroinputdialog.cpp \
 src/main.cpp \
 src/mainwindow.cpp \
@@ -32,6 +33,7 @@ HEADERS += \
     src/batch.h \
 src/connection.h \
 src/functions.h \
+    src/macroformatdialog.h \
     src/macroinputdialog.h \
 src/mainwindow.h \
     src/restore.h \

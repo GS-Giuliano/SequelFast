@@ -7,7 +7,7 @@
 #include <QLineEdit>
 #include <QDateEdit>
 #include <QDateTimeEdit>
-#include <QDoubleSpinBox>
+#include <QSpinBox>
 #include <QFormLayout>
 #include <QDialogButtonBox>
 #include <QCheckBox>

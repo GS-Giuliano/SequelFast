@@ -96,12 +96,13 @@ SELECT * FROM table WHERE field = :ask_field
 
 |Format|Means|Remarks|
 |------|-----|-------|
-|`:field`| Ask for a value and replace on query as string||
-|`:field@type`|Ask for a formated value and replace on query|May be: string, number, date, datetime, bool and combo|
-|`:field@combo~table`|Ask for a value on combobox and replace valueon query|Elements are aqcuired thru SELECT on table|
-|`:field@combo~table~key`|Elements are aqcuired thru SELECT on table, using key|
-|`:field@combo~table~key~field`|Elements are aqcuired thru SELECT on table, using key, and showing field|
-|`:field@combo~table~key~field~order`|Elements are aqcuired thru SELECT on table, using key, showing field ordered by order|
+|`~field`| Ask for a value and replace on query as string||
+|`~field@type`|Ask for a formated value and replace on query|May be: string, number, date, datetime, bool and combo|
+|`~field@type~default`|Ask for a formated value and replace on query|May be: string, number, date, datetime, bool and combo, using default value|
+|`~field@combo~table`|Ask for a value on combobox and replace valueon query|Elements are aqcuired thru SELECT on table|
+|`~field@combo~table~key`|Elements are aqcuired thru SELECT on table, using key|
+|`~field@combo~table~key~field`|Elements are aqcuired thru SELECT on table, using key, and showing field|
+|`~field@combo~table~key~field~order`|Elements are aqcuired thru SELECT on table, using key, showing field ordered by order|
 
 </details>
 

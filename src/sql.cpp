@@ -41,7 +41,8 @@
 #include <QJsonValue>
 
 #include <functions.h>
-#include <macroinputdialog.h>
+#include "macroinputdialog.h"
+#include "macroformatdialog.h"
 #include "mainwindow.h"
 
 extern QJsonArray connections;
@@ -648,9 +649,6 @@ void Sql::on_actionRun_triggered()
 
     // qDebug() << "host: " << sql_host << " schema: " << sql_schema << " table: " << sql_table;
 
-    QApplication::setOverrideCursor(Qt::WaitCursor);
-    QApplication::processEvents();
-
     // executa a query
     // QSqlQueryModel *model = new QSqlQueryModel(this);        
     QString queryStr = ui->textQuery->textCursor().selectedText();
@@ -673,9 +671,15 @@ void Sql::on_actionRun_triggered()
         if (queryTimer == "")
         {
             queryStr = processQueryWithMacros(queryStr, this);
+            qDebug() << queryStr; // TODO Fix
+
         }
 
         editEnabled = false;
+
+        QApplication::setOverrideCursor(Qt::WaitCursor);
+        QApplication::processEvents();
+
 
         QSqlQuery query(dbMysqlLocal);
         QString consulta = "USE "+databaseName+" ";
@@ -780,10 +784,10 @@ void Sql::on_actionRun_triggered()
             // Limpa a tabela visual, pois não há dados a mostrar
             ui->tableData->setModel(nullptr);
         }
+        QApplication::restoreOverrideCursor();
+        QApplication::processEvents();
 
     }
-    QApplication::restoreOverrideCursor();
-    QApplication::processEvents();
 }
 
 
@@ -1167,12 +1171,12 @@ void Sql::show_context_menu(const QPoint &pos)
     QAction *tableCopyInsert = menu.addAction("Copy as INSERT");
     QAction *tableCopyUpdate = menu.addAction("Copy as UPDATE");
     QAction *tableCopyCsv = menu.addAction("Copy as CSV");
-    menu.addSeparator();
-    QAction *tableCRUDGfw= menu.addAction("CRUD gFW");
-    QAction *tableCRUDLaravel = menu.addAction("CRUD Laravel");
+    // menu.addSeparator();
+    // QAction *tableCRUDGfw= menu.addAction("CRUD gFW");
+    // QAction *tableCRUDLaravel = menu.addAction("CRUD Laravel");
     menu.addSeparator();
     QAction *tableExportCSV = menu.addAction("Export as CSV");
-    QAction *tableExportPDF = menu.addAction("Export as PDF");
+    // QAction *tableExportPDF = menu.addAction("Export as PDF");
 
     QAction *selectedAction = menu.exec(ui->tableData->viewport()->mapToGlobal(pos));
 
@@ -1194,12 +1198,12 @@ void Sql::show_context_menu(const QPoint &pos)
     else if (selectedAction == tableCopyCsv) {
         on_tableCopyCsv_triggered();
     }
-    else if (selectedAction == tableCRUDGfw) {
-        on_tableCRUDGfw_triggered();
-    }
-    else if (selectedAction == tableCRUDLaravel) {
-        on_tableCRUDLaravel_triggered();
-    }
+    // else if (selectedAction == tableCRUDGfw) {
+    //     on_tableCRUDGfw_triggered();
+    // }
+    // else if (selectedAction == tableCRUDLaravel) {
+    //     on_tableCRUDLaravel_triggered();
+    // }
 }
 
 QVector<MacroField> Sql::extractFields(const QString &queryStr) {
@@ -1217,14 +1221,7 @@ QVector<MacroField> Sql::extractFields(const QString &queryStr) {
         maskedQuery.replace(start, length, QString(length, ' '));
     }
 
-    // Regex para capturar macros
-    QRegularExpression macroRegex(R"(:([A-Za-z0-9_çÇáàâãéèêíïóôõöúñÁÀÂÃÉÈÊÍÏÓÔÕÖÚÑ]+)"
-                                  R"((?:@([a-zA-Z_][a-zA-Z0-9_]*))?"
-                                   R"((?:~([A-Za-z0-9_]+))?"
-                                   R"((?:~([A-Za-z0-9_]+))?"
-                                   R"((?:~([A-Za-z0-9_]+))?"
-                                   R"((?:~([A-Za-z0-9_]+))?)?)?)?)?"
-                                   R"((?=\b|\W))");
+    QRegularExpression macroRegex(R"(~([A-Za-z0-9_çÇáàâãéèêíïóôõöúñÁÀÂÃÉÈÊÍÏÓÔÕÖÚÑ]+)(?:@([a-zA-Z_][a-zA-Z0-9_]*))?(?:~([A-Za-z0-9_%]+))?(?:~([A-Za-z0-9_]+))?(?:~([A-Za-z0-9_]+))?(?:~([A-Za-z0-9_]+))?(?=\b|\W))");
 
     QRegularExpressionMatchIterator it = macroRegex.globalMatch(maskedQuery);
     while (it.hasNext()) {
@@ -1240,17 +1237,16 @@ QVector<MacroField> Sql::extractFields(const QString &queryStr) {
         field.order   = match.captured(6);  // ~ordenacao
         field.full    = match.captured(0);  // macro completa
 
-        // qDebug() << "field.name"    << field.name;
-        // qDebug() << "field.type"    << field.type;
-        // qDebug() << "field.table"   << field.table;
-        // qDebug() << "field.key"     << field.key;
-        // qDebug() << "field.display" << field.display;
-        // qDebug() << "field.order"   << field.order;
-        // qDebug() << "field.full"    << field.full;
+        qDebug() << "field.name"    << field.name;
+        qDebug() << "field.type"    << field.type;
+        qDebug() << "field.table"   << field.table;
+        qDebug() << "field.key"     << field.key;
+        qDebug() << "field.display" << field.display;
+        qDebug() << "field.order"   << field.order;
+        qDebug() << "field.full"    << field.full;
 
         fields.append(field);
     }
-
     return fields;
 }
 
@@ -1268,7 +1264,13 @@ QString Sql::processQueryWithMacros(QString queryStr, QWidget *parent) {
             QString value = values[field.name].toString();
             // Escapa aspas simples dentro do valor para evitar erro de SQL
             value.replace('\'', "''");
-            queryStr.replace(field.full, QString("'%1'").arg(value));
+            // qDebug() << field.type << " = " << value;
+            if (field.type == "number")
+            {
+                queryStr.replace(field.full, QString("%1").arg(value));
+            } else {
+                queryStr.replace(field.full, QString("'%1'").arg(value));
+            }
         }
     }
 
@@ -1338,3 +1340,14 @@ void Sql::keyPressEvent(QKeyEvent *event)
         // Sql::keyPressEvent(event);  // comportamento normal para outras teclas
     }
 }
+
+void Sql::on_actionMacros_triggered()
+{
+    MacroFormatDialog dialog(this);
+    if (dialog.exec() == QDialog::Accepted) {
+        QString macro = dialog.resultMacro();
+        QTextCursor cursor = ui->textQuery->textCursor();
+        cursor.insertText(macro);
+    }
+}
+

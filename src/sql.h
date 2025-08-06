@@ -51,6 +51,8 @@ private slots:
 
     void show_context_menu(const QPoint &pos);
 
+    void on_actionMacros_triggered();
+
 protected:
     void keyPressEvent(QKeyEvent *event) override;
 

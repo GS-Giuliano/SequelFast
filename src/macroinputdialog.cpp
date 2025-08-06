@@ -12,18 +12,38 @@ MacroInputDialog::MacroInputDialog(const QVector<MacroField> &fields, const QStr
 
         if (field.type == "date") {
             auto *dateEdit = new QDateEdit(QDate::currentDate(), this);
+            if (field.table != "")
+            {
+                QDate data = QDate::fromString(field.table, "yyyy-MM-dd");
+                if (data.isValid())
+                {
+                    dateEdit->setDate(data);
+                }
+            }
             dateEdit->setCalendarPopup(true);
             inputs[field.name] = dateEdit;
             inputWidget = dateEdit;
 
         } else if (field.type == "datetime") {
             auto *dtEdit = new QDateTimeEdit(QDateTime::currentDateTime(), this);
+            if (field.table != "")
+            {
+                QDateTime data = QDateTime::fromString(field.table, "yyyy-MM-dd HH:mm:ss");
+                if (data.isValid())
+                {
+                    dtEdit->setDateTime(data);
+                }
+            }
             dtEdit->setCalendarPopup(true);
             inputs[field.name] = dtEdit;
             inputWidget = dtEdit;
 
         } else if (field.type == "number") {
-            auto *spin = new QDoubleSpinBox(this);
+            auto *spin = new QSpinBox(this);
+            if (field.table != "")
+            {
+                spin->setValue(field.table.toInt());
+            }
             spin->setMaximum(1e9);
             inputs[field.name] = spin;
             inputWidget = spin;
@@ -32,6 +52,13 @@ MacroInputDialog::MacroInputDialog(const QVector<MacroField> &fields, const QStr
             QString labelText = field.name;
             labelText.replace('_', ' ');
             auto *check = new QCheckBox(labelText, this);
+            if (field.table != "")
+            {
+                if (field.table=="1" || field.table=="true" || field.table=="on")
+                {
+                    check->setCheckState(Qt::Checked);
+                }
+            }
             inputs[field.name] = check;
             inputWidget = check;
             layout->addRow("", inputWidget);
@@ -44,10 +71,10 @@ MacroInputDialog::MacroInputDialog(const QVector<MacroField> &fields, const QStr
             const QString &keyField    = field.key;
             const QString &displayField = field.display;
             const QString &orderField  = field.order;
-            qDebug() << "tableName: " << tableName;
-            qDebug() << "keyField: " << keyField;
-            qDebug() << "displayField: " << displayField;
-            qDebug() << "orderField: " << orderField;
+            // qDebug() << "tableName: " << tableName;
+            // qDebug() << "keyField: " << keyField;
+            // qDebug() << "displayField: " << displayField;
+            // qDebug() << "orderField: " << orderField;
 
             if (tableName.isEmpty()) {
                 combo->addItem("Erro: tabela não definida", QVariant());
@@ -138,6 +165,10 @@ MacroInputDialog::MacroInputDialog(const QVector<MacroField> &fields, const QStr
 
         } else {
             auto *lineEdit = new QLineEdit(this);
+            if (field.table != "")
+            {
+                lineEdit->setText(field.table);
+            }
             inputs[field.name] = lineEdit;
             inputWidget = lineEdit;
         }
@@ -158,7 +189,7 @@ QMap<QString, QVariant> MacroInputDialog::getValues() const {
     for (auto it = inputs.begin(); it != inputs.end(); ++it) {
         if (auto *w = qobject_cast<QLineEdit *>(it.value()))
             values[it.key()] = w->text();
-        else if (auto *w = qobject_cast<QDoubleSpinBox *>(it.value()))
+        else if (auto *w = qobject_cast<QSpinBox *>(it.value()))
             values[it.key()] = w->value();
         else if (auto *w = qobject_cast<QDateEdit *>(it.value()))
             values[it.key()] = w->date().toString("yyyy-MM-dd");

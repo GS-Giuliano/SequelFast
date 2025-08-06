@@ -81,11 +81,7 @@ SqlHighlighter::SqlHighlighter(QTextDocument *parent)
         macroFormat.setForeground(QColor("#87CEFA")); // azul mais claro no modo escuro
     macroFormat.setFontItalic(true);
 
-    // Expressão: dois grupos possíveis — :nome ou :nome@tipo
-    // rule.pattern = QRegularExpression(":[a-zA-Z_][a-zA-Z0-9_]*(?:@[a-zA-Z_][a-zA-Z0-9_]*)?");
-    // rule.pattern = QRegularExpression(R"(:[a-zA-Z_][a-zA-Z0-9_]*(?:@[a-zA-Z_][a-zA-Z0-9_]*)(?:~[a-zA-Z0-9_]+){0,5}?(?=\b|\W))");
-    rule.pattern = QRegularExpression(R"(:[a-zA-Z_][a-zA-Z0-9_]*(?:@[a-zA-Z_][a-zA-Z0-9_]*(?:~[a-zA-Z0-9_]+){0,5})?(?=\b|\W))");
-
+    rule.pattern = QRegularExpression(R"(~[a-zA-Z_][a-zA-Z0-9_]*@[a-zA-Z_][a-zA-Z0-9_]*(?:~[0-9a-zA-Z_%]+)?(?:~[a-zA-Z_][a-zA-Z0-9_]*){0,2}(?=\b|\W|$|[;,\)\]\s]))");
 
     rule.format = macroFormat;
     rules.append(rule);

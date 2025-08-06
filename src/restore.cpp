@@ -45,7 +45,7 @@ private:
 
 Restore::Restore(QObject *parent) : QObject(parent) {}
 
-void Restore::run(QString fileName, const QString &bkp_host, const QString &bkp_schema, QWidget *parent) {
+void Restore::run(QString fileName, const QString &bkp_prefix, const QString &bkp_host, const QString &bkp_schema, QWidget *parent) {
 
     QFile fileLog(QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation)+"/restore.log");
     if (!fileLog.open(QIODevice::WriteOnly | QIODevice::Text)) {
@@ -106,8 +106,7 @@ void Restore::run(QString fileName, const QString &bkp_host, const QString &bkp_
 
     file.close();
     progressBar->setRange(0, sqlCommands.size());
-
-    QSqlDatabase db = QSqlDatabase::database("mysql_connection_" + bkp_host);
+    QSqlDatabase db = QSqlDatabase::database(bkp_prefix + bkp_host);
     if (!db.isOpen()) {
         QMessageBox::critical(parent, "Error", "Database connection is not open.");
         return;

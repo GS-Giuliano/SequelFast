@@ -58,16 +58,7 @@ Backup::Backup(const QString &host, const QString &schema, QWidget *parent) : QD
     layout->addLayout(fileLayout);
     connect(btnBrowse, &QPushButton::clicked, this, &Backup::chooseFile);
 
-    // Linha 2: seleção de host
-    auto *connLayout = new QHBoxLayout;
-    auto *connLabel = new QLabel("To connection");
-    connLabel->setFixedWidth(150);
-    connList = new QComboBox();
-    connLayout->addWidget(connLabel);
-    connLayout->addWidget(connList);
-    layout->addLayout(connLayout);
-
-    // Linha 3: seleção de schema
+    // Linha 2: seleção de schema
     auto *schemaLayout = new QHBoxLayout;
     auto *schemaLabel = new QLabel("To schema");
     schemaLabel->setFixedWidth(150);
@@ -78,7 +69,16 @@ Backup::Backup(const QString &host, const QString &schema, QWidget *parent) : QD
     schemaLayout->addWidget(schemaEdit);
     layout->addLayout(schemaLayout);
 
-    // Linha 3: seleção de tabelas
+    // Linha 3: seleção de host
+    auto *connLayout = new QHBoxLayout;
+    auto *connLabel = new QLabel("To connection");
+    connLabel->setFixedWidth(150);
+    connList = new QComboBox();
+    connLayout->addWidget(connLabel);
+    connLayout->addWidget(connList);
+    layout->addLayout(connLayout);
+
+    // Linha 4: seleção de tabelas
     tableView = new QTableView(this);
     layout->addWidget(tableView);
 
@@ -305,7 +305,7 @@ void Backup::onConfirm()
     QString exportToHostName = bkp_host;
     QString exportToSchema = schemaEdit->text().trimmed();
     QFile file(lineEdit->text());
-    exportToHostName = schemaEdit->text();
+    exportToHostName = bkp_host;
     int totalTables = model->rowCount() - 1; // pula linha 0
     int processedTables = 0;
 
@@ -318,7 +318,8 @@ void Backup::onConfirm()
             return;
         }
     }
-    if ((exportToSchema != bkp_schema) && (connList->currentText() != "Select host destination..."))
+
+    if (connList->currentText() != "Select host destination...")
     {
         exportToHost = true;
         exportToHostName = connList->currentText();
@@ -489,12 +490,20 @@ void Backup::onConfirm()
     // Fecha o arquivo
     file.close();
 
+    qDebug() << "exportToHostName"<< exportToHostName;
+    qDebug() << "exportToSchema"<< exportToSchema;
+    qDebug() << "lineEdit->text()" << lineEdit->text();
+
     if (exportToHost && lineEdit->text()!= "")
     {
+        qDebug() << "Restaurando!!!!" ;
         connectMySQL(exportToHostName, this, "backup_");
-        dbMysql.open();
+        if (!dbMysql.open())
+        {
+            qWarning() << "erro ao abrir DB!!!!";
+        }
         Restore executor;
-        executor.run(lineEdit->text(), exportToHostName, exportToSchema, this);
+        executor.run(lineEdit->text(), "backup_", exportToHostName, exportToSchema, this);
     }
 
 

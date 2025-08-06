@@ -81,7 +81,7 @@
      <x>0</x>
      <y>0</y>
      <width>800</width>
-     <height>21</height>
+     <height>24</height>
     </rect>
    </property>
    <property name="styleSheet">
@@ -95,8 +95,8 @@
    </property>
    <property name="iconSize">
     <size>
-     <width>20</width>
-     <height>20</height>
+     <width>24</width>
+     <height>24</height>
     </size>
    </property>
    <property name="toolButtonStyle">
@@ -110,6 +110,7 @@
    </attribute>
    <addaction name="actionRun"/>
    <addaction name="actionFormat"/>
+   <addaction name="actionMacros"/>
    <addaction name="actionFavorites"/>
    <addaction name="actionIncrease"/>
    <addaction name="actionReduce"/>
@@ -211,10 +212,10 @@
      <normaloff>:/icons/resources/search zoom.svg</normaloff>:/icons/resources/search zoom.svg</iconset>
    </property>
    <property name="text">
-    <string>Reduce</string>
+    <string>Decrease</string>
    </property>
    <property name="toolTip">
-    <string>Reduce font size</string>
+    <string>Decrease font size</string>
    </property>
    <property name="shortcut">
     <string>Ctrl+-</string>
@@ -233,6 +234,21 @@
    </property>
    <property name="toolTip">
     <string>Edit</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::MenuRole::NoRole</enum>
+   </property>
+  </action>
+  <action name="actionMacros">
+   <property name="icon">
+    <iconset resource="../icons.qrc">
+     <normaloff>:/icons/resources/shapes.svg</normaloff>:/icons/resources/shapes.svg</iconset>
+   </property>
+   <property name="text">
+    <string>Macros</string>
+   </property>
+   <property name="toolTip">
+    <string>Macro builder</string>
    </property>
    <property name="menuRole">
     <enum>QAction::MenuRole::NoRole</enum>

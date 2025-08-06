@@ -11,7 +11,7 @@ class Restore : public QObject
     Q_OBJECT
 public:
     explicit Restore(QObject *parent = nullptr);
-    void run(QString fileName, const QString &bkp_host, const QString &bkp_schema, QWidget *parent);
+    void run(QString fileName, const QString &bkp_prefix, const QString &bkp_host, const QString &bkp_schema, QWidget *parent);
 private:
     bool showMessage = false;
 };

@@ -1559,7 +1559,7 @@ void MainWindow::backup(const QString &bkp_host, const QString &bkp_schema, QWid
 void MainWindow::restore(const QString &bkp_host, const QString &bkp_schema, QWidget *parent)
 {
     Restore executor;
-    executor.run("", bkp_host, bkp_schema, this);
+    executor.run("", "mysql_connection_", bkp_host, bkp_schema, this);
     refresh_schemas(actual_host, false);
 
     // QFile fileLog(QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation)+"/restore.log");
