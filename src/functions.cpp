@@ -17,6 +17,8 @@
 #include <QStandardPaths>
 #include <QDir>
 #include <QMessageBox>
+#include <QApplication>
+
 #include <tunnelsqlmanager.h>
 
 QJsonArray connections;
@@ -522,6 +524,9 @@ QString extractCurrentQuery(const QString &text, int cursorPos)
 
 bool connectMySQL(const QString selectedHost, QObject *parent = nullptr, const QString prefix = "mysql_connection_" )
 {
+    QApplication::setOverrideCursor(Qt::WaitCursor);
+    QApplication::processEvents();
+
     QString connectionName = prefix + selectedHost;
 
     // Verifica se já existe uma conexão ativa com esse nome
@@ -529,6 +534,8 @@ bool connectMySQL(const QString selectedHost, QObject *parent = nullptr, const Q
         QSqlDatabase existingDb = QSqlDatabase::database(connectionName);
         if (existingDb.isOpen()) {
             dbMysql = existingDb;
+            QApplication::restoreOverrideCursor();
+            QApplication::processEvents();
             return true; // Já está conectada
         }
     }
@@ -555,6 +562,8 @@ bool connectMySQL(const QString selectedHost, QObject *parent = nullptr, const Q
             item["pass"].toVariant().toString(),
             item["schema"].toVariant().toString());
         if (!ok) {
+            QApplication::restoreOverrideCursor();
+            QApplication::processEvents();
             return false;
         }
     }
@@ -574,8 +583,12 @@ bool connectMySQL(const QString selectedHost, QObject *parent = nullptr, const Q
 
     if (!dbMysql.open()) {
         qDebug() << dbMysql.lastError();
+        QApplication::restoreOverrideCursor();
+        QApplication::processEvents();
         return false;
     }
+    QApplication::restoreOverrideCursor();
+    QApplication::processEvents();
 
     return true;
 }

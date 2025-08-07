@@ -307,13 +307,7 @@ bool MainWindow::host_connect(QString selectedHost)
 {
     QJsonObject item = getConnection(selectedHost);
 
-    QApplication::setOverrideCursor(Qt::WaitCursor);
-    QApplication::processEvents();
-
     connectMySQL(selectedHost, this);
-
-    QApplication::restoreOverrideCursor();
-    QApplication::processEvents();
 
     if (!dbMysql.open()) {
         qDebug() << dbMysql.lastError();
@@ -375,16 +369,20 @@ void MainWindow::refresh_connections() {
 
 void MainWindow::refresh_schemas(QString selectedHost, bool jumpToTables)
 {
+    QApplication::setOverrideCursor(Qt::WaitCursor);
+    QApplication::processEvents();
+
     if (!dbMysql.open()) {
         ui->statusbar->showMessage("Connection failed!");
+        QApplication::restoreOverrideCursor();
+        QApplication::processEvents();
+
         QMessageBox::information(this,
                                  "Connection failed!",
                                  "Check parameters and try again",
                                  QMessageBox::Ok
                                  );
     } else {
-        QApplication::setOverrideCursor(Qt::WaitCursor);
-        QApplication::processEvents();
 
         QJsonObject item = getConnection(selectedHost);
         QSqlQuery query(QSqlDatabase::database("mysql_connection_" + selectedHost));
@@ -409,6 +407,7 @@ void MainWindow::refresh_schemas(QString selectedHost, bool jumpToTables)
 
             QString actual_first_schema = "";
             while (query.next()) {
+                QApplication::processEvents();
                 QString name = query.value(0).toString();
                 if (name == "mysql" || name=="information_schema" || name=="performance_schema"  || name=="sys")
                 {
@@ -449,6 +448,9 @@ void MainWindow::refresh_schemas(QString selectedHost, bool jumpToTables)
                 proxy->setFilterRegularExpression(re);
             });
 
+            QApplication::restoreOverrideCursor();
+            QApplication::processEvents();
+
             if (sel > -1) {
                 QModelIndex index = proxy->index(sel, 0);
                 ui->listViewSchemas->setCurrentIndex(index);
@@ -457,9 +459,10 @@ void MainWindow::refresh_schemas(QString selectedHost, bool jumpToTables)
                     refresh_tables(selectedHost);
                 }
             }
+        } else {
+            QApplication::restoreOverrideCursor();
+            QApplication::processEvents();
         }
-        QApplication::restoreOverrideCursor();
-        QApplication::processEvents();
     }
 }
 
@@ -582,6 +585,7 @@ void MainWindow::refresh_tables(QString selectedHost) {
         int cnt = 0;
 
         while (query.next()) {
+            QApplication::processEvents();
             QString name = query.value(0).toString();
 
             QStandardItem *linha = new QStandardItem(iconeTabela, name);
