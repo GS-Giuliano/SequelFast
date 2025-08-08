@@ -1,23 +1,5 @@
 #include "statistics.h"
 #include "ui_statistics.h"
-
-#include <QDebug>
-#include <QLabel>
-#include <QLineEdit>
-#include <QSortFilterProxyModel>
-#include <QAbstractItemModel>
-#include <QMessageBox>
-
-#include <QSqlDatabase>
-#include <QSqlError>
-#include <QSqlQuery>
-#include <QSqlQueryModel>
-
-#include <QJsonDocument>
-#include <QJsonObject>
-#include <QJsonArray>
-#include <QJsonValue>
-
 #include <functions.h>
 
 extern QJsonArray connections;
@@ -29,7 +11,7 @@ extern int pref_table_row_height;
 extern int pref_table_font_size;
 extern int pref_sql_font_size;
 
-Statistics::Statistics(QString &host, QString &schema, QWidget *parent)
+Statistics::Statistics(QString& host, QString& schema, QWidget* parent)
     : QDialog(parent)
     , ui(new Ui::Statistics)
 {
@@ -38,7 +20,7 @@ Statistics::Statistics(QString &host, QString &schema, QWidget *parent)
     // QString sql_table = table;
 
     ui->setupUi(this);
-    this->setWindowTitle(sql_host +" • "+sql_schema );
+    this->setWindowTitle(sql_host + " • " + sql_schema);
     sql_host = host;
     sql_schema = schema;
 
@@ -49,14 +31,15 @@ Statistics::Statistics(QString &host, QString &schema, QWidget *parent)
     QString consulta = "SELECT * FROM performance_schema.global_variables";
     QSqlDatabase db = QSqlDatabase::database("mysql_connection_" + sql_host);
 
-    QSqlQueryModel *model = new QSqlQueryModel(this);
+    QSqlQueryModel* model = new QSqlQueryModel(this);
     model->setQuery(consulta, db);
 
     if (model->lastError().isValid()) {
-        qDebug() <<  model->lastError().text();
+        qDebug() << model->lastError().text();
         delete model;
-    } else {
-        QSortFilterProxyModel *proxy = new QSortFilterProxyModel(this);
+    }
+    else {
+        QSortFilterProxyModel* proxy = new QSortFilterProxyModel(this);
         proxy->setSourceModel(model);
         proxy->setFilterCaseSensitivity(Qt::CaseInsensitive);
 
@@ -66,34 +49,34 @@ Statistics::Statistics(QString &host, QString &schema, QWidget *parent)
         ui->tableView->setColumnWidth(1, 130);
         ui->tableView->setSortingEnabled(true);
 
-        connect(ui->lineFilter, &QLineEdit::textChanged, this, [=](const QString &texto) {
+        connect(ui->lineFilter, &QLineEdit::textChanged, this, [=](const QString& texto) {
             QString pattern = QString("(%1)").arg(texto);
             QRegularExpression re(pattern, QRegularExpression::CaseInsensitiveOption);
             proxy->setFilterRegularExpression(re);
-        });
+            });
     }
 
 
     QSqlQuery query(db);
-    if (query.exec("SELECT * FROM information_schema.SCHEMATA WHERE SCHEMA_NAME = '"+sql_schema+"'")) {
+    if (query.exec("SELECT * FROM information_schema.SCHEMATA WHERE SCHEMA_NAME = '" + sql_schema + "'")) {
         if (query.next()) {
             ui->lineCharSet->setText(query.value("DEFAULT_CHARACTER_SET_NAME").toString());
             ui->lineCollation->setText(query.value("DEFAULT_COLLATION_NAME").toString());
             ui->lineEncrypt->setText(query.value("DEFAULT_ENCRYPTION").toString());
 
             consulta = "SELECT table_schema AS name, ROUND(SUM(data_length + index_length) / 1024 / 1024, 2) size "
-                       "FROM information_schema.TABLES "
-                       "WHERE table_schema = '"+sql_schema+"' "
-                                      "GROUP BY table_schema ";
-            if (query.exec( consulta )) {
+                "FROM information_schema.TABLES "
+                "WHERE table_schema = '" + sql_schema + "' "
+                "GROUP BY table_schema ";
+            if (query.exec(consulta)) {
                 if (query.next()) {
                     ui->lineSize->setText(query.value("size").toString() + " Mb");
                 }
             }
 
             consulta = "SELECT COUNT(*) AS total_tables FROM information_schema.tables "
-                       "WHERE table_schema = '"+sql_schema+"'";
-            if (query.exec( consulta )) {
+                "WHERE table_schema = '" + sql_schema + "'";
+            if (query.exec(consulta)) {
                 if (query.next()) {
                     ui->lineTables->setText(query.value("total_tables").toString());
                 }
@@ -110,13 +93,13 @@ Statistics::~Statistics()
     delete ui;
 }
 
-void Statistics::on_tableView_cellClicked(const QModelIndex &index)
+void Statistics::on_tableView_cellClicked(const QModelIndex& index)
 {
     if (!index.isValid())
         return;
 
     // Obtem o modelo visível (proxy ou direto)
-    const QAbstractItemModel *model = index.model();
+    const QAbstractItemModel* model = index.model();
 
 
     int row = index.row();
@@ -128,7 +111,7 @@ void Statistics::on_tableView_cellClicked(const QModelIndex &index)
     QString col1Value = model->index(row, 1).data(Qt::DisplayRole).toString();
 
     QString message = QString("<b>%1:</b><br>%2 <br><br>&nbsp;")
-                          .arg(col0Value, col1Value);
+        .arg(col0Value, col1Value);
 
     QMessageBox msgBox(this);
     msgBox.setWindowTitle("Value");

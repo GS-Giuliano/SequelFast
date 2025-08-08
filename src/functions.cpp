@@ -1,32 +1,8 @@
-#include <QMainWindow>
-#include <QDebug>
-#include <QMessageBox>
-#include <QStringListModel>
-
-#include <QCoreApplication>
-#include <QSqlDatabase>
-#include <QSqlError>
-#include <QSqlQuery>
-
-#include <QJsonDocument>
-#include <QJsonObject>
-#include <QJsonArray>
-#include <QJsonValue>
-#include <QMap>
-#include <QProcess>
-#include <QStandardPaths>
-#include <QDir>
-#include <QMessageBox>
-#include <QApplication>
-
+#include "functions.h"
 #include <tunnelsqlmanager.h>
 
 QJsonArray connections;
-
-QString currentTheme = "dark";
-
 QJsonArray colors;
-
 QJsonArray colorThemes = QJsonArray{
     QJsonObject{
         {"theme", "light"},
@@ -64,6 +40,7 @@ QSqlDatabase dbMysql;
 QString dbPath = "";
 QString dbName = "preferences.db";
 
+QString currentTheme = "dark";
 QString actual_host = "";
 QString actual_schema = "";
 QString actual_table = "";
@@ -105,27 +82,29 @@ bool openPreferences()
     QSqlQuery query(QSqlDatabase::database("pref_connection"));
 
     QString createTableSql = "CREATE TABLE IF NOT EXISTS conns ("
-                             "id INTEGER PRIMARY KEY AUTOINCREMENT,"
-                             "name TEXT NULL,"
-                             "color TEXT NULL,"
-                             "host TEXT NULL,"
-                             "port TEXT NULL,"
-                             "schema TEXT NULL,"
-                             "user TEXT NULL,"
-                             "pass TEXT NULL,"
-                             "ssh_host TEXT NULL,"
-                             "ssh_port TEXT NULL,"
-                             "ssh_user TEXT NULL,"
-                             "ssh_pass TEXT NULL,"
-                             "ssh_keyfile TEXT NULL"
-                             ")";
+        "id INTEGER PRIMARY KEY AUTOINCREMENT,"
+        "name TEXT NULL,"
+        "color TEXT NULL,"
+        "host TEXT NULL,"
+        "port TEXT NULL,"
+        "schema TEXT NULL,"
+        "user TEXT NULL,"
+        "pass TEXT NULL,"
+        "ssh_host TEXT NULL,"
+        "ssh_port TEXT NULL,"
+        "ssh_user TEXT NULL,"
+        "ssh_pass TEXT NULL,"
+        "ssh_keyfile TEXT NULL"
+        ")";
     if (!query.exec(createTableSql)) {
         qCritical() << "Erro ao criar a tabela 'conns':" << query.lastError().text();
         dbPreferences.close();
-    } else {
+    }
+    else {
         if (!query.exec("SELECT COUNT(id) ttl FROM conns")) {
             qCritical() << "Erro ao consultar dados:" << query.lastError().text();
-        } else {
+        }
+        else {
             while (query.next()) {
                 int id = query.value("ttl").toInt();
                 if (id == 0)
@@ -146,18 +125,20 @@ bool openPreferences()
             }
         }
         QString createTableSql = "CREATE TABLE IF NOT EXISTS prefs ("
-                                 "id INTEGER PRIMARY KEY AUTOINCREMENT,"
-                                 "name TEXT NULL,"
-                                 "value TEXT NULL,"
-                                 "type TEXT NULL"
-                                 ")";
+            "id INTEGER PRIMARY KEY AUTOINCREMENT,"
+            "name TEXT NULL,"
+            "value TEXT NULL,"
+            "type TEXT NULL"
+            ")";
         if (!query.exec(createTableSql)) {
             qCritical() << "Erro ao criar a tabela 'pref':" << query.lastError().text();
             dbPreferences.close();
-        } else {
+        }
+        else {
             if (!query.exec("SELECT COUNT(id) ttl FROM prefs")) {
                 qCritical() << "Erro ao consultar dados:" << query.lastError().text();
-            } else {
+            }
+            else {
                 while (query.next()) {
                     int id = query.value("ttl").toInt();
                     if (id == 0)
@@ -182,7 +163,8 @@ bool openPreferences()
 
     if (!query.exec("SELECT * FROM conns")) {
         qCritical() << "Erro ao consultar dados:" << query.lastError().text();
-    } else {
+    }
+    else {
         connections = QJsonArray();
         while (query.next()) {
             QJsonObject obj;
@@ -202,7 +184,7 @@ bool openPreferences()
         }
     }
 
-    for (const QJsonValue &valor : connections) {
+    for (const QJsonValue& valor : connections) {
         if (valor.isObject()) {
             QJsonObject item = valor.toObject();
         }
@@ -218,7 +200,8 @@ void updateIntPreference(QString name, int value)
     QSqlQuery query(QSqlDatabase::database("pref_connection"));
     if (!query.exec("SELECT name FROM prefs WHERE name = '" + name + "'")) {
         qCritical() << "Erro ao consultar dados:" << query.lastError().text();
-    } else {
+    }
+    else {
         if (query.last())
         {
             QString updateSql = "UPDATE prefs SET type  = :type, value = :value WHERE name =:name";
@@ -232,7 +215,8 @@ void updateIntPreference(QString name, int value)
                 qWarning() << "Erro ao inserir host:" << query.lastError().text();
             }
 
-        } else {
+        }
+        else {
             QString insertSql = "INSERT INTO prefs (name, type, value) VALUES (:name, :type, :value)";
             query.prepare(insertSql); // Prepara a consulta para inserção segura (evita SQL injection)
 
@@ -263,7 +247,8 @@ int getIntPreference(QString name)
     // Verifica se retornou algum resultado
     if (query.next()) {
         value = query.value(0).toInt();
-    } else {
+    }
+    else {
         // qDebug() << "Preferência não encontrada para:" << name;
     }
     return(value);
@@ -284,7 +269,8 @@ QString getStringPreference(QString name)
 
     if (query.next()) {
         value = query.value(0).toString();
-    } else {
+    }
+    else {
         // qDebug() << "Preferência não encontrada para:" << name;
     }
     return(value);
@@ -312,7 +298,8 @@ QString setStringPreference(QString name, QString value)
         if (!query.exec()) {
             qWarning() << "Erro ao inserir host:" << query.lastError().text();
         }
-    } else {
+    }
+    else {
         qDebug() << "Preferência não encontrada para:" << name;
         QString insertSql = "INSERT INTO prefs (name, type, value) VALUES (:name, 'string', :value)";
         query.prepare(insertSql);
@@ -351,16 +338,16 @@ void updatePreferences()
 }
 
 bool addConnection(QString name,
-                   QString color = "",
-                   QString host = "",
-                   QString user = "",
-                   QString pass = "",
-                   QString port = "",
-                   QString ssh_host = "",
-                   QString ssh_user = "",
-                   QString ssh_pass = "",
-                   QString ssh_port = "",
-                   QString ssh_keyfile = "")
+    QString color,
+    QString host,
+    QString user,
+    QString pass,
+    QString port,
+    QString ssh_host,
+    QString ssh_user,
+    QString ssh_pass,
+    QString ssh_port,
+    QString ssh_keyfile)
 {
     bool sai = false;
     if (!dbPreferences.isValid())
@@ -381,10 +368,11 @@ bool addConnection(QString name,
     if (!query.exec()) {
         qCritical() << "Erro ao consultar dados:" << query.lastError().text();
         return(false);
-    } else {
+    }
+    else {
         if (!query.last()) {
             QString insertSql = "INSERT INTO conns (name, color, host, user, pass, port, ssh_host, ssh_user, ssh_pass, ssh_port, ssh_keyfile) "
-                                "VALUES (:name, :color, :host, :user, :pass, :port, :ssh_host, :ssh_user, :ssh_pass, :ssh_port, :ssh_keyfile)";
+                "VALUES (:name, :color, :host, :user, :pass, :port, :ssh_host, :ssh_user, :ssh_pass, :ssh_port, :ssh_keyfile)";
             query.prepare(insertSql);
 
             query.bindValue(":name", name);
@@ -403,7 +391,8 @@ bool addConnection(QString name,
 
             if (!query.exec()) {
                 qWarning() << "Erro ao inserir host:" << query.lastError().text();
-            } else {
+            }
+            else {
                 sai = true;
             }
             openPreferences();
@@ -433,14 +422,16 @@ bool deleteConnection(QString name)
     if (!query.exec()) {
         qCritical() << "Erro ao consultar dados:" << query.lastError().text();
         return(false);
-    } else {
+    }
+    else {
         if (query.last()) {
             QString insertSql = "DELETE FROM conns WHERE name = :name";
             query.prepare(insertSql);
             query.bindValue(":name", name);
             if (!query.exec()) {
                 qWarning() << "Erro ao remover host:" << query.lastError().text();
-            } else {
+            }
+            else {
                 sai = true;
             }
             openPreferences();
@@ -452,7 +443,7 @@ bool deleteConnection(QString name)
 QJsonObject getConnection(QString selectedHost)
 {
     QJsonObject item;
-    for (const QJsonValue &valor : connections) {
+    for (const QJsonValue& valor : connections) {
         if (valor.isObject()) {
             item = valor.toObject();
             if (item["name"].toVariant().toString() == selectedHost)
@@ -464,9 +455,9 @@ QJsonObject getConnection(QString selectedHost)
     return(item);
 }
 
-QString getRgbFromColorName(const QString &colorName)
+QString getRgbFromColorName(const QString& colorName)
 {
-    for (const QJsonValue &val : colors) {
+    for (const QJsonValue& val : colors) {
         QJsonObject obj = val.toObject();
         if (obj["name"].toString() == colorName.toLower()) {
             return obj["rgb"].toString();
@@ -475,9 +466,9 @@ QString getRgbFromColorName(const QString &colorName)
     return "#FFFFFF";
 }
 
-QStringList extractFieldsWithPrefix(const QStringList &fields, const QString &tableName, const QString &alias) {
+QStringList extractFieldsWithPrefix(const QStringList& fields, const QString& tableName, const QString& alias) {
     QStringList result;
-    for (const QString &field : fields) {
+    for (const QString& field : fields) {
         QString trimmed = field.trimmed();
 
         // Campo com prefixo (ex: P.nome ou pessoas.nome)
@@ -488,7 +479,8 @@ QStringList extractFieldsWithPrefix(const QStringList &fields, const QString &ta
             if ((!alias.isEmpty() && prefix == alias) || prefix == tableName) {
                 result << fieldName;
             }
-        } else {
+        }
+        else {
             // Campo sem prefixo: assume-se que pertence à tabela principal
             result << trimmed;
         }
@@ -497,7 +489,7 @@ QStringList extractFieldsWithPrefix(const QStringList &fields, const QString &ta
 }
 
 
-QString extractCurrentQuery(const QString &text, int cursorPos)
+QString extractCurrentQuery(const QString& text, int cursorPos)
 {
     if (text.isEmpty() || cursorPos < 0 || cursorPos > text.length())
         return "";
@@ -522,7 +514,7 @@ QString extractCurrentQuery(const QString &text, int cursorPos)
     return query;
 }
 
-bool connectMySQL(const QString selectedHost, QObject *parent = nullptr, const QString prefix = "mysql_connection_" )
+bool connectMySQL(const QString selectedHost, QObject* parent, const QString prefix)
 {
     QApplication::setOverrideCursor(Qt::WaitCursor);
     QApplication::processEvents();
@@ -546,7 +538,7 @@ bool connectMySQL(const QString selectedHost, QObject *parent = nullptr, const Q
 
     if (item["ssh_host"] != "")
     {
-        TunnelSqlManager *manager = new TunnelSqlManager(parent);
+        TunnelSqlManager* manager = new TunnelSqlManager(parent);
 
         bool ok = manager->conectar(
             item["name"].toVariant().toString(),
@@ -618,7 +610,8 @@ QString generateCreateTableStatement(const QString& tableName, const QString& co
         QString createTableStmt = query.value(1).toString();
         qDebug() << "Comando CREATE TABLE obtido com sucesso para" << tableName;
         return createTableStmt;
-    } else {
+    }
+    else {
         qDebug() << "Nenhum resultado retornado para SHOW CREATE TABLE" << tableName;
         return QString();
     }
@@ -653,9 +646,9 @@ QString generateColumnsCsv(const QString& tableName, const QString& connectionNa
 
         // Formata a linha CSV
         QString csvLine = QString("\"%1\",\"%2\",\"%3\"")
-                              .arg(field.replace("\"", "\"\"")) // Escapa aspas no nome do campo
-                              .arg(type.replace("\"", "\"\""))  // Escapa aspas no tipo
-                              .arg(defaultValue.replace("\"", "\"\"")); // Escapa aspas no valor padrão
+            .arg(field.replace("\"", "\"\"")) // Escapa aspas no nome do campo
+            .arg(type.replace("\"", "\"\""))  // Escapa aspas no tipo
+            .arg(defaultValue.replace("\"", "\"\"")); // Escapa aspas no valor padrão
         csvLines << csvLine;
     }
 

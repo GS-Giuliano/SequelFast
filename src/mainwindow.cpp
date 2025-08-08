@@ -1,43 +1,8 @@
 #include "mainwindow.h"
 #include "./ui_mainwindow.h"
 
-#include <QCoreApplication>
-#include <QSqlDatabase>
-#include <QSqlError>
-#include <QSqlQuery>
-#include <QDebug>
-#include <QStringListModel>
-#include <QMessageBox>
-#include <QStringListModel>
-#include <QStandardItemModel>
-#include <QMdiSubWindow>
-#include <QProgressDialog>
-#include <QTimer>
-#include <QAction>
-#include <QContextMenuEvent>
-#include <QMenu>
-#include <QInputDialog>
-#include <QTextStream>
-#include <QFile>
-#include <QPainter>
-#include <QPixmap>
-#include <QFormLayout>
-#include <QClipboard>
-#include <QStandardPaths>
-#include <QFileDialog>
-
-#include <QSortFilterProxyModel>
-#include <QMap>
-#include <QProcess>
-
-#include <QJsonDocument>
-#include <QJsonObject>
-#include <QJsonArray>
-#include <QJsonValue>
-
 #include <backup.h>
 #include <restore.h>
-
 #include <functions.h>
 #include <connection.h>
 #include <sql.h>
@@ -70,27 +35,29 @@ QStringList favValue;
 
 
 struct InterruptibleProgressDialog : public QDialog {
-    bool &aborted;
-    InterruptibleProgressDialog(bool &abortRef, QWidget *parent = nullptr)
-        : QDialog(parent), aborted(abortRef) {}
+    bool& aborted;
+    InterruptibleProgressDialog(bool& abortRef, QWidget* parent = nullptr)
+        : QDialog(parent), aborted(abortRef) {
+    }
 
 protected:
-    void keyPressEvent(QKeyEvent *event) override {
+    void keyPressEvent(QKeyEvent* event) override {
         if (event->key() == Qt::Key_Escape) {
             aborted = true;
             close();  // fecha visualmente a janela
-        } else {
+        }
+        else {
             QDialog::keyPressEvent(event);
         }
     }
 
-    void closeEvent(QCloseEvent *event) override {
+    void closeEvent(QCloseEvent* event) override {
         aborted = true;
         QDialog::closeEvent(event);
     }
 };
 
-MainWindow::MainWindow(QWidget *parent)
+MainWindow::MainWindow(QWidget* parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
 {
@@ -116,26 +83,27 @@ MainWindow::MainWindow(QWidget *parent)
 
         ui->listViewConns->setContextMenuPolicy(Qt::CustomContextMenu);
         connect(ui->listViewConns, &QListView::customContextMenuRequested,
-                this, &MainWindow::mostrarMenuContextoConns);
+            this, &MainWindow::show_context_menu_Conns);
 
         ui->listViewSchemas->setContextMenuPolicy(Qt::CustomContextMenu);
         connect(ui->listViewSchemas, &QListView::customContextMenuRequested,
-                this, &MainWindow::mostrarMenuContextoSchemas);
+            this, &MainWindow::show_context_menu_Schemas);
 
         ui->listViewTables->setContextMenuPolicy(Qt::CustomContextMenu);
         connect(ui->listViewTables, &QListView::customContextMenuRequested,
-                this, &MainWindow::mostrarMenuContextoTables);
+            this, &MainWindow::show_context_menu_Tables);
 
         ui->listViewFavorites->setContextMenuPolicy(Qt::CustomContextMenu);
         connect(ui->listViewFavorites, &QListView::customContextMenuRequested,
-                this, &MainWindow::mostrarMenuContextoFavorites);
+            this, &MainWindow::show_context_menu_Favorites);
 
 
         refresh_connections();
         getPreferences();
 
-    } else {
-        customAlert("Error","Can't create preferences file! Check permissions and try again...");
+    }
+    else {
+        customAlert("Error", "Can't create preferences file! Check permissions and try again...");
         QTimer::singleShot(0, qApp, &QApplication::quit);
     }
     refresh_favorites();
@@ -154,15 +122,15 @@ void MainWindow::changeTheme()
     // qDebug() << "mudar tema: " << currentTheme;
     QFile f(QString(":themes/%1/%2style.qss").arg(currentTheme).arg(currentTheme));
 
-    if (!f.exists())   {
+    if (!f.exists()) {
         printf("Unable to set stylesheet, file not found\n");
     }
-    else   {
+    else {
         f.open(QFile::ReadOnly | QFile::Text);
         QTextStream ts(&f);
         this->setStyleSheet(ts.readAll());
 
-        for (const QJsonValue &val : colorThemes) {
+        for (const QJsonValue& val : colorThemes) {
             QJsonObject obj = val.toObject();
             if (obj["theme"].toString() == currentTheme) {
                 colors = obj["colors"].toArray();
@@ -171,7 +139,7 @@ void MainWindow::changeTheme()
         }
         setStringPreference("theme", currentTheme);
 
-        if (currentTheme=="dark")
+        if (currentTheme == "dark")
         {
             QPixmap pixmap(10, 10);
             pixmap.fill(Qt::darkGray); // cor de fundo
@@ -181,7 +149,8 @@ void MainWindow::changeTheme()
             painter.drawPoint(5, 5); // ponto central
             painter.end();
             ui->mdiArea->setBackground(QBrush(pixmap));
-        } else {
+        }
+        else {
             QPixmap pixmap(10, 10);
             pixmap.fill(Qt::white); // cor de fundo
 
@@ -211,21 +180,21 @@ void MainWindow::customAlert(QString title, QString message)
         "    padding: 5px;"
         "    margin: 5px"
         "}"
-        );
+    );
     msgBox.exec();
 }
 
 
-void MainWindow::createDatabaseDialog(QWidget *parent)
+void MainWindow::createDatabaseDialog(QWidget* parent)
 {
     QDialog dialog(parent);
     dialog.setWindowTitle("Create database");
 
-    QFormLayout *formLayout = new QFormLayout(&dialog);
+    QFormLayout* formLayout = new QFormLayout(&dialog);
 
-    QLineEdit *editNome = new QLineEdit();
-    QLineEdit *editCharset = new QLineEdit();
-    QLineEdit *editCollate = new QLineEdit();
+    QLineEdit* editNome = new QLineEdit();
+    QLineEdit* editCharset = new QLineEdit();
+    QLineEdit* editCollate = new QLineEdit();
 
     editCharset->setText("utf8mb4");
     editCollate->setText("utf8mb4_general_ci");
@@ -234,7 +203,7 @@ void MainWindow::createDatabaseDialog(QWidget *parent)
     formLayout->addRow("Character Set:", editCharset);
     formLayout->addRow("Collation:", editCollate);
 
-    QDialogButtonBox *buttons = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
+    QDialogButtonBox* buttons = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
     formLayout->addWidget(buttons);
 
     QObject::connect(buttons, &QDialogButtonBox::accepted, &dialog, &QDialog::accept);
@@ -252,11 +221,12 @@ void MainWindow::createDatabaseDialog(QWidget *parent)
         }
 
         QString sql = QString("CREATE DATABASE `%1` CHARACTER SET %2 COLLATE %3;")
-                          .arg(nome, charset, collate);
+            .arg(nome, charset, collate);
         QSqlQuery query(QSqlDatabase::database("mysql_connection_" + actual_host));
         if (!query.exec(sql)) {
             customAlert("Create database error", query.lastError().text());
-        } else {
+        }
+        else {
             refresh_schemas(actual_host, false);
             // customAlert("Success", "Database created!");
         }
@@ -264,19 +234,19 @@ void MainWindow::createDatabaseDialog(QWidget *parent)
 }
 
 
-void MainWindow::createTableDialog(QWidget *parent)
+void MainWindow::createTableDialog(QWidget* parent)
 {
     QDialog dialog(parent);
     dialog.setWindowTitle("Create table");
 
-    QFormLayout *formLayout = new QFormLayout(&dialog);
+    QFormLayout* formLayout = new QFormLayout(&dialog);
 
-    QLineEdit *editName = new QLineEdit();
+    QLineEdit* editName = new QLineEdit();
 
 
     formLayout->addRow("Table name:", editName);
 
-    QDialogButtonBox *buttons = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
+    QDialogButtonBox* buttons = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
     formLayout->addWidget(buttons);
 
     QObject::connect(buttons, &QDialogButtonBox::accepted, &dialog, &QDialog::accept);
@@ -295,7 +265,8 @@ void MainWindow::createTableDialog(QWidget *parent)
         QSqlQuery query(QSqlDatabase::database("mysql_connection_" + actual_host));
         if (!query.exec(sql)) {
             customAlert("Create table error", query.lastError().text());
-        } else {
+        }
+        else {
             refresh_tables(actual_host);
             // customAlert("Success", "Database created!");
         }
@@ -315,7 +286,8 @@ bool MainWindow::host_connect(QString selectedHost)
 
         customAlert("Connection failed!", "Check parameters and try again");
         return(false);
-    } else {
+    }
+    else {
         ui->statusbar->showMessage("Host connected!");
         refresh_schemas(selectedHost, true);
     }
@@ -326,23 +298,24 @@ void MainWindow::refresh_connections() {
     ui->toolBoxLeft->setCurrentIndex(3);
     ui->lineEditConns->setText("");
 
-    QStandardItemModel *modelo = new QStandardItemModel(this);
+    QStandardItemModel* modelo = new QStandardItemModel(this);
 
     QIcon iconeConexao;
     if (ui->buttonEditConns->isChecked())
     {
         iconeConexao = QIcon(":/icons/resources/cloud connection 2.svg");
-    } else {
+    }
+    else {
         iconeConexao = QIcon(":/icons/resources/cloud connection.svg");
     }
 
-    for (const QJsonValue &valor : connections) {
+    for (const QJsonValue& valor : connections) {
         if (valor.isObject()) {
             QJsonObject item = valor.toObject();
             QString nome = item["name"].toString();
             QString corDeFundo = item["color"].toString().toLower();
 
-            QStandardItem *linha = new QStandardItem(iconeConexao, nome);  // Ícone aplicado aqui
+            QStandardItem* linha = new QStandardItem(iconeConexao, nome);  // Ícone aplicado aqui
 
             // Define a cor de fundo com base no texto
             linha->setBackground(QColor(getRgbFromColorName(corDeFundo)));
@@ -351,18 +324,18 @@ void MainWindow::refresh_connections() {
     }
 
     // Proxy de filtro
-    QSortFilterProxyModel *proxy = new QSortFilterProxyModel(this);
+    QSortFilterProxyModel* proxy = new QSortFilterProxyModel(this);
     proxy->setSourceModel(modelo);
     proxy->setFilterCaseSensitivity(Qt::CaseInsensitive);
 
     ui->listViewConns->setModel(proxy);
 
     // Filtro no LineEdit
-    connect(ui->lineEditConns, &QLineEdit::textChanged, this, [=](const QString &texto) {
+    connect(ui->lineEditConns, &QLineEdit::textChanged, this, [=](const QString& texto) {
         QString pattern = QString("(%1)").arg(texto);
         QRegularExpression re(pattern, QRegularExpression::CaseInsensitiveOption);
         proxy->setFilterRegularExpression(re);
-    });
+        });
 
     ui->statusbar->showMessage("Connections updated");
 }
@@ -378,11 +351,12 @@ void MainWindow::refresh_schemas(QString selectedHost, bool jumpToTables)
         QApplication::processEvents();
 
         QMessageBox::information(this,
-                                 "Connection failed!",
-                                 "Check parameters and try again",
-                                 QMessageBox::Ok
-                                 );
-    } else {
+            "Connection failed!",
+            "Check parameters and try again",
+            QMessageBox::Ok
+        );
+    }
+    else {
 
         QJsonObject item = getConnection(selectedHost);
         QSqlQuery query(QSqlDatabase::database("mysql_connection_" + selectedHost));
@@ -390,7 +364,7 @@ void MainWindow::refresh_schemas(QString selectedHost, bool jumpToTables)
         if (query.exec("SHOW DATABASES"))
         {
             ui->lineEditSchemas->setText("");
-            QStandardItemModel *modelo = new QStandardItemModel(this);
+            QStandardItemModel* modelo = new QStandardItemModel(this);
             int sel = -1;
             int cnt = 0;
 
@@ -400,7 +374,8 @@ void MainWindow::refresh_schemas(QString selectedHost, bool jumpToTables)
             {
                 iconeBanco1 = QIcon(":/icons/resources/box.svg");
                 iconeBanco2 = QIcon(":/icons/resources/box 3.svg");
-            } else {
+            }
+            else {
                 iconeBanco1 = QIcon(":/icons/resources/box.svg");
                 iconeBanco2 = QIcon(":/icons/resources/box 2.svg");
             }
@@ -409,12 +384,13 @@ void MainWindow::refresh_schemas(QString selectedHost, bool jumpToTables)
             while (query.next()) {
                 QApplication::processEvents();
                 QString name = query.value(0).toString();
-                if (name == "mysql" || name=="information_schema" || name=="performance_schema"  || name=="sys")
+                if (name == "mysql" || name == "information_schema" || name == "performance_schema" || name == "sys")
                 {
-                    QStandardItem *linha = new QStandardItem(iconeBanco1, name);
+                    QStandardItem* linha = new QStandardItem(iconeBanco1, name);
                     modelo->appendRow(linha);
-                } else {
-                    QStandardItem *linha = new QStandardItem(iconeBanco2, name);
+                }
+                else {
+                    QStandardItem* linha = new QStandardItem(iconeBanco2, name);
                     modelo->appendRow(linha);
                     if (actual_first_schema == "")
                     {
@@ -435,18 +411,18 @@ void MainWindow::refresh_schemas(QString selectedHost, bool jumpToTables)
             }
 
             // Proxy de filtro
-            QSortFilterProxyModel *proxy = new QSortFilterProxyModel(this);
+            QSortFilterProxyModel* proxy = new QSortFilterProxyModel(this);
             proxy->setSourceModel(modelo);
             proxy->setFilterCaseSensitivity(Qt::CaseInsensitive);
 
             ui->listViewSchemas->setModel(proxy);
 
             // Filtro no LineEdit
-            connect(ui->lineEditSchemas, &QLineEdit::textChanged, this, [=](const QString &texto) {
+            connect(ui->lineEditSchemas, &QLineEdit::textChanged, this, [=](const QString& texto) {
                 QString pattern = QString("(%1)").arg(texto);
                 QRegularExpression re(pattern, QRegularExpression::CaseInsensitiveOption);
                 proxy->setFilterRegularExpression(re);
-            });
+                });
 
             QApplication::restoreOverrideCursor();
             QApplication::processEvents();
@@ -459,7 +435,8 @@ void MainWindow::refresh_schemas(QString selectedHost, bool jumpToTables)
                     refresh_tables(selectedHost);
                 }
             }
-        } else {
+        }
+        else {
             QApplication::restoreOverrideCursor();
             QApplication::processEvents();
         }
@@ -471,14 +448,15 @@ void MainWindow::refresh_schema(QString selectedSchema)
     if (!dbMysql.open()) {
         ui->statusbar->showMessage("Connection failed!");
         QMessageBox::information(this,
-                                 "Connection failed!",
-                                 "Check parameters and try again",
-                                 QMessageBox::Ok
-                                 );
-    } else {
-        QSqlQuery query(QSqlDatabase::database("mysql_connection_"+actual_host));
+            "Connection failed!",
+            "Check parameters and try again",
+            QMessageBox::Ok
+        );
+    }
+    else {
+        QSqlQuery query(QSqlDatabase::database("mysql_connection_" + actual_host));
 
-        if (query.exec("USE "+selectedSchema)) {
+        if (query.exec("USE " + selectedSchema)) {
             refresh_tables(actual_host);
             ui->toolBoxLeft->setCurrentIndex(1);
             ui->buttonFilterTables->setChecked(false);
@@ -502,12 +480,13 @@ void MainWindow::refresh_favorites()
 
     ui->lineEditFavorites->setText("");
 
-    QStandardItemModel *modelo = new QStandardItemModel(this);
+    QStandardItemModel* modelo = new QStandardItemModel(this);
     QIcon iconeTabela;
     if (ui->buttonEditFavorites->isChecked())
     {
         iconeTabela = QIcon(":/icons/resources/heart 2.svg");
-    } else {
+    }
+    else {
         iconeTabela = QIcon(":/icons/resources/heart.svg");
     }
 
@@ -527,7 +506,7 @@ void MainWindow::refresh_favorites()
         favValue.append(value);
 
         QStringList favList = name.split(":");
-        QStandardItem *linha = new QStandardItem(iconeTabela, favList[5]);
+        QStandardItem* linha = new QStandardItem(iconeTabela, favList[5]);
 
         QString corDeFundo = favList[4];
 
@@ -542,17 +521,17 @@ void MainWindow::refresh_favorites()
         cnt++;
     }
 
-    QSortFilterProxyModel *proxy = new QSortFilterProxyModel(this);
+    QSortFilterProxyModel* proxy = new QSortFilterProxyModel(this);
     proxy->setSourceModel(modelo);
     proxy->setFilterCaseSensitivity(Qt::CaseInsensitive);
 
     ui->listViewFavorites->setModel(proxy);
 
-    connect(ui->lineEditFavorites, &QLineEdit::textChanged, this, [=](const QString &texto) {
+    connect(ui->lineEditFavorites, &QLineEdit::textChanged, this, [=](const QString& texto) {
         QString pattern = QString("(%1)").arg(texto);
         QRegularExpression re(pattern, QRegularExpression::CaseInsensitiveOption);
         proxy->setFilterRegularExpression(re);
-    });
+        });
 
     if (sel > -1) {
         QModelIndex index = ui->listViewFavorites->model()->index(sel, 0);
@@ -572,12 +551,13 @@ void MainWindow::refresh_tables(QString selectedHost) {
     if (query.exec("SHOW TABLES")) {
         ui->lineEditTables->setText("");
 
-        QStandardItemModel *modelo = new QStandardItemModel(this);
+        QStandardItemModel* modelo = new QStandardItemModel(this);
         QIcon iconeTabela;
         if (ui->buttonEditTables->isChecked())
         {
             iconeTabela = QIcon(":/icons/resources/size.svg");
-        } else {
+        }
+        else {
             iconeTabela = QIcon(":/icons/resources/copy.svg");
         }
 
@@ -588,7 +568,7 @@ void MainWindow::refresh_tables(QString selectedHost) {
             QApplication::processEvents();
             QString name = query.value(0).toString();
 
-            QStandardItem *linha = new QStandardItem(iconeTabela, name);
+            QStandardItem* linha = new QStandardItem(iconeTabela, name);
             modelo->appendRow(linha);
 
             if (false) {
@@ -598,17 +578,17 @@ void MainWindow::refresh_tables(QString selectedHost) {
         }
 
         // Proxy de filtro
-        QSortFilterProxyModel *proxy = new QSortFilterProxyModel(this);
+        QSortFilterProxyModel* proxy = new QSortFilterProxyModel(this);
         proxy->setSourceModel(modelo);
         proxy->setFilterCaseSensitivity(Qt::CaseInsensitive);
 
         ui->listViewTables->setModel(proxy);
 
-        connect(ui->lineEditTables, &QLineEdit::textChanged, this, [=](const QString &texto) {
+        connect(ui->lineEditTables, &QLineEdit::textChanged, this, [=](const QString& texto) {
             QString pattern = QString("(%1)").arg(texto);
             QRegularExpression re(pattern, QRegularExpression::CaseInsensitiveOption);
             proxy->setFilterRegularExpression(re);
-        });
+            });
 
         if (sel > -1) {
             QModelIndex index = ui->listViewTables->model()->index(sel, 0);
@@ -616,24 +596,25 @@ void MainWindow::refresh_tables(QString selectedHost) {
         }
 
         ui->statusbar->showMessage("Tables updated");
-    // } else {
-    //     ui->statusbar->showMessage("Find tables error!");
+        // } else {
+        //     ui->statusbar->showMessage("Find tables error!");
     }
 
     QApplication::restoreOverrideCursor();
     QApplication::processEvents();
 }
 
-void MainWindow::on_listViewConns_clicked(const QModelIndex &index)
+void MainWindow::on_listViewConns_clicked(const QModelIndex& index)
 {
 }
 
-void MainWindow::on_listViewConns_doubleClicked(const QModelIndex &index)
+void MainWindow::on_listViewConns_doubleClicked(const QModelIndex& index)
 {
     if (ui->buttonEditConns->isChecked())
     {
         listViewConns_edit(index);
-    } else {
+    }
+    else {
         ui->actionNew_schema->setDisabled(false);
         ui->actionUsers->setDisabled(false);
         ui->actionRestore->setDisabled(false);
@@ -642,7 +623,7 @@ void MainWindow::on_listViewConns_doubleClicked(const QModelIndex &index)
 }
 
 
-void MainWindow::on_listViewSchemas_clicked(const QModelIndex &index)
+void MainWindow::on_listViewSchemas_clicked(const QModelIndex& index)
 {
     actual_schema = index.data(Qt::DisplayRole).toString();
     ui->actionBackup->setDisabled(false);
@@ -652,18 +633,18 @@ void MainWindow::on_listViewSchemas_clicked(const QModelIndex &index)
     QSqlQuery query(db);
 
     QString consulta = "SELECT table_schema AS name, ROUND(SUM(data_length + index_length) / 1024 / 1024, 2) size "
-                       "FROM information_schema.TABLES "
-                       "WHERE table_schema = '"+actual_schema+"' "
-                                         "GROUP BY table_schema ";
-    if (query.exec( consulta )) {
+        "FROM information_schema.TABLES "
+        "WHERE table_schema = '" + actual_schema + "' "
+        "GROUP BY table_schema ";
+    if (query.exec(consulta)) {
         if (query.next()) {
             ui->labelSchemaSize->setText(query.value("size").toString() + " Mb");
         }
     }
 
     consulta = "SELECT COUNT(*) AS total_tables FROM information_schema.tables "
-               "WHERE table_schema = '"+actual_schema+"'";
-    if (query.exec( consulta )) {
+        "WHERE table_schema = '" + actual_schema + "'";
+    if (query.exec(consulta)) {
         if (query.next()) {
             ui->labelSchemaTables->setText(query.value("total_tables").toString());
         }
@@ -671,7 +652,7 @@ void MainWindow::on_listViewSchemas_clicked(const QModelIndex &index)
 }
 
 
-void MainWindow::on_listViewSchemas_doubleClicked(const QModelIndex &index)
+void MainWindow::on_listViewSchemas_doubleClicked(const QModelIndex& index)
 {
     actual_schema = index.data(Qt::DisplayRole).toString();
     ui->actionNew_table->setDisabled(false);
@@ -679,9 +660,9 @@ void MainWindow::on_listViewSchemas_doubleClicked(const QModelIndex &index)
 }
 
 
-void MainWindow::on_listViewTables_clicked(const QModelIndex &index)
+void MainWindow::on_listViewTables_clicked(const QModelIndex& index)
 {
-    actual_table= index.data(Qt::DisplayRole).toString();
+    actual_table = index.data(Qt::DisplayRole).toString();
 
     QSqlDatabase db = QSqlDatabase::database("mysql_connection_" + actual_host);
 
@@ -689,9 +670,9 @@ void MainWindow::on_listViewTables_clicked(const QModelIndex &index)
 
     QString consulta = "SELECT table_name AS 'table', table_rows AS 'rows',"
         "ROUND((data_length + index_length) / 1024 / 1024, 2) AS 'size'"
-        "FROM  information_schema.tables WHERE  table_schema = '"+actual_schema+"' AND "
-        " table_name = '"+actual_table+"'";
-    if (query.exec( consulta )) {
+        "FROM  information_schema.tables WHERE  table_schema = '" + actual_schema + "' AND "
+        " table_name = '" + actual_table + "'";
+    if (query.exec(consulta)) {
         if (query.next()) {
             ui->labelTablesSize->setText(query.value("size").toString() + " Mb");
             ui->labelTablesRows->setText(query.value("rows").toString());
@@ -700,18 +681,19 @@ void MainWindow::on_listViewTables_clicked(const QModelIndex &index)
 }
 
 
-void MainWindow::on_listViewTables_doubleClicked(const QModelIndex &index)
+void MainWindow::on_listViewTables_doubleClicked(const QModelIndex& index)
 {
     // actual_table= index.data(Qt::DisplayRole).toString();
     if (ui->buttonEditTables->isChecked())
     {
         on_listViewTables_edit(index);
-    } else {
+    }
+    else {
         on_listViewTables_open(index);
     }
 }
 
-void MainWindow::open_selected_favorite(const QModelIndex &index, const bool &run)
+void MainWindow::open_selected_favorite(const QModelIndex& index, const bool& run)
 {
     QString a_host = "";
     QString a_schema = "";
@@ -727,7 +709,7 @@ void MainWindow::open_selected_favorite(const QModelIndex &index, const bool &ru
 
         QStringList favList = fav.split(":");
 
-        QMdiSubWindow *prev = ui->mdiArea->activeSubWindow();
+        QMdiSubWindow* prev = ui->mdiArea->activeSubWindow();
         bool maximize = true;
 
         if (prev) {
@@ -741,9 +723,9 @@ void MainWindow::open_selected_favorite(const QModelIndex &index, const bool &ru
         a_table = favList[3];
         a_color = favList[4];
 
-        Sql *form = new Sql(a_host, a_schema, a_table, a_color, favName[index.row()], favValue[index.row()], run);
+        Sql* form = new Sql(a_host, a_schema, a_table, a_color, favName[index.row()], favValue[index.row()], run);
 
-        QMdiSubWindow *sub = new QMdiSubWindow;
+        QMdiSubWindow* sub = new QMdiSubWindow;
         sub->setWidget(form);
         sub->setAttribute(Qt::WA_DeleteOnClose);  // subjanela será destruída ao fechar
         ui->mdiArea->addSubWindow(sub);
@@ -755,7 +737,7 @@ void MainWindow::open_selected_favorite(const QModelIndex &index, const bool &ru
     }
 }
 
-void MainWindow::on_listViewFavorites_doubleClicked(const QModelIndex &index)
+void MainWindow::on_listViewFavorites_doubleClicked(const QModelIndex& index)
 {
     bool run = true;
     if (ui->buttonEditFavorites->isChecked())
@@ -765,7 +747,7 @@ void MainWindow::on_listViewFavorites_doubleClicked(const QModelIndex &index)
     open_selected_favorite(index, run);
 }
 
-void MainWindow::on_listViewFavorites_clicked(const QModelIndex &index)
+void MainWindow::on_listViewFavorites_clicked(const QModelIndex& index)
 {
 
 }
@@ -819,7 +801,7 @@ void MainWindow::on_buttonNewConns_clicked()
 
 void MainWindow::on_buttonFilterTables_clicked()
 {
-    QString pref_name = "fav_"+actual_host+"_"+actual_schema;
+    QString pref_name = "fav_" + actual_host + "_" + actual_schema;
 
     if (ui->buttonFilterTables->isChecked())
     {
@@ -830,10 +812,12 @@ void MainWindow::on_buttonFilterTables_clicked()
             {
                 ui->lineEditTables->setText(value);
             }
-        } else {
+        }
+        else {
             setStringPreference(pref_name, ui->lineEditTables->text());
         }
-    } else {
+    }
+    else {
         ui->lineEditTables->setText("");
     }
 }
@@ -841,7 +825,7 @@ void MainWindow::on_buttonFilterTables_clicked()
 
 void MainWindow::on_buttonFilterSchemas_clicked()
 {
-    QString pref_name = "fav_"+actual_host;
+    QString pref_name = "fav_" + actual_host;
 
     if (ui->buttonFilterSchemas->isChecked())
     {
@@ -852,10 +836,12 @@ void MainWindow::on_buttonFilterSchemas_clicked()
             {
                 ui->lineEditSchemas->setText(value);
             }
-        } else {
+        }
+        else {
             setStringPreference(pref_name, ui->lineEditSchemas->text());
         }
-    } else {
+    }
+    else {
         ui->lineEditSchemas->setText("");
     }
 }
@@ -873,10 +859,12 @@ void MainWindow::on_buttonFilterFavorites_clicked()
             {
                 ui->lineEditFavorites->setText(value);
             }
-        } else {
+        }
+        else {
             setStringPreference(pref_name, ui->lineEditFavorites->text());
         }
-    } else {
+    }
+    else {
         ui->lineEditFavorites->setText("");
     }
 }
@@ -901,20 +889,20 @@ void MainWindow::on_toolBoxLeft_currentChanged(int index)
 
 void MainWindow::on_actionNew_connection_triggered()
 {
-    QString selected ;
+    QString selected;
     bool fez = false;
     newConnectionCount = 0;
-    while(!fez)
+    while (!fez)
     {
         selected = "New connection";
         if (newConnectionCount > 0) {
-            selected+=" " +std::to_string(newConnectionCount);
+            selected += " " + std::to_string(newConnectionCount);
         }
         newConnectionCount++;
         fez = addConnection(selected);
         if (fez)
         {
-            Connection *janela = new Connection(selected, this);
+            Connection* janela = new Connection(selected, this);
             int result = janela->exec();
             if (result == QDialog::Accepted) {
                 refresh_connections();
@@ -947,7 +935,8 @@ void MainWindow::on_actionTheme_triggered()
     if (currentTheme == "light")
     {
         currentTheme = "dark";
-    } else {
+    }
+    else {
         currentTheme = "light";
     }
     changeTheme();
@@ -957,7 +946,7 @@ void MainWindow::on_actionTheme_triggered()
 
 
 
-void MainWindow::listViewConns_open(const QModelIndex &index)
+void MainWindow::listViewConns_open(const QModelIndex& index)
 {
     actual_host = index.data(Qt::DisplayRole).toString();
     if (host_connect(actual_host))
@@ -970,44 +959,44 @@ void MainWindow::listViewConns_open(const QModelIndex &index)
     }
 }
 
-void MainWindow::listViewConns_edit(const QModelIndex &index)
+void MainWindow::listViewConns_edit(const QModelIndex& index)
 {
     actual_host = index.data(Qt::DisplayRole).toString();
-    Connection *janela = new Connection(actual_host, this);
+    Connection* janela = new Connection(actual_host, this);
     int result = janela->exec();
     if (result == QDialog::Accepted) {
         refresh_connections();
     }
 }
 
-void MainWindow::listViewConns_clone(const QModelIndex &index)
+void MainWindow::listViewConns_clone(const QModelIndex& index)
 {
     actual_host = index.data(Qt::DisplayRole).toString();
     QJsonObject orig = getConnection(actual_host);
-    QString selected ;
+    QString selected;
     bool fez = false;
     newConnectionCount = 0;
-    while(!fez)
+    while (!fez)
     {
         selected = actual_host;
         if (newConnectionCount > 0) {
-            selected+=" " +std::to_string(newConnectionCount);
+            selected += " " + std::to_string(newConnectionCount);
         }
         newConnectionCount++;
         fez = addConnection(selected,
-                            orig["color"].toVariant().toString(),
-                            orig["host"].toVariant().toString(),
-                            orig["user"].toVariant().toString(),
-                            orig["pass"].toVariant().toString(),
-                            orig["port"].toVariant().toString(),
-                            orig["ssh_host"].toVariant().toString(),
-                            orig["ssh_user"].toVariant().toString(),
-                            orig["ssh_pass"].toVariant().toString(),
-                            orig["ssh_port"].toVariant().toString(),
-                            orig["ssh_keyfile"].toVariant().toString() );
+            orig["color"].toVariant().toString(),
+            orig["host"].toVariant().toString(),
+            orig["user"].toVariant().toString(),
+            orig["pass"].toVariant().toString(),
+            orig["port"].toVariant().toString(),
+            orig["ssh_host"].toVariant().toString(),
+            orig["ssh_user"].toVariant().toString(),
+            orig["ssh_pass"].toVariant().toString(),
+            orig["ssh_port"].toVariant().toString(),
+            orig["ssh_keyfile"].toVariant().toString());
         if (fez)
         {
-            Connection *janela = new Connection(selected, this);
+            Connection* janela = new Connection(selected, this);
             int result = janela->exec();
             if (result == QDialog::Accepted) {
                 refresh_connections();
@@ -1016,27 +1005,27 @@ void MainWindow::listViewConns_clone(const QModelIndex &index)
     }
 }
 
-void MainWindow::listViewConns_remove(const QModelIndex &index)
+void MainWindow::listViewConns_remove(const QModelIndex& index)
 {
     actual_host = index.data(Qt::DisplayRole).toString();
     deleteConnection(actual_host);
     refresh_connections();
 }
 
-void MainWindow::mostrarMenuContextoConns(const QPoint &pos)
+void MainWindow::show_context_menu_Conns(const QPoint& pos)
 {
     QModelIndex index = ui->listViewConns->indexAt(pos);
     if (!index.isValid())
         return;
 
     QMenu menu(this);
-    QAction *schemaOpen = menu.addAction("Open");
-    QAction *schemaEdit = menu.addAction("Edit");
-    QAction *schemaClone = menu.addAction("Clone");
-    QAction *schemaRemove = menu.addAction("Remove");
-    QAction *schemaBatchRun = menu.addAction("Batch run");
+    QAction* schemaOpen = menu.addAction("Open");
+    QAction* schemaEdit = menu.addAction("Edit");
+    QAction* schemaClone = menu.addAction("Clone");
+    QAction* schemaRemove = menu.addAction("Remove");
+    QAction* schemaBatchRun = menu.addAction("Batch run");
 
-    QAction *selectedAction = menu.exec(ui->listViewConns->viewport()->mapToGlobal(pos));
+    QAction* selectedAction = menu.exec(ui->listViewConns->viewport()->mapToGlobal(pos));
 
     if (selectedAction == schemaOpen) {
         listViewConns_open(index);
@@ -1057,7 +1046,7 @@ void MainWindow::mostrarMenuContextoConns(const QPoint &pos)
 }
 
 
-void MainWindow::mostrarMenuContextoSchemas(const QPoint &pos)
+void MainWindow::show_context_menu_Schemas(const QPoint& pos)
 {
     QModelIndex index = ui->listViewSchemas->indexAt(pos);
     QString selSchema = index.data(Qt::DisplayRole).toString();
@@ -1065,25 +1054,25 @@ void MainWindow::mostrarMenuContextoSchemas(const QPoint &pos)
         return;
 
     QMenu menu(this);
-    QAction *schemaOpen = menu.addAction("Open");
-    QAction *schemaCreate = menu.addAction("Create");
-    QAction *schemaDrop = menu.addAction("Drop");
-    QAction *schemaRefresh = menu.addAction("Refresh");
+    QAction* schemaOpen = menu.addAction("Open");
+    QAction* schemaCreate = menu.addAction("Create");
+    QAction* schemaDrop = menu.addAction("Drop");
+    QAction* schemaRefresh = menu.addAction("Refresh");
     menu.addSeparator();
-    QAction *schemaUsers = menu.addAction("Users");
-    QAction *schemaStatistics = menu.addAction("Statistics");
+    QAction* schemaUsers = menu.addAction("Users");
+    QAction* schemaStatistics = menu.addAction("Statistics");
     menu.addSeparator();
-    QAction *schemaBackup = menu.addAction("Backup");
-    QAction *schemaRestore = menu.addAction("Restore");
-    QAction *schemaBatchRun = menu.addAction("Batch run");
+    QAction* schemaBackup = menu.addAction("Backup");
+    QAction* schemaRestore = menu.addAction("Restore");
+    QAction* schemaBatchRun = menu.addAction("Batch run");
 
-    QAction *selectedAction = menu.exec(ui->listViewSchemas->viewport()->mapToGlobal(pos));
+    QAction* selectedAction = menu.exec(ui->listViewSchemas->viewport()->mapToGlobal(pos));
 
     if (selectedAction == schemaOpen) {
         on_listViewSchemas_clicked(index);
     }
     else if (selectedAction == schemaStatistics) {
-        Statistics *janela = new Statistics(actual_host, selSchema, this);
+        Statistics* janela = new Statistics(actual_host, selSchema, this);
         janela->exec();
     }
     else if (selectedAction == schemaBackup) {
@@ -1118,7 +1107,7 @@ void MainWindow::mostrarMenuContextoSchemas(const QPoint &pos)
             "    min-width: 90px;"
             "    min-height: 16px;"
             "}"
-            );
+        );
         msgBox.setWindowTitle("Confirm Deletion");
         msgBox.setIcon(QMessageBox::Question);
         msgBox.setStandardButtons(QMessageBox::Yes | QMessageBox::No);
@@ -1136,7 +1125,8 @@ void MainWindow::mostrarMenuContextoSchemas(const QPoint &pos)
 
             if (!query.exec(sql)) {
                 customAlert("Error", "Failed to delete database:\n" + query.lastError().text());
-            } else {
+            }
+            else {
                 refresh_schemas(actual_host, false);
                 // customAlert("Success", "Database deleted successfully.");
 
@@ -1145,23 +1135,23 @@ void MainWindow::mostrarMenuContextoSchemas(const QPoint &pos)
     }
 }
 
-void MainWindow::mostrarMenuContextoTables(const QPoint &pos)
+void MainWindow::show_context_menu_Tables(const QPoint& pos)
 {
     QModelIndex index = ui->listViewTables->indexAt(pos);
     if (!index.isValid())
         return;
 
     QMenu menu(this);
-    QAction *tableOpen = menu.addAction("Open");
-    QAction *tableEdit = menu.addAction("Edit");
-    QAction *tableCreate = menu.addAction("Create");
-    QAction *tableDrop = menu.addAction("Drop");
-    QAction *tableRefresh = menu.addAction("Refresh");
+    QAction* tableOpen = menu.addAction("Open");
+    QAction* tableEdit = menu.addAction("Edit");
+    QAction* tableCreate = menu.addAction("Create");
+    QAction* tableDrop = menu.addAction("Drop");
+    QAction* tableRefresh = menu.addAction("Refresh");
     menu.addSeparator();
-    QAction *tableCopySQL = menu.addAction("Copy as SQL");
-    QAction *tableCopyCSV = menu.addAction("Copy as CSV");
+    QAction* tableCopySQL = menu.addAction("Copy as SQL");
+    QAction* tableCopyCSV = menu.addAction("Copy as CSV");
 
-    QAction *selectedAction = menu.exec(ui->listViewTables->viewport()->mapToGlobal(pos));
+    QAction* selectedAction = menu.exec(ui->listViewTables->viewport()->mapToGlobal(pos));
 
     if (selectedAction == tableOpen) {
         on_listViewTables_open(index);
@@ -1176,18 +1166,19 @@ void MainWindow::mostrarMenuContextoTables(const QPoint &pos)
         if (!createTableSql.isEmpty()) {
 
             // Copia o comando para o clipboard
-            QClipboard *clipboard = QApplication::clipboard();
+            QClipboard* clipboard = QApplication::clipboard();
             clipboard->setText(createTableSql);
 
             // Exemplo de execução do comando CREATE TABLE (para uma nova tabela, se necessário)
             QSqlQuery query(QSqlDatabase::database(connectionName));
             if (query.exec(createTableSql)) {
                 // qDebug() << "Tabela criada com sucesso";
-            } else {
+            }
+            else {
                 // qDebug() << "Falha ao criar tabela:" << query.lastError().text();
             }
-        // } else {
-        //     qDebug() << "Falha ao gerar o comando CREATE TABLE";
+            // } else {
+            //     qDebug() << "Falha ao gerar o comando CREATE TABLE";
         }
     }
     else if (selectedAction == tableCopyCSV) {
@@ -1198,7 +1189,7 @@ void MainWindow::mostrarMenuContextoTables(const QPoint &pos)
 
         if (!csvContent.isEmpty()) {
             // Copia o conteúdo CSV para o clipboard
-            QClipboard *clipboard = QApplication::clipboard();
+            QClipboard* clipboard = QApplication::clipboard();
             clipboard->setText(csvContent);
             // qDebug() << "Campos da tabela copiados para a área de transferência em formato CSV:\n" << csvContent;
         // } else {
@@ -1230,7 +1221,7 @@ void MainWindow::mostrarMenuContextoTables(const QPoint &pos)
             "    margin: 10px;"
             "    min-height: 16px;"
             "}"
-            );
+        );
         msgBox.setWindowTitle("Confirm Delete");
         msgBox.setIcon(QMessageBox::Question);
         msgBox.setStandardButtons(QMessageBox::Yes | QMessageBox::No);
@@ -1247,7 +1238,8 @@ void MainWindow::mostrarMenuContextoTables(const QPoint &pos)
 
             if (!query.exec(sql)) {
                 customAlert("Error", "Failed to delete table:\n" + query.lastError().text());
-            } else {
+            }
+            else {
                 refresh_tables(actual_host);
                 // customAlert("Success", "Table deleted successfully.");
 
@@ -1258,7 +1250,7 @@ void MainWindow::mostrarMenuContextoTables(const QPoint &pos)
 }
 
 
-void MainWindow::mostrarMenuContextoFavorites(const QPoint &pos)
+void MainWindow::show_context_menu_Favorites(const QPoint& pos)
 {
     QModelIndex index = ui->listViewFavorites->indexAt(pos);
     if (!index.isValid())
@@ -1266,15 +1258,15 @@ void MainWindow::mostrarMenuContextoFavorites(const QPoint &pos)
     QString selectedFavoriteName = index.data(Qt::DisplayRole).toString();
 
     QMenu menu(this);
-    QAction *favoritesOpen = menu.addAction("Open");
-    QAction *favoritesEdit = menu.addAction("Edit");
-    QAction *favoritesClone = menu.addAction("Clone");
-    QAction *favoritesRename = menu.addAction("Rename");
-    QAction *favoritesDelete = menu.addAction("Delete");
+    QAction* favoritesOpen = menu.addAction("Open");
+    QAction* favoritesEdit = menu.addAction("Edit");
+    QAction* favoritesClone = menu.addAction("Clone");
+    QAction* favoritesRename = menu.addAction("Rename");
+    QAction* favoritesDelete = menu.addAction("Delete");
     menu.addSeparator();
-    QAction *favoritesRefresh = menu.addAction("Refresh");
+    QAction* favoritesRefresh = menu.addAction("Refresh");
 
-    QAction *selectedAction = menu.exec(ui->listViewFavorites->viewport()->mapToGlobal(pos));
+    QAction* selectedAction = menu.exec(ui->listViewFavorites->viewport()->mapToGlobal(pos));
 
     if (selectedAction == favoritesOpen) {
         open_selected_favorite(index, true);
@@ -1286,12 +1278,12 @@ void MainWindow::mostrarMenuContextoFavorites(const QPoint &pos)
         QDialog dialog(this);
         dialog.setWindowTitle(tr("Clone favorite"));
 
-        QVBoxLayout *layout = new QVBoxLayout(&dialog);
+        QVBoxLayout* layout = new QVBoxLayout(&dialog);
 
-        QLabel *label = new QLabel(tr("Name:"), &dialog);
+        QLabel* label = new QLabel(tr("Name:"), &dialog);
         layout->addWidget(label);
 
-        QLineEdit *lineEdit = new QLineEdit(&dialog);
+        QLineEdit* lineEdit = new QLineEdit(&dialog);
         lineEdit->setText(selectedFavoriteName);
         layout->addWidget(lineEdit);
 
@@ -1306,9 +1298,9 @@ void MainWindow::mostrarMenuContextoFavorites(const QPoint &pos)
             "    margin: 20px;"
             "    min-height: 16px;"
             "}"
-            );
+        );
 
-        QDialogButtonBox *buttons = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, &dialog);
+        QDialogButtonBox* buttons = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, &dialog);
         layout->addWidget(buttons);
 
         QObject::connect(buttons, &QDialogButtonBox::accepted, &dialog, &QDialog::accept);
@@ -1331,12 +1323,12 @@ void MainWindow::mostrarMenuContextoFavorites(const QPoint &pos)
         QDialog dialog(this);
         dialog.setWindowTitle(tr("Rename favorite"));
 
-        QVBoxLayout *layout = new QVBoxLayout(&dialog);
+        QVBoxLayout* layout = new QVBoxLayout(&dialog);
 
-        QLabel *label = new QLabel(tr("Name:"), &dialog);
+        QLabel* label = new QLabel(tr("Name:"), &dialog);
         layout->addWidget(label);
 
-        QLineEdit *lineEdit = new QLineEdit(&dialog);
+        QLineEdit* lineEdit = new QLineEdit(&dialog);
         lineEdit->setText(selectedFavoriteName);
         layout->addWidget(lineEdit);
 
@@ -1351,9 +1343,9 @@ void MainWindow::mostrarMenuContextoFavorites(const QPoint &pos)
             "    margin: 20px;"
             "    min-height: 16px;"
             "}"
-            );
+        );
 
-        QDialogButtonBox *buttons = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, &dialog);
+        QDialogButtonBox* buttons = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, &dialog);
         layout->addWidget(buttons);
 
         QObject::connect(buttons, &QDialogButtonBox::accepted, &dialog, &QDialog::accept);
@@ -1399,7 +1391,7 @@ void MainWindow::mostrarMenuContextoFavorites(const QPoint &pos)
             "    margin: 20px;"
             "    min-height: 16px;"
             "}"
-            );
+        );
         msgBox.setWindowTitle("Confirm Deletion");
         msgBox.setIcon(QMessageBox::Question);
         msgBox.setStandardButtons(QMessageBox::Yes | QMessageBox::No);
@@ -1430,10 +1422,10 @@ void MainWindow::mostrarMenuContextoFavorites(const QPoint &pos)
 
 
 
-void MainWindow::on_listViewTables_open(const QModelIndex &index)
+void MainWindow::on_listViewTables_open(const QModelIndex& index)
 {
-    actual_table= index.data(Qt::DisplayRole).toString();
-    QMdiSubWindow *prev = ui->mdiArea->activeSubWindow();
+    actual_table = index.data(Qt::DisplayRole).toString();
+    QMdiSubWindow* prev = ui->mdiArea->activeSubWindow();
     bool maximize = true;
 
     if (prev) {
@@ -1442,9 +1434,9 @@ void MainWindow::on_listViewTables_open(const QModelIndex &index)
         }
     }
 
-    Sql *form = new Sql(actual_host, actual_schema, actual_table, actual_color, "", "", true);
+    Sql* form = new Sql(actual_host, actual_schema, actual_table, actual_color, "", "", true);
 
-    QMdiSubWindow *sub = new QMdiSubWindow;
+    QMdiSubWindow* sub = new QMdiSubWindow;
     sub->setWidget(form);
     sub->setAttribute(Qt::WA_DeleteOnClose);  // subjanela será destruída ao fechar
     ui->mdiArea->addSubWindow(sub);
@@ -1456,10 +1448,10 @@ void MainWindow::on_listViewTables_open(const QModelIndex &index)
 
 }
 
-void MainWindow::on_listViewTables_edit(const QModelIndex &index)
+void MainWindow::on_listViewTables_edit(const QModelIndex& index)
 {
-    actual_table= index.data(Qt::DisplayRole).toString();
-    QMdiSubWindow *prev = ui->mdiArea->activeSubWindow();
+    actual_table = index.data(Qt::DisplayRole).toString();
+    QMdiSubWindow* prev = ui->mdiArea->activeSubWindow();
     bool maximize = true;
 
     if (prev) {
@@ -1467,9 +1459,9 @@ void MainWindow::on_listViewTables_edit(const QModelIndex &index)
             maximize = false;
         }
     }
-    Structure *form = new Structure(actual_host, actual_schema, actual_table);
+    Structure* form = new Structure(actual_host, actual_schema, actual_table);
 
-    QMdiSubWindow *sub = new QMdiSubWindow;
+    QMdiSubWindow* sub = new QMdiSubWindow;
     sub->setWidget(form);
     sub->setAttribute(Qt::WA_DeleteOnClose);  // subjanela será destruída ao fechar
 
@@ -1504,7 +1496,7 @@ void MainWindow::on_actionNew_table_triggered()
 
 void MainWindow::on_actionUsers_triggered()
 {
-    QMdiSubWindow *prev = ui->mdiArea->activeSubWindow();
+    QMdiSubWindow* prev = ui->mdiArea->activeSubWindow();
     bool maximize = true;
 
     if (prev) {
@@ -1513,9 +1505,9 @@ void MainWindow::on_actionUsers_triggered()
         }
     }
 
-    Users *form = new Users(actual_host, actual_schema, this);
+    Users* form = new Users(actual_host, actual_schema, this);
 
-    QMdiSubWindow *sub = new QMdiSubWindow;
+    QMdiSubWindow* sub = new QMdiSubWindow;
     sub->setWidget(form);
     sub->setAttribute(Qt::WA_DeleteOnClose);  // subjanela será destruída ao fechar
     ui->mdiArea->addSubWindow(sub);
@@ -1529,7 +1521,7 @@ void MainWindow::on_actionUsers_triggered()
 
 void MainWindow::batch_run()
 {
-    QMdiSubWindow *prev = ui->mdiArea->activeSubWindow();
+    QMdiSubWindow* prev = ui->mdiArea->activeSubWindow();
     bool maximize = true;
 
     if (prev) {
@@ -1538,9 +1530,9 @@ void MainWindow::batch_run()
         }
     }
 
-    Batch *form = new Batch(actual_host, actual_schema, this);
+    Batch* form = new Batch(actual_host, actual_schema, this);
 
-    QMdiSubWindow *sub = new QMdiSubWindow;
+    QMdiSubWindow* sub = new QMdiSubWindow;
     sub->setWidget(form);
     sub->setAttribute(Qt::WA_DeleteOnClose);
     ui->mdiArea->addSubWindow(sub);
@@ -1553,14 +1545,14 @@ void MainWindow::batch_run()
 
 }
 
-void MainWindow::backup(const QString &bkp_host, const QString &bkp_schema, QWidget *parent)
+void MainWindow::backup(const QString& bkp_host, const QString& bkp_schema, QWidget* parent)
 {
     Backup dialog(bkp_host, bkp_schema, this);
     dialog.exec();
     refresh_schemas(actual_host, false);
 }
 
-void MainWindow::restore(const QString &bkp_host, const QString &bkp_schema, QWidget *parent)
+void MainWindow::restore(const QString& bkp_host, const QString& bkp_schema, QWidget* parent)
 {
     Restore executor;
     executor.run("", "mysql_connection_", bkp_host, bkp_schema, this);

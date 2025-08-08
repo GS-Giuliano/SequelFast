@@ -1,5 +1,4 @@
-#ifndef SQLHIGHLIGHTER_H
-#define SQLHIGHLIGHTER_H
+#pragma once
 
 #include <QSyntaxHighlighter>
 #include <QTextCharFormat>
@@ -23,4 +22,4 @@ private:
     QVector<Rule> rules;
 };
 
-#endif // SQLHIGHLIGHTER_H
+

@@ -1,0 +1,47 @@
+{
+    "files.associations": {
+        "*.pro": "makefile",
+        "*.qrc": "xml",
+        "*.ui": "xml",
+        "*.ts": "xml",
+        "qstandarditemmodel": "cpp",
+        "qformlayout": "cpp",
+        "qabstractitemmodel": "cpp"
+    },
+    "cmake.configureOnOpen": false,
+    "cmake.configureOnEdit": false,
+    "cmake.buildBeforeRun": false,
+    "cmake.showOptionsMovedNotification": false,
+    "extensions.ignoreRecommendations": false,
+    "C_Cpp.default.configurationProvider": "ms-vscode.cpptools",
+    "C_Cpp.default.intelliSenseMode": "linux-gcc-x64",
+    "C_Cpp.default.cStandard": "gnu17",
+    "C_Cpp.default.cppStandard": "gnu++17",
+    "C_Cpp.errorSquiggles": "enabled",
+    "C_Cpp.autocomplete": "default",
+    "C_Cpp.formatting": "vcFormat",
+    "editor.formatOnSave": true,
+    "editor.tabSize": 4,
+    "editor.insertSpaces": true,
+    "files.exclude": {
+        "**/*.o": true,
+        "**/moc_*.cpp": true,
+        "**/moc_*.h": true,
+        "**/ui_*.h": true,
+        "**/qrc_*.cpp": true,
+        "**/Makefile*": false,
+        "**/.qm/**": true,
+        "**/moc_predefs.h": true,
+        "**/restore.moc": true
+    },
+    "search.exclude": {
+        "**/*.o": true,
+        "**/moc_*.cpp": true,
+        "**/moc_*.h": true,
+        "**/ui_*.h": true,
+        "**/qrc_*.cpp": true,
+        "**/.qm/**": true,
+        "**/moc_predefs.h": true,
+        "**/restore.moc": true
+    }
+}

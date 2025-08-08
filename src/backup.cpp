@@ -1,28 +1,6 @@
 #include "backup.h"
 #include "two_checkbox_delegate.h"
-
-#include <QApplication>
-#include <QVBoxLayout>
-#include <QHBoxLayout>
-#include <QPushButton>
-#include <QLineEdit>
-#include <QFileDialog>
-#include <QTableView>
-#include <QLabel>
-#include <QDateTime>
-
-#include <QStandardItemModel>
-#include <QSqlDatabase>
-#include <QSqlQuery>
-#include <QSqlRecord>
-#include <QStandardPaths>
-#include <QSqlField>
-
-#include <QDebug>
-#include <QHeaderView>
-#include <QMessageBox>
-
-#include <functions.h>
+#include "functions.h"
 #include "mainwindow.h"
 #include "restore.h";
 
@@ -31,7 +9,7 @@ extern QJsonArray connections;
 extern QSqlDatabase dbPreferences;
 extern QSqlDatabase dbMysql;
 
-Backup::Backup(const QString &host, const QString &schema, QWidget *parent) : QDialog(parent)
+Backup::Backup(const QString& host, const QString& schema, QWidget* parent) : QDialog(parent)
 {
     setWindowTitle("Select tables and file name");
     bkp_host = host;
@@ -39,14 +17,14 @@ Backup::Backup(const QString &host, const QString &schema, QWidget *parent) : QD
 
     QString timestamp = QDateTime::currentDateTime().toString("yyMMdd-HHmmss");
     QString dumpFile = QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation)
-                       + "/" + schema + "-" + timestamp + ".sql";
+        + "/" + schema + "-" + timestamp + ".sql";
 
-    auto *layout = new QVBoxLayout(this);
+    auto* layout = new QVBoxLayout(this);
 
     // Linha 1: campo de arquivo + botão
-    auto *fileLabel = new QLabel("To file");
+    auto* fileLabel = new QLabel("To file");
     fileLabel->setFixedWidth(150);
-    auto *fileLayout = new QHBoxLayout;
+    auto* fileLayout = new QHBoxLayout;
     lineEdit = new QLineEdit(this);
     lineEdit->setText(dumpFile);
 
@@ -59,8 +37,8 @@ Backup::Backup(const QString &host, const QString &schema, QWidget *parent) : QD
     connect(btnBrowse, &QPushButton::clicked, this, &Backup::chooseFile);
 
     // Linha 2: seleção de schema
-    auto *schemaLayout = new QHBoxLayout;
-    auto *schemaLabel = new QLabel("To schema");
+    auto* schemaLayout = new QHBoxLayout;
+    auto* schemaLabel = new QLabel("To schema");
     schemaLabel->setFixedWidth(150);
     schemaEdit = new QLineEdit(bkp_schema);
     connect(schemaEdit, &QLineEdit::textChanged, this, &Backup::onSchemaEditTextChanged);
@@ -70,8 +48,8 @@ Backup::Backup(const QString &host, const QString &schema, QWidget *parent) : QD
     layout->addLayout(schemaLayout);
 
     // Linha 3: seleção de host
-    auto *connLayout = new QHBoxLayout;
-    auto *connLabel = new QLabel("To connection");
+    auto* connLayout = new QHBoxLayout;
+    auto* connLabel = new QLabel("To connection");
     connLabel->setFixedWidth(150);
     connList = new QComboBox();
     connLayout->addWidget(connLabel);
@@ -97,10 +75,10 @@ Backup::Backup(const QString &host, const QString &schema, QWidget *parent) : QD
         " min-height: 16px;"
         " min-width: 90px;"
         "}"
-        );
+    );
 
     // Linha 3: botões
-    auto *buttonLayout = new QHBoxLayout;
+    auto* buttonLayout = new QHBoxLayout;
     btnFavorite = new QPushButton("Favorite", this);
     btnCancel = new QPushButton("Cancel", this);
     btnConfirm = new QPushButton("Run", this);
@@ -138,7 +116,7 @@ void Backup::refresh_conns()
 {
     connList->clear();
     connList->addItem("Select host destination...");
-    for (const QJsonValue &valor : connections) {
+    for (const QJsonValue& valor : connections) {
         if (valor.isObject()) {
             QJsonObject item = valor.toObject();
             QString nome = item["name"].toString();
@@ -167,7 +145,7 @@ void Backup::refresh_tables()
 
     // Configura o modelo
     model = new QStandardItemModel(0, 5, this);
-    model->setHorizontalHeaderLabels({"Table", "Structure", "Data", "Where", "Order by", "Limit"});
+    model->setHorizontalHeaderLabels({ "Table", "Structure", "Data", "Where", "Order by", "Limit" });
     tableView->setModel(model);
 
     // Aplica o delegate personalizado às colunas 1 e 2
@@ -226,17 +204,19 @@ void Backup::chooseFile()
                 "File Exists",
                 QString("The file '%1' already exists. Do you want to overwrite it?").arg(fileInfo.fileName()),
                 QMessageBox::Yes | QMessageBox::No
-                );
+            );
 
             if (reply == QMessageBox::Yes) {
                 // Usuário aceitou sobrescrever
                 lineEdit->setText(file);
                 pathValid = true;
-            } else {
+            }
+            else {
                 // Usuário não quer sobrescrever, solicita nova seleção
                 continue;
             }
-        } else {
+        }
+        else {
             // Verifica se o diretório existe
             QDir dir(fileInfo.absolutePath());
             if (!dir.exists()) {
@@ -244,7 +224,7 @@ void Backup::chooseFile()
                     this,
                     "Invalid Directory",
                     QString("The directory '%1' does not exist. Please select a valid directory.").arg(fileInfo.absolutePath())
-                    );
+                );
                 // Solicita nova seleção
                 continue;
             }
@@ -255,18 +235,19 @@ void Backup::chooseFile()
     }
 }
 
-void Backup::closeEvent(QCloseEvent *event)
+void Backup::closeEvent(QCloseEvent* event)
 {
     onCancel();      // chama seu tratamento
     event->ignore(); // impede o fechamento imediato
 }
 
-void Backup::keyPressEvent(QKeyEvent *event)
+void Backup::keyPressEvent(QKeyEvent* event)
 {
     if (event->key() == Qt::Key_Escape) {
         onCancel();  // chama sua função personalizada
         event->accept();  // impede o fechamento padrão
-    } else {
+    }
+    else {
         QDialog::keyPressEvent(event);  // comportamento normal para outras teclas
     }
 }
@@ -360,7 +341,7 @@ void Backup::onConfirm()
             QApplication::processEvents();
 
 
-            if ((structure || data) && ( exportToFile)) {
+            if ((structure || data) && (exportToFile)) {
                 // Obtém a estrutura da tabela
                 if (structure) {
                     if (query.exec("SHOW CREATE TABLE " + table)) {
@@ -370,7 +351,8 @@ void Backup::onConfirm()
                                 out << "DROP TABLE IF EXISTS " << table << ";\n";
                                 out << createTableStmt << ";\n\n";
                             }
-                        } else {
+                        }
+                        else {
                             progressBar->setVisible(false);
                             progressBar2->setVisible(false);
                             qDebug() << "Error: No result for SHOW CREATE TABLE" << table;
@@ -379,7 +361,8 @@ void Backup::onConfirm()
                                 out << "-- Error: Could not retrieve structure for table " << table << "\n\n";
                             }
                         }
-                    } else {
+                    }
+                    else {
                         progressBar->setVisible(false);
                         progressBar2->setVisible(false);
                         qDebug() << "Error executing SHOW CREATE TABLE for" << table << ":" << query.lastError().text();
@@ -434,7 +417,7 @@ void Backup::onConfirm()
                                 processedRows++;
                                 // int percentRows = (processedRows * 100) / totalRows;
                                 progressBar2->setValue(processedRows);
-                                progressBar2->setFormat("%v / "+ table +" / %m");
+                                progressBar2->setFormat("%v / " + table + " / %m");
 
                                 QApplication::processEvents();
 
@@ -443,18 +426,24 @@ void Backup::onConfirm()
                                     QVariant value = query.value(i);
                                     if (value.isNull()) {
                                         values << "NULL";
-                                    } else if (value.type() == QVariant::String) {
+                                    }
+                                    else if (value.type() == QVariant::String) {
                                         values << "'" + value.toString().replace("'", "''") + "'";
-                                    } else if (value.type() == QVariant::Date || value.type() == QVariant::DateTime) {
+                                    }
+                                    else if (value.type() == QVariant::Date || value.type() == QVariant::DateTime) {
                                         values << "'" + value.toDateTime().toString("yyyy-MM-dd HH:mm:ss") + "'";
-                                    } else if (value.type() == QVariant::Time) {
+                                    }
+                                    else if (value.type() == QVariant::Time) {
                                         values << "'" + value.toTime().toString("HH:mm:ss") + "'";
-                                    } else if (value.type() == QVariant::ByteArray) {
+                                    }
+                                    else if (value.type() == QVariant::ByteArray) {
                                         QByteArray bytes = value.toByteArray();
                                         values << "X'" + QString(bytes.toHex()) + "'";
-                                    } else if (value.type() == QVariant::LongLong || value.type() == QVariant::Double || value.type() == QVariant::Int ) {
+                                    }
+                                    else if (value.type() == QVariant::LongLong || value.type() == QVariant::Double || value.type() == QVariant::Int) {
                                         values << value.toString();
-                                    } else {
+                                    }
+                                    else {
                                         values << "'" + value.toString().replace("'", "''") + "'";
                                     }
                                 }
@@ -470,7 +459,8 @@ void Backup::onConfirm()
                         {
                             out << "\n";
                         }
-                    } else {
+                    }
+                    else {
                         progressBar->setVisible(false);
                         progressBar2->setVisible(false);
 
@@ -490,13 +480,13 @@ void Backup::onConfirm()
     // Fecha o arquivo
     file.close();
 
-    qDebug() << "exportToHostName"<< exportToHostName;
-    qDebug() << "exportToSchema"<< exportToSchema;
+    qDebug() << "exportToHostName" << exportToHostName;
+    qDebug() << "exportToSchema" << exportToSchema;
     qDebug() << "lineEdit->text()" << lineEdit->text();
 
-    if (exportToHost && lineEdit->text()!= "")
+    if (exportToHost && lineEdit->text() != "")
     {
-        qDebug() << "Restaurando!!!!" ;
+        qDebug() << "Restaurando!!!!";
         connectMySQL(exportToHostName, this, "backup_");
         if (!dbMysql.open())
         {
@@ -521,7 +511,8 @@ void Backup::onConfirm()
         QMessageBox::information(this, "Failed", "Backup cancelled!");
         reject();
 
-    } else {
+    }
+    else {
         QMessageBox::information(this, "Success", "Backup created successfully!");
         accept();
     }
@@ -544,12 +535,12 @@ void Backup::onHeaderClicked(int section)
     }
 }
 
-void Backup::onSchemaEditTextChanged(const QString &newText) {
+void Backup::onSchemaEditTextChanged(const QString& newText) {
     if (lineEdit->text() != "")
     {
         QString timestamp = QDateTime::currentDateTime().toString("yyMMdd-HHmmss");
         QString dumpFile = QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation)
-                           + "/" + newText + "-" + timestamp + ".sql";
+            + "/" + newText + "-" + timestamp + ".sql";
         lineEdit->setText(dumpFile);
     }
 }

@@ -1,10 +1,19 @@
-#ifndef CONNECTION_H
-#define CONNECTION_H
+#pragma once
 
+#include <QColorDialog>
+#include <QCoreApplication>
 #include <QDialog>
+#include <QJsonArray>
+#include <QJsonDocument>
+#include <QJsonObject>
+#include <QJsonValue>
+#include <QMessageBox>
+#include <QSqlDatabase>
+#include <QSqlError>
+#include <QSqlQuery>
 
 namespace Ui {
-class Connection;
+    class Connection;
 }
 
 class Connection : public QDialog
@@ -12,7 +21,7 @@ class Connection : public QDialog
     Q_OBJECT
 
 public:
-    explicit Connection(QString selectedHost, QWidget *parent = nullptr);
+    explicit Connection(QString selectedHost, QWidget* parent = nullptr);
     ~Connection();
     void saveConnection();
 
@@ -28,7 +37,6 @@ private slots:
     void on_dial_valueChanged(int value);
 
 private:
-    Ui::Connection *ui;
+    Ui::Connection* ui;
 };
 
-#endif // CONNECTION_H

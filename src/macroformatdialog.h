@@ -1,36 +1,38 @@
-#ifndef MACROFORMATDIALOG_H
-#define MACROFORMATDIALOG_H
+#pragma once
 
 #include <QDialog>
 #include <QLineEdit>
 #include <QComboBox>
 #include <QFormLayout>
 #include <QLabel>
+#include <QVBoxLayout>
+#include <QDialogButtonBox>
+#include <QLabel>
 
 class MacroFormatDialog : public QDialog {
     Q_OBJECT
 
 public:
-    explicit MacroFormatDialog(QWidget *parent = nullptr);
+    explicit MacroFormatDialog(QWidget* parent = nullptr);
     QString resultMacro() const;
 
 private slots:
-    void onTypeChanged(const QString &type);
+    void onTypeChanged(const QString& type);
 
 private:
-    QLineEdit *labelEdit;
-    QComboBox *typeCombo;
+    QLineEdit* labelEdit;
+    QComboBox* typeCombo;
 
-    QWidget *tableGroup;
-    QFormLayout *groupLayout;
+    QWidget* tableGroup;
+    QFormLayout* groupLayout;
 
-    QLineEdit *tableEdit;
-    QLineEdit *keyEdit;
-    QLineEdit *fieldEdit;
+    QLineEdit* tableEdit;
+    QLineEdit* keyEdit;
+    QLineEdit* fieldEdit;
 
-    QLabel *tableLabel;
+    QLabel* tableLabel;
 
     QString macroString;
 };
 
-#endif // MACROFORMATDIALOG_H
+

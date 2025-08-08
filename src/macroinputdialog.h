@@ -1,5 +1,4 @@
-#ifndef MACROINPUTDIALOG_H
-#define MACROINPUTDIALOG_H
+#pragma once
 
 #include <QDialog>
 #include <QMap>
@@ -41,4 +40,4 @@ private:
     QMap<QString, QWidget *> inputs;
 };
 
-#endif // MACROINPUTDIALOG_H
+

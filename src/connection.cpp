@@ -1,38 +1,23 @@
 #include "connection.h"
 #include "ui_connection.h"
-#include <functions.h>
-
-#include <QCoreApplication>
-#include <QSqlDatabase>
-#include <QSqlError>
-#include <QSqlQuery>
-#include <QMessageBox>
-#include <QColorDialog>
-
-#include <QJsonDocument>
-#include <QJsonObject>
-#include <QJsonArray>
-#include <QJsonValue>
+#include "functions.h"
 
 extern QSqlDatabase dbPreferences;
 extern QSqlDatabase dbMysql;
-
 extern QJsonArray connections;
-
 extern QString actual_host;
 extern QString actual_schema;
 extern QString actual_table;
-
 extern QJsonArray colors;
 
 QString thatHost;
-QString thatColor="white";
+QString thatColor = "white";
 
 #include <QJsonArray>
 #include <QJsonObject>
 #include "ui_connection.h"
 
-Connection::Connection(QString selectedHost, QWidget *parent)
+Connection::Connection(QString selectedHost, QWidget* parent)
     : QDialog(parent)
     , ui(new Ui::Connection)
 {
@@ -116,7 +101,7 @@ Connection::~Connection()
 
 void Connection::saveConnection()
 {
-        if (!dbPreferences.open()) {
+    if (!dbPreferences.open()) {
         qCritical() << "Erro ao abrir o banco de dados SQLite:" << dbPreferences.lastError().text();
     }
 
@@ -176,7 +161,7 @@ void Connection::on_buttonConnect_clicked()
     // qDebug() << " User: " << item["user"].toVariant().toString();
     // qDebug() << " Pass: " << item["pass"].toVariant().toString();
 
-    dbMysql = QSqlDatabase::addDatabase("QMYSQL", "mysql_connection_"+ui->lineName->text());
+    dbMysql = QSqlDatabase::addDatabase("QMYSQL", "mysql_connection_" + ui->lineName->text());
 
     dbMysql.setHostName(item["host"].toVariant().toString());
     dbMysql.setDatabaseName(item["schema"].toVariant().toString());
@@ -186,11 +171,12 @@ void Connection::on_buttonConnect_clicked()
 
     if (!dbMysql.open()) {
         QMessageBox::information(this,
-                                 "Connection",
-                                 "Connection failed! Check parameters and try again",
-                                 QMessageBox::Ok
-                                 );
-    } else {
+            "Connection",
+            "Connection failed! Check parameters and try again",
+            QMessageBox::Ok
+        );
+    }
+    else {
         qDebug() << "Conexão bem-sucedida!";
         dbMysql.close();
     }
@@ -204,7 +190,7 @@ void Connection::on_dial_valueChanged(int value)
     if (value >= 0 && value < colors.size()) {
         QJsonObject obj = colors[value].toObject();
         QString colorName = obj["name"].toString();
-        QString colorRgb  = obj["rgb"].toString();
+        QString colorRgb = obj["rgb"].toString();
 
         ui->dial->setStyleSheet(QString("QDial {background-color: %1}").arg(colorRgb));
         thatColor = colorName;

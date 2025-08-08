@@ -1,20 +1,17 @@
 #include "macroformatdialog.h"
-#include <QVBoxLayout>
-#include <QDialogButtonBox>
-#include <QLabel>
 
-MacroFormatDialog::MacroFormatDialog(QWidget *parent)
+MacroFormatDialog::MacroFormatDialog(QWidget* parent)
     : QDialog(parent)
 {
     setWindowTitle("Insert Macro");
 
-    QFormLayout *formLayout = new QFormLayout;
+    QFormLayout* formLayout = new QFormLayout;
     formLayout->setLabelAlignment(Qt::AlignLeft);
     formLayout->setFormAlignment(Qt::AlignLeft);
 
     // Validador para campos restritos (label, key, field)
     QRegularExpression rx(R"([A-Za-z0-9_]+)");
-    auto *validator = new QRegularExpressionValidator(rx, this);
+    auto* validator = new QRegularExpressionValidator(rx, this);
 
     // Label
     labelEdit = new QLineEdit(this);
@@ -23,7 +20,7 @@ MacroFormatDialog::MacroFormatDialog(QWidget *parent)
 
     // Type
     typeCombo = new QComboBox(this);
-    typeCombo->addItems({"string", "number", "date", "datetime", "bool", "combo"});
+    typeCombo->addItems({ "string", "number", "date", "datetime", "bool", "combo" });
     formLayout->addRow("Type:", typeCombo);
 
     // Grupo de campos adicionais
@@ -60,7 +57,7 @@ MacroFormatDialog::MacroFormatDialog(QWidget *parent)
     connect(typeCombo, &QComboBox::currentTextChanged, this, &MacroFormatDialog::onTypeChanged);
 
     // Botões
-    QDialogButtonBox *buttonBox = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, this);
+    QDialogButtonBox* buttonBox = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, this);
     connect(buttonBox, &QDialogButtonBox::accepted, this, [=]() {
         QString label = labelEdit->text().trimmed();
         QString type = typeCombo->currentText();
@@ -73,25 +70,28 @@ MacroFormatDialog::MacroFormatDialog(QWidget *parent)
         QString defaultValue = tableEdit->text().trimmed();
         if (type == "string" && defaultValue.isEmpty()) {
             macroString = "~" + label;
-        } else if (type == "combo") {
+        }
+        else if (type == "combo") {
             QString table = tableEdit->text().trimmed();
             QString key = keyEdit->text().trimmed();
             QString field = fieldEdit->text().trimmed();
             macroString = "~" + label + "@combo~" + table + "~" + key + "~" + field;
-        } else {
+        }
+        else {
             if (defaultValue.isEmpty()) {
                 macroString = "~" + label + "@" + type;
-            } else {
+            }
+            else {
                 macroString = "~" + label + "@" + type + "~" + defaultValue;
             }
         }
 
         accept();
-    });
+        });
 
     connect(buttonBox, &QDialogButtonBox::rejected, this, &QDialog::reject);
 
-    QVBoxLayout *mainLayout = new QVBoxLayout(this);
+    QVBoxLayout* mainLayout = new QVBoxLayout(this);
     mainLayout->addLayout(formLayout);
     mainLayout->addWidget(buttonBox);
     setLayout(mainLayout);
@@ -99,7 +99,7 @@ MacroFormatDialog::MacroFormatDialog(QWidget *parent)
     setMinimumSize(400, 340);
 }
 
-void MacroFormatDialog::onTypeChanged(const QString &type)
+void MacroFormatDialog::onTypeChanged(const QString& type)
 {
     if (type == "combo") {
         tableGroup->setVisible(true);
@@ -108,7 +108,8 @@ void MacroFormatDialog::onTypeChanged(const QString &type)
         tableLabel->setText("Table:");
         groupLayout->labelForField(keyEdit)->setVisible(true);
         groupLayout->labelForField(fieldEdit)->setVisible(true);
-    } else {
+    }
+    else {
         tableGroup->setVisible(true);
         keyEdit->setVisible(false);
         fieldEdit->setVisible(false);

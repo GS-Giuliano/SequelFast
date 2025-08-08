@@ -1,20 +1,52 @@
-#ifndef SQL_H
-#define SQL_H
+#pragma once
 
-#include <QMainWindow>
-#include <QLineEdit>
-#include <QPushButton>
-#include <QSqlDatabase>
-#include <QSqlRecord>
-#include <QTableView>
-#include <QCompleter>
-#include <QStringListModel>
 #include <QAbstractItemModel>
-#include <macroinputdialog.h>
-#include <texteditcompleter.h>
+#include <QAction>
+#include <QClipboard>
+#include <QCompleter>
+#include <QDateEdit>
+#include <QDateTimeEdit>
+#include <QDebug>
+#include <QDialog>
+#include <QDialogButtonBox>
+#include <QDoubleSpinBox>
+#include <QFormLayout>
+#include <QInputDialog>
+#include <QJsonArray>
+#include <QJsonDocument>
+#include <QJsonObject>
+#include <QJsonValue>
+#include <QLabel>
+#include <QLineEdit>
+#include <QMainWindow>
+#include <QMenu>
+#include <QMessageBox>
+#include <QPlainTextEdit>
+#include <QPushButton>
+#include <QRegularExpression>
+#include <QSqlDatabase>
+#include <QSqlError>
+#include <QSqlField>
+#include <QSqlQuery>
+#include <QSqlQueryModel>
+#include <QSqlRecord>
+#include <QStandardItemModel>
+#include <QString>
+#include <QStringList>
+#include <QStringListModel>
+#include <QStyledItemDelegate>
+#include <QTableView>
+#include <QTimer>
+#include <QToolButton>
+#include <QVBoxLayout>
+
+#include <functions.h>
+#include "texteditcompleter.h"
+#include "macroinputdialog.h"
+#include "macroformatdialog.h"
 
 namespace Ui {
-class Sql;
+    class Sql;
 }
 
 class Sql : public QMainWindow
@@ -22,17 +54,18 @@ class Sql : public QMainWindow
     Q_OBJECT
 
 public:
-    explicit Sql(const QString &host, const QString &schema, const QString &table,
-                 const QString &color, const QString &favName, const QString &favValue,
-                 const bool &run, QWidget *parent = nullptr);
+    explicit Sql(const QString& host, const QString& schema, const QString& table,
+        const QString& color, const QString& favName, const QString& favValue,
+        const bool& run, QWidget* parent = nullptr);
     ~Sql();
 
-    void query2TableView(QTableView *tableView, const QString &queryStr, const QString &comando);
+    void query2TableView(QTableView* tableView, const QString& queryStr, const QString& comando);
     void setInterfaceSize(int increase);
     void refresh_structure();
     void formatSqlText();
-    QVector<MacroField> extractFields(const QString &queryStr);
-    QString processQueryWithMacros(QString queryStr, QWidget *parent);
+    QVector<MacroField> extractFields(const QString& queryStr);
+    QString processQueryWithMacros(QString queryStr, QWidget* parent);
+    void setupSqlCompleter();
 
 private slots:
     void statusMessage(QString msg);
@@ -43,7 +76,7 @@ private slots:
     void on_actionSave_triggered();
     void on_timer_tick();
     void on_button_clicked();
-    bool on_tableData_edit_trigger(QString &id, QString &fieldName, QString &newValue);
+    bool on_tableData_edit_trigger(QString& id, QString& fieldName, QString& newValue);
     void on_tableAppend_triggered();
     void on_tableClone_triggered();
     void on_tableDelete_triggered();
@@ -53,28 +86,27 @@ private slots:
     void on_tableCRUDGfw_triggered();
     void on_tableCRUDLaravel_triggered();
     void on_actionFavorites_triggered();
-    void show_context_menu(const QPoint &pos);
     void on_actionMacros_triggered();
-    void setupSqlCompleter();
+    void show_context_menu(const QPoint& pos);
 
 private:
     // Novos métodos para suporte ao autocompletar
     QAbstractItemModel* getTableModel() const;
-    QAbstractItemModel* getColumnModel(const QString &table) const;
+    QAbstractItemModel* getColumnModel(const QString& table) const;
 
-    Ui::Sql *ui;
-    QCompleter *sqlCompleter = nullptr;
-    QStringListModel *sqlCompleterModel = nullptr;
+    Ui::Sql* ui;
+    QCompleter* sqlCompleter = nullptr;
+    QStringListModel* sqlCompleterModel = nullptr;
 
     QSqlDatabase dbMysqlLocal;
     QString sql_host;
     QString sql_schema;
     QString sql_table;
     QString sql_color;
-    QLineEdit *edit;
-    QLineEdit *editTimes;
-    QPushButton *button;
-    QTimer *timer;
+    QLineEdit* edit;
+    QLineEdit* editTimes;
+    QPushButton* button;
+    QTimer* timer;
     QSqlRecord currentRecord;
 
     bool editEnabled = false;
@@ -93,7 +125,6 @@ private:
     QStringList orderByFields;
 
 protected:
-    void keyPressEvent(QKeyEvent *event) override;
+    void keyPressEvent(QKeyEvent* event) override;
 };
 
-#endif // SQL_H

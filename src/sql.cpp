@@ -3,43 +3,6 @@
 #include "sqlhighlighter.h"
 #include "texteditcompleter.h"
 
-#include <QDebug>
-#include <QLabel>
-#include <QLineEdit>
-#include <QTimer>
-#include <QRegularExpression>
-#include <QString>
-#include <QStringList>
-#include <QDialog>
-#include <QDialogButtonBox>
-#include <QDateEdit>
-#include <QDateTimeEdit>
-#include <QVBoxLayout>
-#include <QPlainTextEdit>
-#include <QStyledItemDelegate>
-#include <QMenu>
-#include <QAction>
-#include <QClipboard>
-#include <QMessageBox>
-#include <QFormLayout>
-#include <QDoubleSpinBox>
-#include <QInputDialog>
-#include <QSqlDatabase>
-#include <QSqlError>
-#include <QSqlQuery>
-#include <QSqlQueryModel>
-#include <QSqlRecord>
-#include <QSqlField>
-#include <QToolButton>
-#include <QPushButton>
-#include <QStandardItemModel>
-#include <QJsonDocument>
-#include <QJsonObject>
-#include <QJsonArray>
-#include <QJsonValue>
-#include <functions.h>
-#include "macroinputdialog.h"
-#include "macroformatdialog.h"
 #include "mainwindow.h"
 
 // Extern variables (unchanged)
@@ -55,45 +18,46 @@ extern int pref_sql_font_size;
 // CustomDelegate class (unchanged, included for completeness)
 class CustomDelegate : public QStyledItemDelegate {
 public:
-    CustomDelegate(QObject *parent, const QSqlRecord &record)
-        : QStyledItemDelegate(parent), currentRecord(record) {}
+    CustomDelegate(QObject* parent, const QSqlRecord& record)
+        : QStyledItemDelegate(parent), currentRecord(record) {
+    }
 
-    QWidget *createEditor(QWidget *parent, const QStyleOptionViewItem &option,
-                          const QModelIndex &index) const override {
+    QWidget* createEditor(QWidget* parent, const QStyleOptionViewItem& option,
+        const QModelIndex& index) const override {
         QSqlField field = currentRecord.field(index.column());
         QVariant::Type type = field.type();
         int fieldSize = field.length();
 
         if (type == QVariant::Date) {
-            auto *editor = new QDateEdit(parent);
+            auto* editor = new QDateEdit(parent);
             editor->setCalendarPopup(true);
             editor->setDisplayFormat("yyyy-MM-dd");
             return editor;
         }
 
         if (type == QVariant::DateTime || type == QVariant::Time) {
-            auto *editor = new QDateTimeEdit(parent);
+            auto* editor = new QDateTimeEdit(parent);
             editor->setCalendarPopup(true);
             editor->setDisplayFormat("yyyy-MM-dd HH:mm:ss");
             return editor;
         }
 
         if (type == QVariant::String && fieldSize > 150) {
-            auto *editor = new QPlainTextEdit(parent);
+            auto* editor = new QPlainTextEdit(parent);
             editor->setMinimumHeight(80);
             return editor;
         }
 
         if (type == QVariant::Int || type == QVariant::UInt ||
             type == QVariant::LongLong || type == QVariant::ULongLong) {
-            auto *editor = new QLineEdit(parent);
+            auto* editor = new QLineEdit(parent);
             editor->setValidator(new QIntValidator(editor));
             return editor;
         }
 
         if (type == QVariant::Double) {
-            auto *editor = new QLineEdit(parent);
-            auto *validator = new QDoubleValidator(editor);
+            auto* editor = new QLineEdit(parent);
+            auto* validator = new QDoubleValidator(editor);
             validator->setNotation(QDoubleValidator::StandardNotation);
             validator->setDecimals(10);
             editor->setValidator(validator);
@@ -103,30 +67,30 @@ public:
         return QStyledItemDelegate::createEditor(parent, option, index);
     }
 
-    void setEditorData(QWidget *editor, const QModelIndex &index) const override {
+    void setEditorData(QWidget* editor, const QModelIndex& index) const override {
         QString value = index.model()->data(index, Qt::EditRole).toString();
         QSqlField field = currentRecord.field(index.column());
         QVariant::Type type = field.type();
         int fieldSize = field.length();
 
         if (type == QVariant::Date) {
-            auto *dateEditor = qobject_cast<QDateEdit *>(editor);
+            auto* dateEditor = qobject_cast<QDateEdit*>(editor);
             dateEditor->setDate(index.model()->data(index, Qt::EditRole).toDate());
             return;
         }
 
         if (type == QVariant::DateTime || type == QVariant::Time) {
-            auto *dtEditor = qobject_cast<QDateTimeEdit *>(editor);
+            auto* dtEditor = qobject_cast<QDateTimeEdit*>(editor);
             dtEditor->setDateTime(index.model()->data(index, Qt::EditRole).toDateTime());
             return;
         }
         if (type == QVariant::String && fieldSize > 128) {
-            auto *textEditor = qobject_cast<QPlainTextEdit *>(editor);
+            auto* textEditor = qobject_cast<QPlainTextEdit*>(editor);
             textEditor->setPlainText(value);
             return;
         }
 
-        if (auto *lineEdit = qobject_cast<QLineEdit *>(editor)) {
+        if (auto* lineEdit = qobject_cast<QLineEdit*>(editor)) {
             lineEdit->setText(value);
             return;
         }
@@ -134,31 +98,31 @@ public:
         QStyledItemDelegate::setEditorData(editor, index);
     }
 
-    void setModelData(QWidget *editor, QAbstractItemModel *model,
-                      const QModelIndex &index) const override {
+    void setModelData(QWidget* editor, QAbstractItemModel* model,
+        const QModelIndex& index) const override {
         QSqlField field = currentRecord.field(index.column());
         QVariant::Type type = field.type();
         int fieldSize = field.length();
 
         if (type == QVariant::Date) {
-            auto *dateEditor = qobject_cast<QDateEdit *>(editor);
+            auto* dateEditor = qobject_cast<QDateEdit*>(editor);
             model->setData(index, dateEditor->date().toString("yyyy-MM-dd"));
             return;
         }
 
         if (type == QVariant::DateTime || type == QVariant::Time) {
-            auto *dtEditor = qobject_cast<QDateTimeEdit *>(editor);
+            auto* dtEditor = qobject_cast<QDateTimeEdit*>(editor);
             model->setData(index, dtEditor->dateTime().toString("yyyy-MM-dd HH:mm:ss"));
             return;
         }
 
         if (type == QVariant::String && fieldSize > 128) {
-            auto *textEditor = qobject_cast<QPlainTextEdit *>(editor);
+            auto* textEditor = qobject_cast<QPlainTextEdit*>(editor);
             model->setData(index, textEditor->toPlainText());
             return;
         }
 
-        if (auto *lineEdit = qobject_cast<QLineEdit *>(editor)) {
+        if (auto* lineEdit = qobject_cast<QLineEdit*>(editor)) {
             model->setData(index, lineEdit->text());
             return;
         }
@@ -171,9 +135,9 @@ private:
 };
 
 // Sql constructor
-Sql::Sql(const QString &host, const QString &schema, const QString &table,
-         const QString &color, const QString &favName, const QString &favValue,
-         const bool &run, QWidget *parent)
+Sql::Sql(const QString& host, const QString& schema, const QString& table,
+    const QString& color, const QString& favName, const QString& favValue,
+    const bool& run, QWidget* parent)
     : QMainWindow(parent), ui(new Ui::Sql)
 {
     sql_host = host;
@@ -245,12 +209,12 @@ Sql::Sql(const QString &host, const QString &schema, const QString &table,
 
     setupSqlCompleter();
 
-    QWidget *spacer = new QWidget(this);
+    QWidget* spacer = new QWidget(this);
     spacer->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
-    QLabel *labelFavName = new QLabel(databaseName, this);
-    QLabel *label = new QLabel("Every ", this);
-    QLabel *labelSeconds = new QLabel("second(s) ", this);
-    QLabel *labelTimes = new QLabel(" time(s)", this);
+    QLabel* labelFavName = new QLabel(databaseName, this);
+    QLabel* label = new QLabel("Every ", this);
+    QLabel* labelSeconds = new QLabel("second(s) ", this);
+    QLabel* labelTimes = new QLabel(" time(s)", this);
 
     spacer->setStyleSheet("QWidget {background-color: transparent}");
 
@@ -258,14 +222,14 @@ Sql::Sql(const QString &host, const QString &schema, const QString &table,
     edit->setText("1");
     edit->setFixedWidth(50);
     edit->setPlaceholderText("Seconds");
-    QIntValidator *validator = new QIntValidator(0, 3600, this);
+    QIntValidator* validator = new QIntValidator(0, 3600, this);
     edit->setValidator(validator);
 
     editTimes = new QLineEdit(this);
     editTimes->setText("5");
     editTimes->setFixedWidth(50);
     editTimes->setPlaceholderText("Times");
-    QIntValidator *validatorTimes = new QIntValidator(0, 99999, this);
+    QIntValidator* validatorTimes = new QIntValidator(0, 99999, this);
     editTimes->setValidator(validatorTimes);
 
     button = new QPushButton(this);
@@ -291,7 +255,7 @@ Sql::Sql(const QString &host, const QString &schema, const QString &table,
 
     ui->tableData->setContextMenuPolicy(Qt::CustomContextMenu);
     connect(ui->tableData, &QTableView::customContextMenuRequested,
-            this, &Sql::show_context_menu);
+        this, &Sql::show_context_menu);
 
     QApplication::processEvents();
     if (run)
@@ -305,52 +269,62 @@ Sql::~Sql()
     delete ui;
 }
 
-void Sql::on_button_clicked()
+QVector<MacroField> Sql::extractFields(const QString& queryStr)
 {
-    if (button->isChecked())
-    {
-        timer->start(edit->text().toInt() * 1000);
-        edit->setEnabled(false);
-        ui->textQuery->setEnabled(false);
+    QVector<MacroField> fields;
+    QString maskedQuery = queryStr;
+    QRegularExpression stringLiteralRegex(R"('(?:[^']|'')*')");
+    QRegularExpressionMatchIterator stringIt = stringLiteralRegex.globalMatch(queryStr);
+
+    while (stringIt.hasNext()) {
+        QRegularExpressionMatch match = stringIt.next();
+        int start = match.capturedStart();
+        int length = match.capturedLength();
+        maskedQuery.replace(start, length, QString(length, ' '));
     }
-    else
-    {
-        if (timer->isActive())
-        {
-            edit->setEnabled(true);
-            timer->stop();
-            ui->textQuery->setEnabled(true);
-        }
+
+    QRegularExpression macroRegex(R"(~([A-Za-z0-9_çÇáàâãéèêíïóôõöúñÁÀÂÃÉÈÊÍÏÓÔÕÖÚÑ]+)(?:@([a-zA-Z_][a-zA-Z0-9_]*))?(?:~([A-Za-z0-9_%]+))?(?:~([A-Za-z0-9_]+))?(?:~([A-Za-z0-9_]+))?(?:~([A-Za-z0-9_]+))?(?=\b|\W))");
+
+    QRegularExpressionMatchIterator it = macroRegex.globalMatch(maskedQuery);
+    while (it.hasNext()) {
+        QRegularExpressionMatch match = it.next();
+        if (!match.hasMatch()) continue;
+
+        MacroField field;
+        field.name = match.captured(1);
+        field.type = match.captured(2).isEmpty() ? "string" : match.captured(2).toLower();
+        field.table = match.captured(3);
+        field.key = match.captured(4);
+        field.display = match.captured(5);
+        field.order = match.captured(6);
+        field.full = match.captured(0);
+        fields.append(field);
     }
+    return fields;
 }
 
-QAbstractItemModel* Sql::getTableModel() const
+QString Sql::processQueryWithMacros(QString queryStr, QWidget* parent)
 {
-    QStringList tables;
-    QSqlQuery query(dbMysqlLocal);
-    if (query.exec("SHOW TABLES")) {
-        while (query.next()) {
-            tables << query.value(0).toString();
-        }
-    }
-    QStringListModel *model = new QStringListModel(tables, const_cast<Sql*>(this));
-    return model;
-}
+    auto fields = extractFields(queryStr);
+    if (fields.isEmpty())
+        return queryStr;
 
-QAbstractItemModel* Sql::getColumnModel(const QString &table) const
-{
-    QStringList columns;
-    if (!table.isEmpty()) {
-        QSqlQuery query(dbMysqlLocal);
-        if (query.exec("SELECT * FROM " + table + " LIMIT 1")) {
-            QSqlRecord record = query.record();
-            for (int i = 0; i < record.count(); ++i) {
-                columns << record.fieldName(i);
+    MacroInputDialog dialog(fields, sql_host, sql_schema, parent);
+    if (dialog.exec() == QDialog::Accepted) {
+        QMap<QString, QVariant> values = dialog.getValues();
+        for (const auto& field : fields) {
+            QString value = values[field.name].toString();
+            value.replace('\'', "''");
+            if (field.type == "number")
+            {
+                queryStr.replace(field.full, QString("%1").arg(value));
+            }
+            else {
+                queryStr.replace(field.full, QString("'%1'").arg(value));
             }
         }
     }
-    QStringListModel *model = new QStringListModel(columns, const_cast<Sql*>(this));
-    return model;
+    return queryStr;
 }
 
 void Sql::setupSqlCompleter()
@@ -384,11 +358,13 @@ void Sql::setupSqlCompleter()
             QString table = match.captured(1);
             QString alias = match.captured(2);
             sqlCompleter->setModel(getColumnModel(table));
-        } else if (auto match = reTableAlias.match(blockText); match.hasMatch()) {
+        }
+        else if (auto match = reTableAlias.match(blockText); match.hasMatch()) {
             QString prefix = match.captured(1);
             QString table = prefix == tableAlias ? tableName : prefix;
             sqlCompleter->setModel(getColumnModel(table));
-        } else {
+        }
+        else {
             QStringList suggestions = keywords;
             QSqlQuery query(dbMysqlLocal);
             if (query.exec("SHOW TABLES")) {
@@ -401,8 +377,57 @@ void Sql::setupSqlCompleter()
             sqlCompleterModel->setStringList(suggestions);
             sqlCompleter->setModel(sqlCompleterModel);
         }
-    });
+        });
 }
+
+void Sql::on_button_clicked()
+{
+    if (button->isChecked())
+    {
+        timer->start(edit->text().toInt() * 1000);
+        edit->setEnabled(false);
+        ui->textQuery->setEnabled(false);
+    }
+    else
+    {
+        if (timer->isActive())
+        {
+            edit->setEnabled(true);
+            timer->stop();
+            ui->textQuery->setEnabled(true);
+        }
+    }
+}
+
+QAbstractItemModel* Sql::getTableModel() const
+{
+    QStringList tables;
+    QSqlQuery query(dbMysqlLocal);
+    if (query.exec("SHOW TABLES")) {
+        while (query.next()) {
+            tables << query.value(0).toString();
+        }
+    }
+    QStringListModel* model = new QStringListModel(tables, const_cast<Sql*>(this));
+    return model;
+}
+
+QAbstractItemModel* Sql::getColumnModel(const QString& table) const
+{
+    QStringList columns;
+    if (!table.isEmpty()) {
+        QSqlQuery query(dbMysqlLocal);
+        if (query.exec("SELECT * FROM " + table + " LIMIT 1")) {
+            QSqlRecord record = query.record();
+            for (int i = 0; i < record.count(); ++i) {
+                columns << record.fieldName(i);
+            }
+        }
+    }
+    QStringListModel* model = new QStringListModel(columns, const_cast<Sql*>(this));
+    return model;
+}
+
 
 void Sql::setInterfaceSize(int increase)
 {
@@ -420,12 +445,12 @@ void Sql::setInterfaceSize(int increase)
     }
     QFont fonte;
     fonte.setFamilies(QStringList()
-                      << "Segoe UI"
-                      << ".SF NS Text"
-                      << "Ubuntu"
-                      << "Cantarell"
-                      << "Noto Sans"
-                      << "Sans Serif");
+        << "Segoe UI"
+        << ".SF NS Text"
+        << "Ubuntu"
+        << "Cantarell"
+        << "Noto Sans"
+        << "Sans Serif");
     fonte.setPointSize(pref_table_font_size);
     ui->tableData->setFont(fonte);
 
@@ -439,7 +464,7 @@ void Sql::setInterfaceSize(int increase)
     ui->textQuery->viewport()->update();
 }
 
-void Sql::keyPressEvent(QKeyEvent *event)
+void Sql::keyPressEvent(QKeyEvent* event)
 {
     if ((event->key() == Qt::Key_Return || event->key() == Qt::Key_Enter) &&
         event->modifiers() & Qt::ControlModifier)
@@ -453,9 +478,9 @@ void Sql::keyPressEvent(QKeyEvent *event)
 }
 
 // Implementações dos outros métodos (mantidas do código original)
-void Sql::query2TableView(QTableView *tableView, const QString &queryStr, const QString &comando)
+void Sql::query2TableView(QTableView* tableView, const QString& queryStr, const QString& comando)
 {
-    QStandardItemModel *model = new QStandardItemModel(tableView);
+    QStandardItemModel* model = new QStandardItemModel(tableView);
     QSqlQuery query(dbMysqlLocal);
     if (!query.exec(queryStr)) {
         statusMessage("Query error: " + query.lastError().text());
@@ -499,7 +524,7 @@ void Sql::query2TableView(QTableView *tableView, const QString &queryStr, const 
                 displayText = value.toString();
             }
 
-            QStandardItem *item = new QStandardItem(displayText);
+            QStandardItem* item = new QStandardItem(displayText);
             item->setEditable(true);
             item->setData(value, Qt::EditRole);
             item->setData(displayText, Qt::DisplayRole);
@@ -551,12 +576,12 @@ void Sql::query2TableView(QTableView *tableView, const QString &queryStr, const 
             QAbstractItemView::EditKeyPressed |
             QAbstractItemView::AnyKeyPressed |
             QAbstractItemView::DoubleClicked
-            );
+        );
 
-        CustomDelegate *delegate = new CustomDelegate(tableView, currentRecord);
+        CustomDelegate* delegate = new CustomDelegate(tableView, currentRecord);
         tableView->setItemDelegate(delegate);
 
-        connect(delegate, &QAbstractItemDelegate::commitData, this, [=](QWidget *editor) {
+        connect(delegate, &QAbstractItemDelegate::commitData, this, [=](QWidget* editor) {
             QModelIndex index = tableView->currentIndex();
             if (!index.isValid() || !hasId || idPosition < 0)
                 return;
@@ -573,58 +598,61 @@ void Sql::query2TableView(QTableView *tableView, const QString &queryStr, const 
 
                 statusBar()->showMessage(
                     QString("Alteração REJEITADA em '%1'. Valor restaurado: %2")
-                        .arg(fieldName, oldValue)
-                    );
+                    .arg(fieldName, oldValue)
+                );
                 qWarning() << "Alteração rejeitada. Valor restaurado.";
-            } else {
+            }
+            else {
                 model->setData(index, newValue, Qt::UserRole);
                 statusBar()->showMessage(QString("Alteração salva em '%1'").arg(fieldName));
             }
-        });
+            });
 
         connect(tableView->selectionModel(), &QItemSelectionModel::currentChanged,
-                this, [this](const QModelIndex &current, const QModelIndex &) {
-                    if (!currentRecord.isEmpty() && current.isValid()) {
-                        QSqlField field = currentRecord.field(current.column());
-                        QVariant::Type type = field.type();
-                        int fieldSize = field.length();
+            this, [this](const QModelIndex& current, const QModelIndex&) {
+                if (!currentRecord.isEmpty() && current.isValid()) {
+                    QSqlField field = currentRecord.field(current.column());
+                    QVariant::Type type = field.type();
+                    int fieldSize = field.length();
 
-                        static const QMap<QVariant::Type, QString> sqlTypeMap = {
-                            {QVariant::Int, "int"},
-                            {QVariant::UInt, "unsigned int"},
-                            {QVariant::LongLong, "bigint"},
-                            {QVariant::ULongLong, "unsigned bigint"},
-                            {QVariant::Double, "double"},
-                            {QVariant::Bool, "boolean"},
-                            {QVariant::Date, "date"},
-                            {QVariant::Time, "time"},
-                            {QVariant::DateTime, "datetime"},
-                            {QVariant::String, "varchar"},
-                            {QVariant::ByteArray, "blob"},
-                            {QVariant::Char, "char"},
-                            {QVariant::Invalid, "unknown"}
-                        };
+                    static const QMap<QVariant::Type, QString> sqlTypeMap = {
+                        {QVariant::Int, "int"},
+                        {QVariant::UInt, "unsigned int"},
+                        {QVariant::LongLong, "bigint"},
+                        {QVariant::ULongLong, "unsigned bigint"},
+                        {QVariant::Double, "double"},
+                        {QVariant::Bool, "boolean"},
+                        {QVariant::Date, "date"},
+                        {QVariant::Time, "time"},
+                        {QVariant::DateTime, "datetime"},
+                        {QVariant::String, "varchar"},
+                        {QVariant::ByteArray, "blob"},
+                        {QVariant::Char, "char"},
+                        {QVariant::Invalid, "unknown"}
+                    };
 
-                        QString sqlTypeName = sqlTypeMap.value(type, QMetaType(type).name());
-                        QString info;
+                    QString sqlTypeName = sqlTypeMap.value(type, QMetaType(type).name());
+                    QString info;
 
-                        if (fieldSize == 262140 && sqlTypeName == "varchar") {
-                            info = QString("%1 • text").arg(field.name());
-                        } else {
-                            info = QString("%1 • %2(%3)").arg(field.name(), sqlTypeName).arg(fieldSize);
-                        }
-                        statusBar()->showMessage(info);
+                    if (fieldSize == 262140 && sqlTypeName == "varchar") {
+                        info = QString("%1 • text").arg(field.name());
                     }
-                });
+                    else {
+                        info = QString("%1 • %2(%3)").arg(field.name(), sqlTypeName).arg(fieldSize);
+                    }
+                    statusBar()->showMessage(info);
+                }
+            });
 
         statusMessage("Success • Rows: " + QString::number(rowsAffected));
-    } else {
+    }
+    else {
         editEnabled = false;
         tableView->setEditTriggers(QAbstractItemView::NoEditTriggers);
     }
 }
 
-bool Sql::on_tableData_edit_trigger(QString &id, QString &fieldName, QString &newValue)
+bool Sql::on_tableData_edit_trigger(QString& id, QString& fieldName, QString& newValue)
 {
     if (fieldName == "id")
     {
@@ -652,7 +680,7 @@ void Sql::refresh_structure()
         if (query.exec(queryStr)) {
             queryStr = "DESCRIBE " + sql_table;
             if (query.exec(queryStr)) {
-                QStandardItemModel *model = new QStandardItemModel(this);
+                QStandardItemModel* model = new QStandardItemModel(this);
                 model->setHorizontalHeaderLabels(QStringList() << "Field" << "Type" << "Null" << "Key" << "Default" << "Extra");
 
                 int row = 0;
@@ -665,11 +693,13 @@ void Sql::refresh_structure()
                     model->setItem(row, 5, new QStandardItem(query.value("Extra").toString()));
                     ++row;
                 }
-            } else {
+            }
+            else {
                 qCritical() << "Erro ao obter estrutura:" << query.lastError().text();
             }
         }
-    } else {
+    }
+    else {
         qCritical() << "Failed to connect to the database";
     }
 
@@ -685,7 +715,7 @@ void Sql::formatSqlText()
         "WHERE", "ORDER", "GROUP BY", "LIMIT"
     };
 
-    for (const QString &palavra : palavrasChave) {
+    for (const QString& palavra : palavrasChave) {
         QRegularExpression re(QStringLiteral("\\b%1\\b").arg(QRegularExpression::escape(palavra)), QRegularExpression::CaseInsensitiveOption);
         texto.replace(re, "\n" + palavra);
     }
@@ -765,7 +795,7 @@ void Sql::on_actionRun_triggered()
             QRegularExpression reOrder(R"(ORDER\s+BY\s+(.*?)(LIMIT|$))", QRegularExpression::DotMatchesEverythingOption | QRegularExpression::CaseInsensitiveOption);
             if (auto match = reOrder.match(queryStr); match.hasMatch()) {
                 QStringList rawOrderFields = match.captured(1).split(',', Qt::SkipEmptyParts);
-                for (QString &f : rawOrderFields) f = f.trimmed();
+                for (QString& f : rawOrderFields) f = f.trimmed();
                 orderByFields = extractFieldsWithPrefix(rawOrderFields, tableName, tableAlias);
             }
 
@@ -775,13 +805,15 @@ void Sql::on_actionRun_triggered()
 
         if (comando == "SELECT" || comando == "SHOW" || comando == "DESCRIBE" || comando == "EXPLAIN") {
             query2TableView(ui->tableData, queryStr, comando);
-        } else {
+        }
+        else {
             editEnabled = false;
             ui->tableData->setEditTriggers(QAbstractItemView::NoEditTriggers);
             QSqlQuery query(dbMysqlLocal);
             if (!query.exec(queryStr)) {
                 statusMessage("Command error: " + query.lastError().text());
-            } else {
+            }
+            else {
                 int linhasAfetadas = query.numRowsAffected();
                 statusMessage("Success! Line affected: " + QString::number(linhasAfetadas));
             }
@@ -851,7 +883,8 @@ void Sql::on_timer_tick()
             {
                 QString style = "QTextEdit {background-color: white}";
                 ui->textQuery->setStyleSheet(style);
-            } else {
+            }
+            else {
                 QString style = "QTextEdit {background-color: " + getRgbFromColorName(sql_color) + "}";
                 ui->textQuery->setStyleSheet(style);
             }
@@ -868,7 +901,8 @@ void Sql::on_tableAppend_triggered()
     QSqlQuery query(dbMysqlLocal);
     if (!query.exec(insert)) {
         qWarning() << "Erro ao adicionar linha:" << query.lastError().text();
-    } else {
+    }
+    else {
         refresh_structure();
     }
 }
@@ -891,14 +925,15 @@ void Sql::on_tableClone_triggered()
     }
 
     QString insert = QString("INSERT INTO %1 (%2) VALUES (%3)")
-                         .arg(sql_table)
-                         .arg(fields.join(", "))
-                         .arg(values.join(", "));
+        .arg(sql_table)
+        .arg(fields.join(", "))
+        .arg(values.join(", "));
 
     QSqlQuery query(dbMysqlLocal);
     if (!query.exec(insert)) {
         qWarning() << "Erro ao clonar linha:" << query.lastError().text();
-    } else {
+    }
+    else {
         refresh_structure();
     }
 }
@@ -909,11 +944,11 @@ void Sql::on_tableDelete_triggered()
     if (selection.isEmpty()) return;
 
     QSet<int> rows;
-    for (const QModelIndex &index : selection)
+    for (const QModelIndex& index : selection)
         rows.insert(index.row());
 
     if (QMessageBox::question(this, "Confirmar exclusão",
-                              QString("Deseja excluir %1 linha(s)?").arg(rows.size())) != QMessageBox::Yes)
+        QString("Deseja excluir %1 linha(s)?").arg(rows.size())) != QMessageBox::Yes)
         return;
 
     QSqlQuery query(dbMysqlLocal);
@@ -925,8 +960,9 @@ void Sql::on_tableDelete_triggered()
         QString del = QString("DELETE FROM %1 WHERE id = %2").arg(sql_table).arg(id);
         if (!query.exec(del)) {
             qWarning() << "Erro ao excluir linha id=" << id << ":" << query.lastError().text();
-        } else {
-            static_cast<QStandardItemModel *>(ui->tableData->model())->removeRow(row);
+        }
+        else {
+            static_cast<QStandardItemModel*>(ui->tableData->model())->removeRow(row);
         }
     }
 }
@@ -936,9 +972,9 @@ void Sql::on_tableCopyInsert_triggered()
     QModelIndexList selection = ui->tableData->selectionModel()->selectedIndexes();
     if (selection.isEmpty()) return;
 
-    QAbstractItemModel *model = ui->tableData->model();
+    QAbstractItemModel* model = ui->tableData->model();
     QMap<int, QMap<int, QString>> rowValues;
-    for (const QModelIndex &index : selection) {
+    for (const QModelIndex& index : selection) {
         int row = index.row();
         int col = index.column();
         QString header = model->headerData(col, Qt::Horizontal).toString();
@@ -948,7 +984,7 @@ void Sql::on_tableCopyInsert_triggered()
 
     QStringList insertCommands;
     for (auto it = rowValues.constBegin(); it != rowValues.constEnd(); ++it) {
-        const QMap<int, QString> &colMap = it.value();
+        const QMap<int, QString>& colMap = it.value();
         QStringList columns;
         QStringList values;
         for (auto colIt = colMap.constBegin(); colIt != colMap.constEnd(); ++colIt) {
@@ -958,13 +994,13 @@ void Sql::on_tableCopyInsert_triggered()
         }
 
         QString query = QString("INSERT INTO %1 (%2) VALUES (%3);")
-                            .arg(sql_table)
-                            .arg(columns.join(", "))
-                            .arg(values.join(", "));
+            .arg(sql_table)
+            .arg(columns.join(", "))
+            .arg(values.join(", "));
         insertCommands << query;
     }
 
-    QClipboard *clipboard = QApplication::clipboard();
+    QClipboard* clipboard = QApplication::clipboard();
     clipboard->setText(insertCommands.join("\n"));
 }
 
@@ -973,7 +1009,7 @@ void Sql::on_tableCopyUpdate_triggered()
     QModelIndexList selection = ui->tableData->selectionModel()->selectedIndexes();
     if (selection.isEmpty()) return;
 
-    QAbstractItemModel *model = ui->tableData->model();
+    QAbstractItemModel* model = ui->tableData->model();
     QMap<int, QMap<int, QString>> rowValues;
     int idColumn = -1;
 
@@ -990,7 +1026,7 @@ void Sql::on_tableCopyUpdate_triggered()
         return;
     }
 
-    for (const QModelIndex &index : selection) {
+    for (const QModelIndex& index : selection) {
         int row = index.row();
         int col = index.column();
         if (col == idColumn) continue;
@@ -1001,7 +1037,7 @@ void Sql::on_tableCopyUpdate_triggered()
     QStringList updateCommands;
     for (auto it = rowValues.constBegin(); it != rowValues.constEnd(); ++it) {
         int row = it.key();
-        const QMap<int, QString> &colMap = it.value();
+        const QMap<int, QString>& colMap = it.value();
         QModelIndex idIndex = model->index(row, idColumn);
         QString idValue = idIndex.data().toString();
 
@@ -1017,13 +1053,13 @@ void Sql::on_tableCopyUpdate_triggered()
         }
 
         QString query = QString("UPDATE %1 SET %2 WHERE Id = %3;")
-                            .arg(sql_table)
-                            .arg(assignments.join(", "))
-                            .arg(idValue);
+            .arg(sql_table)
+            .arg(assignments.join(", "))
+            .arg(idValue);
         updateCommands << query;
     }
 
-    QClipboard *clipboard = QApplication::clipboard();
+    QClipboard* clipboard = QApplication::clipboard();
     clipboard->setText(updateCommands.join("\n"));
 }
 
@@ -1032,13 +1068,13 @@ void Sql::on_tableCopyCsv_triggered()
     QModelIndexList selection = ui->tableData->selectionModel()->selectedIndexes();
     if (selection.isEmpty()) return;
 
-    std::sort(selection.begin(), selection.end(), [](const QModelIndex &a, const QModelIndex &b) {
+    std::sort(selection.begin(), selection.end(), [](const QModelIndex& a, const QModelIndex& b) {
         return a.row() == b.row() ? a.column() < b.column() : a.row() < b.row();
-    });
+        });
 
-    QAbstractItemModel *model = ui->tableData->model();
+    QAbstractItemModel* model = ui->tableData->model();
     QSet<int> selectedColumnsSet;
-    for (const QModelIndex &index : selection)
+    for (const QModelIndex& index : selection)
         selectedColumnsSet.insert(index.column());
 
     QList<int> selectedColumns = selectedColumnsSet.values();
@@ -1058,7 +1094,7 @@ void Sql::on_tableCopyCsv_triggered()
     QStringList csvRow;
     csvRow.fill("", selectedColumns.size());
 
-    for (const QModelIndex &index : selection) {
+    for (const QModelIndex& index : selection) {
         if (index.row() != currentRow) {
             csvText << csvRow.join(";");
             csvRow.fill("", selectedColumns.size());
@@ -1073,16 +1109,16 @@ void Sql::on_tableCopyCsv_triggered()
 
             QVariant::Type type = data.type();
             bool isNumeric = (type == QVariant::Int ||
-                              type == QVariant::UInt ||
-                              type == QVariant::LongLong ||
-                              type == QVariant::ULongLong ||
-                              type == QVariant::Double);
+                type == QVariant::UInt ||
+                type == QVariant::LongLong ||
+                type == QVariant::ULongLong ||
+                type == QVariant::Double);
 
             bool needsQuotes = !isNumeric ||
-                               str.contains(";") ||
-                               str.contains("\n") ||
-                               str.contains("\"") ||
-                               str.startsWith("{") || str.startsWith("[");
+                str.contains(";") ||
+                str.contains("\n") ||
+                str.contains("\"") ||
+                str.startsWith("{") || str.startsWith("[");
 
             csvRow[colIndex] = needsQuotes ? "\"" + str + "\"" : str;
         }
@@ -1090,36 +1126,90 @@ void Sql::on_tableCopyCsv_triggered()
 
     csvText << csvRow.join(";");
 
-    QClipboard *clipboard = QApplication::clipboard();
+    QClipboard* clipboard = QApplication::clipboard();
     clipboard->setText(csvText.join("\n"));
 }
 
 void Sql::on_tableCRUDGfw_triggered()
 {
-    QClipboard *clipboard = QApplication::clipboard();
+    QClipboard* clipboard = QApplication::clipboard();
     clipboard->setText("<?php \n ?>");
 }
 
 void Sql::on_tableCRUDLaravel_triggered()
 {
-    QClipboard *clipboard = QApplication::clipboard();
+    QClipboard* clipboard = QApplication::clipboard();
     clipboard->setText("<?php \n ?>");
 }
 
-void Sql::show_context_menu(const QPoint &pos)
+
+void Sql::on_actionFavorites_triggered()
+{
+    QDialog dialog(this);
+    dialog.setWindowTitle(tr("Add favorite"));
+    QVBoxLayout* layout = new QVBoxLayout(&dialog);
+    QLabel* label = new QLabel(tr("Name:"), &dialog);
+    layout->addWidget(label);
+    QLineEdit* lineEdit = new QLineEdit(&dialog);
+    lineEdit->setText(favoriteName);
+    layout->addWidget(lineEdit);
+    lineEdit->setStyleSheet(
+        "QLabel:last {"
+        "   padding-right: 10px;"
+        "   min-height: 30px;"
+        "   min-width: 280px;"
+        "}"
+        "QPushButton {"
+        "    padding: 4px;"
+        "    margin: 20px;"
+        "    min-height: 16px;"
+        "}"
+    );
+    QDialogButtonBox* buttons = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, &dialog);
+    layout->addWidget(buttons);
+    QObject::connect(buttons, &QDialogButtonBox::accepted, &dialog, &QDialog::accept);
+    QObject::connect(buttons, &QDialogButtonBox::rejected, &dialog, &QDialog::reject);
+
+    if (dialog.exec() == QDialog::Accepted) {
+        QString name = lineEdit->text().trimmed();
+        if (!name.isEmpty()) {
+            QString value = ui->textQuery->toPlainText();
+            setStringPreference("fav:" + sql_host + ":" + sql_schema + ":" + sql_table + ":" + sql_color + ":" + name, value);
+            MainWindow* mainWin = qobject_cast<MainWindow*>(this->window());
+            if (mainWin) {
+                mainWin->refresh_favorites();
+            }
+            else {
+                qWarning() << "MainWindow not found from Sql::on_actionFavorites_triggered";
+            }
+        }
+    }
+}
+
+void Sql::on_actionMacros_triggered()
+{
+    MacroFormatDialog dialog(this);
+    if (dialog.exec() == QDialog::Accepted) {
+        QString macro = dialog.resultMacro();
+        QTextCursor cursor = ui->textQuery->textCursor();
+        cursor.insertText(macro);
+    }
+}
+
+void Sql::show_context_menu(const QPoint& pos)
 {
     QMenu menu(this);
-    QAction *tableAppend = menu.addAction("Append row");
-    QAction *tableClone = menu.addAction("Clone row");
-    QAction *tableDelete = menu.addAction("Delete row(s)");
+    QAction* tableAppend = menu.addAction("Append row");
+    QAction* tableClone = menu.addAction("Clone row");
+    QAction* tableDelete = menu.addAction("Delete row(s)");
     menu.addSeparator();
-    QAction *tableCopyInsert = menu.addAction("Copy as INSERT");
-    QAction *tableCopyUpdate = menu.addAction("Copy as UPDATE");
-    QAction *tableCopyCsv = menu.addAction("Copy as CSV");
+    QAction* tableCopyInsert = menu.addAction("Copy as INSERT");
+    QAction* tableCopyUpdate = menu.addAction("Copy as UPDATE");
+    QAction* tableCopyCsv = menu.addAction("Copy as CSV");
     menu.addSeparator();
-    QAction *tableExportCSV = menu.addAction("Export as CSV");
+    QAction* tableExportCSV = menu.addAction("Export as CSV");
 
-    QAction *selectedAction = menu.exec(ui->tableData->viewport()->mapToGlobal(pos));
+    QAction* selectedAction = menu.exec(ui->tableData->viewport()->mapToGlobal(pos));
 
     if (selectedAction == tableClone) {
         on_tableClone_triggered();
@@ -1138,114 +1228,5 @@ void Sql::show_context_menu(const QPoint &pos)
     }
     else if (selectedAction == tableCopyCsv) {
         on_tableCopyCsv_triggered();
-    }
-}
-
-QVector<MacroField> Sql::extractFields(const QString &queryStr)
-{
-    QVector<MacroField> fields;
-    QString maskedQuery = queryStr;
-    QRegularExpression stringLiteralRegex(R"('(?:[^']|'')*')");
-    QRegularExpressionMatchIterator stringIt = stringLiteralRegex.globalMatch(queryStr);
-
-    while (stringIt.hasNext()) {
-        QRegularExpressionMatch match = stringIt.next();
-        int start = match.capturedStart();
-        int length = match.capturedLength();
-        maskedQuery.replace(start, length, QString(length, ' '));
-    }
-
-    QRegularExpression macroRegex(R"(~([A-Za-z0-9_çÇáàâãéèêíïóôõöúñÁÀÂÃÉÈÊÍÏÓÔÕÖÚÑ]+)(?:@([a-zA-Z_][a-zA-Z0-9_]*))?(?:~([A-Za-z0-9_%]+))?(?:~([A-Za-z0-9_]+))?(?:~([A-Za-z0-9_]+))?(?:~([A-Za-z0-9_]+))?(?=\b|\W))");
-
-    QRegularExpressionMatchIterator it = macroRegex.globalMatch(maskedQuery);
-    while (it.hasNext()) {
-        QRegularExpressionMatch match = it.next();
-        if (!match.hasMatch()) continue;
-
-        MacroField field;
-        field.name = match.captured(1);
-        field.type = match.captured(2).isEmpty() ? "string" : match.captured(2).toLower();
-        field.table = match.captured(3);
-        field.key = match.captured(4);
-        field.display = match.captured(5);
-        field.order = match.captured(6);
-        field.full = match.captured(0);
-        fields.append(field);
-    }
-    return fields;
-}
-
-QString Sql::processQueryWithMacros(QString queryStr, QWidget *parent)
-{
-    auto fields = extractFields(queryStr);
-    if (fields.isEmpty())
-        return queryStr;
-
-    MacroInputDialog dialog(fields, sql_host, sql_schema, parent);
-    if (dialog.exec() == QDialog::Accepted) {
-        QMap<QString, QVariant> values = dialog.getValues();
-        for (const auto &field : fields) {
-            QString value = values[field.name].toString();
-            value.replace('\'', "''");
-            if (field.type == "number")
-            {
-                queryStr.replace(field.full, QString("%1").arg(value));
-            } else {
-                queryStr.replace(field.full, QString("'%1'").arg(value));
-            }
-        }
-    }
-    return queryStr;
-}
-
-void Sql::on_actionFavorites_triggered()
-{
-    QDialog dialog(this);
-    dialog.setWindowTitle(tr("Add favorite"));
-    QVBoxLayout *layout = new QVBoxLayout(&dialog);
-    QLabel *label = new QLabel(tr("Name:"), &dialog);
-    layout->addWidget(label);
-    QLineEdit *lineEdit = new QLineEdit(&dialog);
-    lineEdit->setText(favoriteName);
-    layout->addWidget(lineEdit);
-    lineEdit->setStyleSheet(
-        "QLabel:last {"
-        "   padding-right: 10px;"
-        "   min-height: 30px;"
-        "   min-width: 280px;"
-        "}"
-        "QPushButton {"
-        "    padding: 4px;"
-        "    margin: 20px;"
-        "    min-height: 16px;"
-        "}"
-        );
-    QDialogButtonBox *buttons = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, &dialog);
-    layout->addWidget(buttons);
-    QObject::connect(buttons, &QDialogButtonBox::accepted, &dialog, &QDialog::accept);
-    QObject::connect(buttons, &QDialogButtonBox::rejected, &dialog, &QDialog::reject);
-
-    if (dialog.exec() == QDialog::Accepted) {
-        QString name = lineEdit->text().trimmed();
-        if (!name.isEmpty()) {
-            QString value = ui->textQuery->toPlainText();
-            setStringPreference("fav:" + sql_host + ":" + sql_schema + ":" + sql_table + ":" + sql_color + ":" + name, value);
-            MainWindow *mainWin = qobject_cast<MainWindow *>(this->window());
-            if (mainWin) {
-                mainWin->refresh_favorites();
-            } else {
-                qWarning() << "MainWindow not found from Sql::on_actionFavorites_triggered";
-            }
-        }
-    }
-}
-
-void Sql::on_actionMacros_triggered()
-{
-    MacroFormatDialog dialog(this);
-    if (dialog.exec() == QDialog::Accepted) {
-        QString macro = dialog.resultMacro();
-        QTextCursor cursor = ui->textQuery->textCursor();
-        cursor.insertText(macro);
     }
 }

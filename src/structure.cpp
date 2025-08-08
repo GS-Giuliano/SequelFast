@@ -1,41 +1,21 @@
 #include "structure.h"
 #include "ui_structure.h"
 
-#include <QDebug>
-#include <QLabel>
-#include <QLineEdit>
-#include <QCompleter>
-
-#include <QSqlDatabase>
-#include <QSqlError>
-#include <QSqlQuery>
-#include <QSqlQueryModel>
-#include <QStandardItemModel>
-#include <QJsonDocument>
-#include <QJsonObject>
-#include <QJsonArray>
-#include <QJsonValue>
-#include <QMessageBox>
-
 #include <functions.h>
-
-#include <QStyledItemDelegate>
-#include <QLineEdit>
-#include <QRegularExpressionValidator>
 
 extern QSqlDatabase dbMysql;
 
 
 class RegexDelegateName : public QStyledItemDelegate {
 public:
-    RegexDelegateName(QObject *parent = nullptr) : QStyledItemDelegate(parent) {}
+    RegexDelegateName(QObject* parent = nullptr) : QStyledItemDelegate(parent) {}
 
-    QWidget *createEditor(QWidget *parent,
-                          const QStyleOptionViewItem &,
-                          const QModelIndex &) const override
+    QWidget* createEditor(QWidget* parent,
+        const QStyleOptionViewItem&,
+        const QModelIndex&) const override
     {
-        QLineEdit *editor = new QLineEdit(parent);
-        QRegularExpression regex("^[a-zA-Z0-9_]*$",QRegularExpression::CaseInsensitiveOption);
+        QLineEdit* editor = new QLineEdit(parent);
+        QRegularExpression regex("^[a-zA-Z0-9_]*$", QRegularExpression::CaseInsensitiveOption);
         editor->setValidator(new QRegularExpressionValidator(regex, editor));
         return editor;
     }
@@ -43,13 +23,13 @@ public:
 
 class RegexDelegateType : public QStyledItemDelegate {
 public:
-    RegexDelegateType(QObject *parent = nullptr) : QStyledItemDelegate(parent) {}
+    RegexDelegateType(QObject* parent = nullptr) : QStyledItemDelegate(parent) {}
 
-    QWidget *createEditor(QWidget *parent,
-                          const QStyleOptionViewItem &,
-                          const QModelIndex &) const override
+    QWidget* createEditor(QWidget* parent,
+        const QStyleOptionViewItem&,
+        const QModelIndex&) const override
     {
-        QLineEdit *editor = new QLineEdit(parent);
+        QLineEdit* editor = new QLineEdit(parent);
         QRegularExpression regex(
             R"(^[a-zA-Z0-9_]+(\([0-9]+(,[0-9]+)?\))?( unsigned| zerofill| binary| CHARACTER SET [a-zA-Z0-9_]+| COLLATE [a-zA-Z0-9_]+)*$)",
             QRegularExpression::CaseInsensitiveOption);
@@ -63,7 +43,7 @@ public:
                 editor->setText(lower);
                 editor->setCursorPosition(cursorPos);
             }
-        });
+            });
 
         // Autocompletar com sugestões de tipos SQL
         QStringList suggestions = {
@@ -71,7 +51,7 @@ public:
             "datetime", "tinyint", "mediumint", "smallint", "char(10)", "boolean"
         };
 
-        QCompleter *completer = new QCompleter(suggestions, editor);
+        QCompleter* completer = new QCompleter(suggestions, editor);
         completer->setCaseSensitivity(Qt::CaseInsensitive);
         completer->setCompletionMode(QCompleter::PopupCompletion);
         completer->setFilterMode(Qt::MatchContains);
@@ -83,17 +63,17 @@ public:
 
 class RegexDelegateYesNo : public QStyledItemDelegate {
 public:
-    RegexDelegateYesNo(QObject *parent = nullptr) : QStyledItemDelegate(parent) {}
+    RegexDelegateYesNo(QObject* parent = nullptr) : QStyledItemDelegate(parent) {}
 
-    QWidget *createEditor(QWidget *parent,
-                          const QStyleOptionViewItem &,
-                          const QModelIndex &) const override
+    QWidget* createEditor(QWidget* parent,
+        const QStyleOptionViewItem&,
+        const QModelIndex&) const override
     {
-        QLineEdit *editor = new QLineEdit(parent);
+        QLineEdit* editor = new QLineEdit(parent);
 
         // Regex que permite apenas YES ou NO
         QRegularExpression regex(R"(^yes$|^no$)", QRegularExpression::CaseInsensitiveOption);
-        auto *validator = new QRegularExpressionValidator(regex, editor);
+        auto* validator = new QRegularExpressionValidator(regex, editor);
         editor->setValidator(validator);
 
         // Converte para maiúsculas automaticamente
@@ -104,10 +84,10 @@ public:
                 editor->setText(upper);
                 editor->setCursorPosition(pos);
             }
-        });
+            });
         // Autocompletar com YES e NO
         QStringList options = { "YES", "NO" };
-        QCompleter *completer = new QCompleter(options, editor);
+        QCompleter* completer = new QCompleter(options, editor);
         completer->setCaseSensitivity(Qt::CaseInsensitive);
         completer->setCompletionMode(QCompleter::PopupCompletion);
         editor->setCompleter(completer);
@@ -115,7 +95,7 @@ public:
     }
 };
 
-Structure::Structure(QString &host, QString &schema, QString &table, QWidget *parent)
+Structure::Structure(QString& host, QString& schema, QString& table, QWidget* parent)
     : QMainWindow(parent)
     , ui(new Ui::Structure)
 {
@@ -144,7 +124,7 @@ Structure::Structure(QString &host, QString &schema, QString &table, QWidget *pa
     // Menu de contexto
     ui->tableView->setContextMenuPolicy(Qt::CustomContextMenu);
     connect(ui->tableView, &QTableView::customContextMenuRequested,
-            this, &Structure::show_context_menu);
+        this, &Structure::show_context_menu);
 
 }
 
@@ -167,7 +147,7 @@ void Structure::refresh_structure()
             QString queryStr = "DESCRIBE " + str_table;
 
             if (query.exec(queryStr)) {
-                QStandardItemModel *model = new QStandardItemModel(this);
+                QStandardItemModel* model = new QStandardItemModel(this);
 
                 // Define os cabeçalhos das colunas
                 model->setHorizontalHeaderLabels(QStringList() << "Field" << "Type" << "Null" << "Key" << "Default" << "Extra");
@@ -187,7 +167,8 @@ void Structure::refresh_structure()
                 ui->tableView->resizeColumnsToContents();
                 ui->tableView->horizontalHeader()->setStretchLastSection(true);
 
-            } else {
+            }
+            else {
                 qCritical() << "Erro ao obter estrutura:" << query.lastError().text();
             }
             // Aplicar delegates dinamicamente após atualizar os dados
@@ -196,22 +177,24 @@ void Structure::refresh_structure()
                 QString header = ui->tableView->model()->headerData(col, Qt::Horizontal).toString().toLower();
                 if (header == "field") {
                     ui->tableView->setItemDelegateForColumn(col, new RegexDelegateName(this));
-                } else if (header == "type") {
+                }
+                else if (header == "type") {
                     ui->tableView->setItemDelegateForColumn(col, new RegexDelegateType(this));
-                } else if (header == "null") {
+                }
+                else if (header == "null") {
                     ui->tableView->setItemDelegateForColumn(col, new RegexDelegateYesNo(this));
                 }
             }
             connect(ui->tableView->selectionModel(), &QItemSelectionModel::currentChanged,
-                    this, [this](const QModelIndex &current, const QModelIndex &) {
-                        if (current.isValid()) {
-                            editIndex = current;
-                            previousValue = ui->tableView->model()->data(current);
-                        }
-                    });
+                this, [this](const QModelIndex& current, const QModelIndex&) {
+                    if (current.isValid()) {
+                        editIndex = current;
+                        previousValue = ui->tableView->model()->data(current);
+                    }
+                });
 
             connect(ui->tableView->model(), &QAbstractItemModel::dataChanged,
-                    this, &Structure::on_tableData_changed);
+                this, &Structure::on_tableData_changed);
 
 
             // Seleciona a primeira linha após carregar os dados
@@ -221,7 +204,8 @@ void Structure::refresh_structure()
                 ui->tableView->setCurrentIndex(firstIndex);
             }
         }
-    } else {
+    }
+    else {
         QMessageBox::warning(this, "Error", "Failed to connect to the database!");
 
     }
@@ -231,7 +215,7 @@ void Structure::refresh_structure()
 
 }
 
-void Structure::on_tableData_changed(const QModelIndex &topLeft, const QModelIndex &bottomRight)
+void Structure::on_tableData_changed(const QModelIndex& topLeft, const QModelIndex& bottomRight)
 {
     if (topLeft != bottomRight) return;
 
@@ -264,85 +248,90 @@ void Structure::on_tableData_changed(const QModelIndex &topLeft, const QModelInd
         QString queryStr;
         QRegularExpression regex;
 
-        switch(topLeft.column())
+        switch (topLeft.column())
         {
-            case 0: // nome do campo
-                queryStr = "ALTER TABLE "+str_table+" CHANGE "+value_old+" "+value_new+" "+fieldType;
-                qDebug() << queryStr;
+        case 0: // nome do campo
+            queryStr = "ALTER TABLE " + str_table + " CHANGE " + value_old + " " + value_new + " " + fieldType;
+            qDebug() << queryStr;
 
-                if (query.exec(queryStr)) {
-                    ui->statusbar->showMessage("Success!");
-                    log(fieldName, "Name changed", value_old, value_new);
-                    previousValue = value_new;
-                    editIndex = topLeft;
-                    ui->tableView->resizeColumnsToContents();
+            if (query.exec(queryStr)) {
+                ui->statusbar->showMessage("Success!");
+                log(fieldName, "Name changed", value_old, value_new);
+                previousValue = value_new;
+                editIndex = topLeft;
+                ui->tableView->resizeColumnsToContents();
 
-                } else {
-                    ui->tableView->model()->setData(topLeft, value_old);
-                    ui->statusbar->showMessage("Edit error! "+query.lastError().text());
-                    refresh_structure();
-                }
+            }
+            else {
+                ui->tableView->model()->setData(topLeft, value_old);
+                ui->statusbar->showMessage("Edit error! " + query.lastError().text());
+                refresh_structure();
+            }
 
-                break;
+            break;
 
-            case 1: // tipo do campo
-                value_new = value_new.toLower();
-                queryStr = "ALTER TABLE "+str_table+" MODIFY COLUMN "+fieldName+" "+value_new;
-                qDebug() << queryStr;
+        case 1: // tipo do campo
+            value_new = value_new.toLower();
+            queryStr = "ALTER TABLE " + str_table + " MODIFY COLUMN " + fieldName + " " + value_new;
+            qDebug() << queryStr;
 
-                if (query.exec(queryStr)) {
-                    ui->statusbar->showMessage("Success!");
-                    log(fieldName, "Type changed", value_old, value_new);
-                    previousValue = value_new;
-                    editIndex = topLeft;
-                    ui->tableView->resizeColumnsToContents();
+            if (query.exec(queryStr)) {
+                ui->statusbar->showMessage("Success!");
+                log(fieldName, "Type changed", value_old, value_new);
+                previousValue = value_new;
+                editIndex = topLeft;
+                ui->tableView->resizeColumnsToContents();
 
-                } else {
-                    ui->tableView->model()->setData(topLeft, value_old);
-                    ui->statusbar->showMessage("Edit error! "+query.lastError().text());
-                    refresh_structure();
-                }
+            }
+            else {
+                ui->tableView->model()->setData(topLeft, value_old);
+                ui->statusbar->showMessage("Edit error! " + query.lastError().text());
+                refresh_structure();
+            }
 
-                break;
-            case 2:
-                value_new = value_new.toUpper();
-                if (value_new == "YES")
-                {
-                    queryStr = "ALTER TABLE "+str_table+" MODIFY "+fieldName+ " " +fieldType+" NULL";
-                } else {
-                    queryStr = "ALTER TABLE "+str_table+" MODIFY "+fieldName+" "+fieldType+" NOT NULL";
-                }
-                qDebug() << queryStr;
+            break;
+        case 2:
+            value_new = value_new.toUpper();
+            if (value_new == "YES")
+            {
+                queryStr = "ALTER TABLE " + str_table + " MODIFY " + fieldName + " " + fieldType + " NULL";
+            }
+            else {
+                queryStr = "ALTER TABLE " + str_table + " MODIFY " + fieldName + " " + fieldType + " NOT NULL";
+            }
+            qDebug() << queryStr;
 
-                if (query.exec(queryStr)) {
-                    ui->statusbar->showMessage("Success!");
-                    log(fieldName, "Null changed", value_old.toUpper(), value_new.toUpper());
-                    previousValue = value_new;
-                    editIndex = topLeft;
-                } else {
-                    ui->tableView->model()->setData(topLeft, value_old);
-                    ui->statusbar->showMessage("Edit error! "+query.lastError().text());
-                    refresh_structure();
-                }
-                break;
-            case 4: // default
-                value_new = value_new.replace("'","");
-                queryStr = "ALTER TABLE "+str_table+" MODIFY "+fieldName+ " " +fieldType+" DEFAULT '"+value_new+"'";
-                qDebug() << queryStr;
+            if (query.exec(queryStr)) {
+                ui->statusbar->showMessage("Success!");
+                log(fieldName, "Null changed", value_old.toUpper(), value_new.toUpper());
+                previousValue = value_new;
+                editIndex = topLeft;
+            }
+            else {
+                ui->tableView->model()->setData(topLeft, value_old);
+                ui->statusbar->showMessage("Edit error! " + query.lastError().text());
+                refresh_structure();
+            }
+            break;
+        case 4: // default
+            value_new = value_new.replace("'", "");
+            queryStr = "ALTER TABLE " + str_table + " MODIFY " + fieldName + " " + fieldType + " DEFAULT '" + value_new + "'";
+            qDebug() << queryStr;
 
-                if (query.exec(queryStr)) {
-                    ui->statusbar->showMessage("Success!");
-                    log(fieldName, "Default changed", value_old, value_new);
-                    previousValue = value_new;
-                    editIndex = topLeft;
-                    ui->tableView->resizeColumnsToContents();
-                } else {
-                    ui->tableView->model()->setData(topLeft, value_old);
-                    ui->statusbar->showMessage("Edit error! "+query.lastError().text());
-                    refresh_structure();
-                }
+            if (query.exec(queryStr)) {
+                ui->statusbar->showMessage("Success!");
+                log(fieldName, "Default changed", value_old, value_new);
+                previousValue = value_new;
+                editIndex = topLeft;
+                ui->tableView->resizeColumnsToContents();
+            }
+            else {
+                ui->tableView->model()->setData(topLeft, value_old);
+                ui->statusbar->showMessage("Edit error! " + query.lastError().text());
+                refresh_structure();
+            }
 
-                break;
+            break;
         }
     }
 }
@@ -370,7 +359,7 @@ void Structure::log(QString name, QString what, QString value_from, QString valu
     }
 }
 
-void Structure::add_new(const QModelIndex &index)
+void Structure::add_new(const QModelIndex& index)
 {
 
     QSqlQuery query(QSqlDatabase::database("mysql_connection_" + str_host));
@@ -387,9 +376,9 @@ void Structure::add_new(const QModelIndex &index)
         fieldName = ui->tableView->model()->data(index_col0).toString();
         fieldType = ui->tableView->model()->data(index_col1).toString();
 
-        QString new_field_name = fieldName+"_new";
+        QString new_field_name = fieldName + "_new";
 
-        queryStr = "ALTER TABLE "+str_table+" ADD COLUMN "+new_field_name+" "+fieldType+" AFTER "+fieldName;
+        queryStr = "ALTER TABLE " + str_table + " ADD COLUMN " + new_field_name + " " + fieldType + " AFTER " + fieldName;
         qDebug() << queryStr;
 
         if (query.exec(queryStr)) {
@@ -399,7 +388,7 @@ void Structure::add_new(const QModelIndex &index)
             editIndex = index;
             refresh_structure();
 
-            QAbstractItemModel *model = ui->tableView->model();
+            QAbstractItemModel* model = ui->tableView->model();
 
             for (int row = 0; row < model->rowCount(); ++row) {
                 QModelIndex indexFind = model->index(row, 0);  // primeira coluna
@@ -414,7 +403,8 @@ void Structure::add_new(const QModelIndex &index)
                     break;  // Para na primeira ocorrência
                 }
             }
-        } else {
+        }
+        else {
             refresh_structure();
         }
     }
@@ -426,7 +416,7 @@ void Structure::delete_row()
     QSqlQuery query(QSqlDatabase::database("mysql_connection_" + str_host));
     QString queryStr;
 
-    QItemSelectionModel *selectionModel = ui->tableView->selectionModel();
+    QItemSelectionModel* selectionModel = ui->tableView->selectionModel();
     QModelIndexList selectedIndexes = selectionModel->selectedIndexes();
 
     if (selectedIndexes.isEmpty()) {
@@ -436,7 +426,7 @@ void Structure::delete_row()
 
     // Extrair todas as linhas únicas a partir das células selecionadas
     QSet<int> rowSet;
-    for (const QModelIndex &index : selectedIndexes) {
+    for (const QModelIndex& index : selectedIndexes) {
         rowSet.insert(index.row());
     }
 
@@ -444,7 +434,7 @@ void Structure::delete_row()
     QList<int> rows = rowSet.values();
     std::sort(rows.begin(), rows.end(), std::greater<int>());
 
-    QAbstractItemModel *model = ui->tableView->model();
+    QAbstractItemModel* model = ui->tableView->model();
 
     for (int row : rows) {
         QModelIndex indexField = model->index(row, 0);
@@ -458,7 +448,8 @@ void Structure::delete_row()
             log(value.toString(), "Remove", "", "");
             previousValue = value.toString();
             editIndex = indexField;
-        } else {
+        }
+        else {
             qWarning() << "Erro ao remover campo:" << query.lastError().text();
         }
 
@@ -471,19 +462,19 @@ void Structure::delete_row()
     refresh_structure();
 }
 
-void Structure::show_context_menu(const QPoint &pos)
+void Structure::show_context_menu(const QPoint& pos)
 {
     QModelIndex index = ui->tableView->indexAt(pos);
     if (!index.isValid())
         return;
 
     QMenu menu(this);
-    QAction *tableNew = menu.addAction("New after");
-    QAction *tableRem = menu.addAction("Remove selected");
-    QAction *tableUp = menu.addAction("Move up");
-    QAction *tableDown = menu.addAction("Move down");
+    QAction* tableNew = menu.addAction("New after");
+    QAction* tableRem = menu.addAction("Remove selected");
+    QAction* tableUp = menu.addAction("Move up");
+    QAction* tableDown = menu.addAction("Move down");
 
-    QAction *selectedAction = menu.exec(ui->tableView->viewport()->mapToGlobal(pos));
+    QAction* selectedAction = menu.exec(ui->tableView->viewport()->mapToGlobal(pos));
 
     if (selectedAction == tableNew) {
         add_new(index);

@@ -2,52 +2,38 @@
 
 #include "restore.h"
 
-#include <QFile>
-#include <QTextStream>
-#include <QFileDialog>
-#include <QMessageBox>
-#include <QSqlDatabase>
-#include <QSqlQuery>
-#include <QSqlError>
-#include <QStandardPaths>
-#include <QProgressBar>
-#include <QDialog>
-#include <QVBoxLayout>
-#include <QDebug>
-#include <QApplication>
-#include <QKeyEvent>
-#include <QCloseEvent>
-
 class InterruptibleProgressDialog : public QDialog {
     Q_OBJECT
 public:
-    explicit InterruptibleProgressDialog(bool &abortFlag, QWidget *parent = nullptr)
-        : QDialog(parent), aborted(abortFlag) {}
+    explicit InterruptibleProgressDialog(bool& abortFlag, QWidget* parent = nullptr)
+        : QDialog(parent), aborted(abortFlag) {
+    }
 
 protected:
-    void keyPressEvent(QKeyEvent *event) override {
+    void keyPressEvent(QKeyEvent* event) override {
         if (event->key() == Qt::Key_Escape) {
             aborted = true;
             close();
-        } else {
+        }
+        else {
             QDialog::keyPressEvent(event);
         }
     }
 
-    void closeEvent(QCloseEvent *event) override {
+    void closeEvent(QCloseEvent* event) override {
         aborted = true;
         QDialog::closeEvent(event);
     }
 
 private:
-    bool &aborted;
+    bool& aborted;
 };
 
-Restore::Restore(QObject *parent) : QObject(parent) {}
+Restore::Restore(QObject* parent) : QObject(parent) {}
 
-void Restore::run(QString fileName, const QString &bkp_prefix, const QString &bkp_host, const QString &bkp_schema, QWidget *parent) {
+void Restore::run(QString fileName, const QString& bkp_prefix, const QString& bkp_host, const QString& bkp_schema, QWidget* parent) {
 
-    QFile fileLog(QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation)+"/restore.log");
+    QFile fileLog(QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation) + "/restore.log");
     if (!fileLog.open(QIODevice::WriteOnly | QIODevice::Text)) {
         QMessageBox::warning(parent, "Error", "Failed to open file for writing: " + fileLog.errorString());
         qDebug() << "Error opening file:" << fileLog.errorString();
@@ -58,10 +44,10 @@ void Restore::run(QString fileName, const QString &bkp_prefix, const QString &bk
     if (fileName == "")
     {
         fileName = QFileDialog::getOpenFileName(
-        parent,
-        "Open query file",
-        QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation),
-        "SQL files (*.sql);;All files (*)"
+            parent,
+            "Open query file",
+            QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation),
+            "SQL files (*.sql);;All files (*)"
         );
         showMessage = true;
     }
@@ -78,8 +64,8 @@ void Restore::run(QString fileName, const QString &bkp_prefix, const QString &bk
     bool aborted = false;
     InterruptibleProgressDialog progressDialog(aborted, parent);
     progressDialog.setWindowTitle("Restoring backup...");
-    QVBoxLayout *layout = new QVBoxLayout(&progressDialog);
-    QProgressBar *progressBar = new QProgressBar(&progressDialog);
+    QVBoxLayout* layout = new QVBoxLayout(&progressDialog);
+    QProgressBar* progressBar = new QProgressBar(&progressDialog);
     progressBar->setTextVisible(true);
     layout->addWidget(progressBar);
     progressDialog.setMinimumSize(400, 80);
@@ -116,7 +102,7 @@ void Restore::run(QString fileName, const QString &bkp_prefix, const QString &bk
     int i = 0;
     progressBar->setFormat("%v / %m");
 
-    for (const QString &cmd : sqlCommands) {
+    for (const QString& cmd : sqlCommands) {
         if (aborted)
             break;
 
@@ -138,7 +124,8 @@ void Restore::run(QString fileName, const QString &bkp_prefix, const QString &bk
     {
         if (aborted) {
             QMessageBox::information(parent, "Cancelled", "Backup restoration was aborted by the user.");
-        } else {
+        }
+        else {
             QMessageBox::information(parent, "Done", "Backup restored successfully.");
         }
     }

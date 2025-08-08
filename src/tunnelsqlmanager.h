@@ -1,39 +1,41 @@
-#ifndef TUNNELSQLMANAGER_H
-#define TUNNELSQLMANAGER_H
+#pragma once
 
-#include <QObject>
+#include <QApplication>
+#include <QDebug>
 #include <QMap>
+#include <QObject>
 #include <QProcess>
 #include <QSqlDatabase>
 #include <QSqlError>
-#include <QDebug>
+#include <QThread>
+#include <QTimer>
 
 class TunnelSqlManager : public QObject
 {
     Q_OBJECT
 
 public:
-    explicit TunnelSqlManager(QObject *parent = nullptr);
+    explicit TunnelSqlManager(QObject* parent = nullptr);
     ~TunnelSqlManager();
 
-    bool conectar(const QString &id, int &porta,
-                        QString usuarioSsh,
-                        QString servidorSsh,
-                        QString portaSsh,
-                        QString senhaSsh,
-                        QString keyfileSsh,
-                        QString servidorMysql,
-                        QString portaMysql,
-                        QString usuarioMysql,
-                        QString senhaMysql,
-                        QString banco);
+    bool conectar(const QString& id, int& porta,
+        QString usuarioSsh,
+        QString servidorSsh,
+        QString portaSsh,
+        QString senhaSsh,
+        QString keyfileSsh,
+        QString servidorMysql,
+        QString portaMysql,
+        QString usuarioMysql,
+        QString senhaMysql,
+        QString banco);
 
-    void desconectar(const QString &id);
-    QSqlDatabase obterConexao(const QString &id) const;
+    void desconectar(const QString& id);
+    QSqlDatabase obterConexao(const QString& id) const;
 
 private:
     QMap<QString, QProcess*> sshTunnels;
     QMap<QString, QSqlDatabase> sqlConnections;
 };
 
-#endif // TUNNELSQLMANAGER_H
+

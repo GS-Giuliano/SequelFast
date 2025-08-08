@@ -1,6 +1,8 @@
-#ifndef TWO_CHECKBOX_DELEGATE_H
-#define TWO_CHECKBOX_DELEGATE_H
+#pragma once
 
+#include <QApplication>
+#include <QMouseEvent>
+#include <QStyle>
 #include <QStyledItemDelegate>
 
 /**
@@ -11,13 +13,13 @@ class TwoCheckboxDelegate : public QStyledItemDelegate {
     Q_OBJECT
 
 public:
-    explicit TwoCheckboxDelegate(QObject *parent = nullptr);
+    explicit TwoCheckboxDelegate(QObject* parent = nullptr);
 
-    void paint(QPainter *painter, const QStyleOptionViewItem &option,
-               const QModelIndex &index) const override;
+    void paint(QPainter* painter, const QStyleOptionViewItem& option,
+        const QModelIndex& index) const override;
 
-    bool editorEvent(QEvent *event, QAbstractItemModel *model,
-                     const QStyleOptionViewItem &option, const QModelIndex &index) override;
+    bool editorEvent(QEvent* event, QAbstractItemModel* model,
+        const QStyleOptionViewItem& option, const QModelIndex& index) override;
 };
 
-#endif // TWO_CHECKBOX_DELEGATE_H
+

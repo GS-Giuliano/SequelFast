@@ -1,9 +1,7 @@
 // TunnelSqlManager.cpp
 #include "tunnelsqlmanager.h"
-#include <QThread>
-#include <QTimer>
 #include <functions.h>
-#include <QApplication>
+
 
 extern QSqlDatabase dbMysql;
 
@@ -18,29 +16,29 @@ void waitWithProcessing(int seconds) {
 }
 
 
-TunnelSqlManager::TunnelSqlManager(QObject *parent)
+TunnelSqlManager::TunnelSqlManager(QObject* parent)
     : QObject(parent)
 {
 }
 
 TunnelSqlManager::~TunnelSqlManager()
 {
-    for (const QString &id : sshTunnels.keys()) {
+    for (const QString& id : sshTunnels.keys()) {
         desconectar(id);
     }
 }
 
-bool TunnelSqlManager::conectar(const QString &id, int &porta,
-                                     QString usuarioSsh,
-                                     QString servidorSsh,
-                                     QString portaSsh,
-                                     QString senhaSsh,
-                                     QString keyfileSsh,
-                                     QString servidorMysql,
-                                     QString portaMysql,
-                                     QString usuarioMysql,
-                                     QString senhaMysql,
-                                     QString banco)
+bool TunnelSqlManager::conectar(const QString& id, int& porta,
+    QString usuarioSsh,
+    QString servidorSsh,
+    QString portaSsh,
+    QString senhaSsh,
+    QString keyfileSsh,
+    QString servidorMysql,
+    QString portaMysql,
+    QString usuarioMysql,
+    QString senhaMysql,
+    QString banco)
 {
     if (sqlConnections.contains(id) && sqlConnections[id].isOpen()) {
         qDebug() << "Conexão já existente para" << id;
@@ -63,10 +61,10 @@ bool TunnelSqlManager::conectar(const QString &id, int &porta,
 
         // tunnel: ssh -o ConnectTimeout=60 -o ServerAliveInterval=30 -o ServerAliveCountMax=5 -T -L 3307:localhost:3306 usuario@servidor_ssh
 
-        QProcess *tunnel = new QProcess(this);
+        QProcess* tunnel = new QProcess(this);
 
         QString key = "";
-        if (keyfileSsh!="")
+        if (keyfileSsh != "")
         {
             key = QString("-i%1").arg(keyfileSsh);
         }
@@ -77,13 +75,14 @@ bool TunnelSqlManager::conectar(const QString &id, int &porta,
 
         if (senhaSsh == "")
         {
-            QStringList args { "-o", "ConnectTimeout=30", "-o", "ServerAliveInterval=30", "-o", "ServerAliveCountMax=15", "-T", "-L", portaArg, key, porta , destino};
+            QStringList args{ "-o", "ConnectTimeout=30", "-o", "ServerAliveInterval=30", "-o", "ServerAliveCountMax=15", "-T", "-L", portaArg, key, porta , destino };
             // qDebug() << "ssh" << args;
             tunnel->start("ssh", args);
-        } else {
+        }
+        else {
             // sshpass -p 'senhaAqui' ssh -T -L 3307:localhost:3306 usuario@servidor_ssh
             QString comSenha = QString("'%1'").arg(senhaSsh);
-            QStringList args { "-p", comSenha,"ssh", "-o", "ConnectTimeout=30", "-o", "ServerAliveInterval=30", "-o", "ServerAliveCountMax=15", "-T", "-L", portaArg, key, porta , destino};
+            QStringList args{ "-p", comSenha,"ssh", "-o", "ConnectTimeout=30", "-o", "ServerAliveInterval=30", "-o", "ServerAliveCountMax=15", "-T", "-L", portaArg, key, porta , destino };
             // qDebug() << "sshpass" << args;
             tunnel->start("sshpass", args);
         }
@@ -96,7 +95,7 @@ bool TunnelSqlManager::conectar(const QString &id, int &porta,
 
         connect(tunnel, &QProcess::readyReadStandardError, this, [=]() {
             qDebug() << tunnel->readAllStandardError();
-        });
+            });
 
         sshTunnels[id] = tunnel;
         qDebug() << "Túnel SSH iniciado para" << id;
@@ -116,7 +115,7 @@ bool TunnelSqlManager::conectar(const QString &id, int &porta,
     dbMysql.setDatabaseName(banco);
     dbMysql.setUserName(usuarioMysql);
     dbMysql.setPassword(senhaMysql);
-    qDebug() <<  "Conectando MySQL..." << QString::number(portaLocal) << banco << usuarioMysql << senhaMysql;
+    qDebug() << "Conectando MySQL..." << QString::number(portaLocal) << banco << usuarioMysql << senhaMysql;
     if (!dbMysql.open()) {
         QApplication::restoreOverrideCursor();
         QApplication::processEvents();
@@ -133,7 +132,7 @@ bool TunnelSqlManager::conectar(const QString &id, int &porta,
     return true;
 }
 
-void TunnelSqlManager::desconectar(const QString &id)
+void TunnelSqlManager::desconectar(const QString& id)
 {
     if (sqlConnections.contains(id)) {
         sqlConnections[id].close();
@@ -151,7 +150,7 @@ void TunnelSqlManager::desconectar(const QString &id)
     }
 }
 
-QSqlDatabase TunnelSqlManager::obterConexao(const QString &id) const
+QSqlDatabase TunnelSqlManager::obterConexao(const QString& id) const
 {
     if (sqlConnections.contains(id)) {
         return sqlConnections.value(id);

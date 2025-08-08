@@ -1,5 +1,4 @@
-#ifndef TWO_CHECKBOX_LIST_MODEL_H
-#define TWO_CHECKBOX_LIST_MODEL_H
+#pragma once
 
 #include <QAbstractListModel>
 #include "backup.h"
@@ -37,4 +36,4 @@ public:
     }
 };
 
-#endif // TWO_CHECKBOX_LIST_MODEL_H
+

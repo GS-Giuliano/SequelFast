@@ -1,0 +1,37 @@
+{
+    "configurations": [
+        {
+            "name": "Linux",
+            "includePath": [
+                "${workspaceFolder}/**",
+                "${workspaceFolder}/src",
+                "${workspaceFolder}/Qt-link/6.9.1/gcc_64/include",
+                "${workspaceFolder}/Qt-link/6.9.1/gcc_64/include/QtCore",
+                "${workspaceFolder}/Qt-link/6.9.1/gcc_64/include/QtGui", 
+                "${workspaceFolder}/Qt-link/6.9.1/gcc_64/include/QtWidgets",
+                "${workspaceFolder}/Qt-link/6.9.1/gcc_64/include/QtSql",
+                "${workspaceFolder}/Qt-link/6.9.1/gcc_64/include/QtNetwork",
+                "/usr/include/c++/11",
+                "/usr/include/x86_64-linux-gnu/c++/11",
+                "/usr/include/c++/11/backward",
+                "/usr/lib/gcc/x86_64-linux-gnu/11/include",
+                "/usr/local/include",
+                "/usr/include/x86_64-linux-gnu",
+                "/usr/include"
+            ],
+            "defines": [
+                "QT_CORE_LIB",
+                "QT_GUI_LIB",
+                "QT_WIDGETS_LIB",
+                "QT_SQL_LIB",
+                "QT_NETWORK_LIB"
+            ],
+            "compilerPath": "/usr/bin/g++",
+            "cStandard": "gnu17",
+            "cppStandard": "gnu++17",
+            "intelliSenseMode": "linux-gcc-x64",
+            "compileCommands": "${workspaceFolder}/compile_commands.json"
+        }
+    ],
+    "version": 4
+}

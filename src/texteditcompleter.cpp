@@ -1,17 +1,11 @@
 #include "texteditcompleter.h"
-#include <QCompleter>
-#include <QKeyEvent>
-#include <QAbstractItemView>
-#include <QApplication>
-#include <QDebug>
-#include <QScrollBar>
 
-TextEditCompleter::TextEditCompleter(QWidget *parent)
+TextEditCompleter::TextEditCompleter(QWidget* parent)
     : QTextEdit(parent), c(nullptr)
 {
 }
 
-void TextEditCompleter::setCompleter(QCompleter *completer)
+void TextEditCompleter::setCompleter(QCompleter* completer)
 {
     if (c) {
         disconnect(c, nullptr, this, nullptr);
@@ -26,16 +20,16 @@ void TextEditCompleter::setCompleter(QCompleter *completer)
     c->setCompletionMode(QCompleter::PopupCompletion);
     c->setCaseSensitivity(Qt::CaseInsensitive);
     c->setMaxVisibleItems(10);
-    connect(c, QOverload<const QString &>::of(&QCompleter::activated),
-            this, &TextEditCompleter::insertCompletion);
+    connect(c, QOverload<const QString&>::of(&QCompleter::activated),
+        this, &TextEditCompleter::insertCompletion);
 }
 
-QCompleter *TextEditCompleter::completer() const
+QCompleter* TextEditCompleter::completer() const
 {
     return c;
 }
 
-void TextEditCompleter::insertCompletion(const QString &completion)
+void TextEditCompleter::insertCompletion(const QString& completion)
 {
     if (c->widget() != this)
         return;
@@ -65,7 +59,7 @@ QString TextEditCompleter::getCurrentWord() const
     return word;
 }
 
-void TextEditCompleter::keyPressEvent(QKeyEvent *e)
+void TextEditCompleter::keyPressEvent(QKeyEvent* e)
 {
     if (c && c->popup()->isVisible()) {
         switch (e->key()) {
@@ -112,7 +106,7 @@ void TextEditCompleter::keyPressEvent(QKeyEvent *e)
     c->complete(cr);
 }
 
-void TextEditCompleter::focusInEvent(QFocusEvent *e)
+void TextEditCompleter::focusInEvent(QFocusEvent* e)
 {
     if (c)
         c->setWidget(this);
