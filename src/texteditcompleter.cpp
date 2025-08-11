@@ -72,6 +72,15 @@ void TextEditCompleter::keyPressEvent(QKeyEvent* e)
                 insertCompletion(c->currentCompletion());
             }
             return;
+        case Qt::Key_Up:
+        case Qt::Key_Down:
+        case Qt::Key_Left:
+        case Qt::Key_Right:
+        case Qt::Key_Home:
+        case Qt::Key_End:
+            c->popup()->hide();
+            QTextEdit::keyPressEvent(e);
+            return;
         case Qt::Key_Escape:
             e->accept();
             c->popup()->hide();

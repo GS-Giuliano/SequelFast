@@ -329,9 +329,14 @@ QString Sql::processQueryWithMacros(QString queryStr, QWidget* parent)
 
 void Sql::setupSqlCompleter()
 {
+    // QStringList keywords = {
+    //     "SELECT", "FROM", "WHERE", "JOIN", "LEFT JOIN", "INNER JOIN", "RIGHT JOIN",
+    //     "INSERT", "UPDATE", "DELETE", "VALUES", "SET", "AS", "ON", "AND", "OR",
+    //     "IN", "NULL", "LIMIT", "ORDER BY", "GROUP BY"
+    // };
     QStringList keywords = {
-        "SELECT", "FROM", "WHERE", "JOIN", "LEFT JOIN", "INNER JOIN", "RIGHT JOIN",
-        "INSERT", "UPDATE", "DELETE", "VALUES", "SET", "AS", "ON", "AND", "OR",
+        "FROM", "WHERE", "JOIN", "LEFT JOIN", "INNER JOIN", "RIGHT JOIN",
+        "VALUES", "AS", "ON", "AND", "OR",
         "IN", "NULL", "LIMIT", "ORDER BY", "GROUP BY"
     };
 
