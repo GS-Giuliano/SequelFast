@@ -4,4 +4,5 @@ Exec=/home/giuliano/Applications/SequelFast/SequelFast
 Icon=/home/giuliano/.local/share/icons/hicolor/1024x1024/apps/org.sequelFast.SequelFast.png
 Type=Application
 Categories=Utility;Database;Development;
+StartupWMClass=SequelFast
 Comment=Fast and Clean Database Client Application
