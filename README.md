@@ -191,12 +191,6 @@ Be sure to include the following during installation:
 
 ### Windows
 
-*Install MariaDB C Connector*
-
-https://downloads.mariadb.com/Connectors/c/
-
-Select default path: "C:\Program Files\MariaDB\MariaDB Connector C 64-bit"
-
 *Setup environment variables to enable run qt commands on prompt (PowerShell)*
 
 - Open Windows Explorer
@@ -205,12 +199,22 @@ Select default path: "C:\Program Files\MariaDB\MariaDB Connector C 64-bit"
 - Edit "Path" variable
 - Add: C:\Qt\6.9.1\mingw_64\bin
 
+*Install MariaDB C Connector*
+
+https://downloads.mariadb.com/Connectors/c/
+
+Select default path: "C:\mariadb"
+
 *Build QMYSQL driver*
 
 ```PowerShell
+cd C:\mariadb\lib
+gendef libmariadb.dll
+dlltool -D libmariadb.dll -d libmariadb.def -l libmariadb.dll.a
+cd \
 mkdir build-sqldrivers
 cd build-sqldrivers
-qt-cmake -G Ninja C:\Qt\6.9.1\Src\qtbase\src\plugins\sqldrivers -DCMAKE_INSTALL_PREFIX=C:\Qt\6.9.1\mingw_64 -DMySQL_ROOT="C:\Program/ Files\MariaDB\MariaDB/ Connector/ C/ 64-bit"
+qt-cmake -G Ninja C:\Qt\6.9.1\Src\qtbase\src\plugins\sqldrivers -DCMAKE_INSTALL_PREFIX=C:\Qt\6.9.1\mingw_64 -DFEATURE_sql_mysql=ON -DMySQL_INCLUDE_DIR=C:\mariadb\include\ -DMySQL_LIBRARY=C:\mariadb\lib\ -DMySQL_ROOT=C:\mariadb
 cmake --build .
 cmake --install .
 ```
