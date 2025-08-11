@@ -60,10 +60,8 @@ Backup::Backup(const QString& host, const QString& schema, QWidget* parent) : QD
     tableView = new QTableView(this);
     layout->addWidget(tableView);
 
-    // Conectar clique no cabeçalho
     connect(tableView->horizontalHeader(), &QHeaderView::sectionClicked, this, &Backup::onHeaderClicked);
 
-    // Estilização
     this->setStyleSheet(
         "QLabel:last {"
         " padding-right: 10px;"
@@ -77,7 +75,7 @@ Backup::Backup(const QString& host, const QString& schema, QWidget* parent) : QD
         "}"
     );
 
-    // Linha 3: botões
+    // Linha 5: botões
     auto* buttonLayout = new QHBoxLayout;
     btnFavorite = new QPushButton("Favorite", this);
     btnCancel = new QPushButton("Cancel", this);
@@ -92,17 +90,19 @@ Backup::Backup(const QString& host, const QString& schema, QWidget* parent) : QD
     connect(btnCancel, &QPushButton::clicked, this, &Backup::onCancel);
     connect(btnConfirm, &QPushButton::clicked, this, &Backup::onConfirm);
 
+    // Progresso de tabelas
     progressBar = new QProgressBar(this);
     progressBar->setRange(0, 100);
     progressBar->setValue(0);
-    progressBar->setVisible(false);  // inicialmente oculta
+    progressBar->setVisible(false);
     progressBar->setFormat("%v / %m");
     layout->addWidget(progressBar);
 
+    // Progresso de registros
     progressBar2 = new QProgressBar(this);
     progressBar2->setRange(0, 100);
     progressBar2->setValue(0);
-    progressBar2->setVisible(false);  // inicialmente oculta
+    progressBar2->setVisible(false);
     progressBar2->setFormat("%v / %m");
     layout->addWidget(progressBar2);
 
@@ -143,17 +143,14 @@ void Backup::refresh_tables()
         return;
     }
 
-    // Configura o modelo
     model = new QStandardItemModel(0, 5, this);
     model->setHorizontalHeaderLabels({ "Table", "Structure", "Data", "Where", "Order by", "Limit" });
     tableView->setModel(model);
 
-    // Aplica o delegate personalizado às colunas 1 e 2
     checkboxDelegate = new TwoCheckboxDelegate(this);
     tableView->setItemDelegateForColumn(1, checkboxDelegate);
     tableView->setItemDelegateForColumn(2, checkboxDelegate);
 
-    // Popula o modelo com tabelas do banco de dados
     int cnt = 0;
     QString where;
     QString orderBy;
@@ -169,9 +166,9 @@ void Backup::refresh_tables()
         limit = getStringPreference(favPrefix + name + ":limit");
 
         model->insertRow(row);
-        model->setData(model->index(row, 0), name); // Coluna "Table"
-        model->setData(model->index(row, 1), structure, Qt::UserRole); // Checkbox "Structure"
-        model->setData(model->index(row, 2), tableData, Qt::UserRole); // Checkbox "Data"
+        model->setData(model->index(row, 0), name);
+        model->setData(model->index(row, 1), structure, Qt::UserRole);
+        model->setData(model->index(row, 2), tableData, Qt::UserRole);
         model->setData(model->index(row, 3), where, Qt::EditRole);
         model->setData(model->index(row, 4), orderBy, Qt::EditRole);
         model->setData(model->index(row, 5), limit, Qt::EditRole);
@@ -197,7 +194,6 @@ void Backup::chooseFile()
 
         QFileInfo fileInfo(file);
 
-        // Verifica se o arquivo já existe
         if (fileInfo.exists()) {
             QMessageBox::StandardButton reply = QMessageBox::question(
                 this,
@@ -237,18 +233,18 @@ void Backup::chooseFile()
 
 void Backup::closeEvent(QCloseEvent* event)
 {
-    onCancel();      // chama seu tratamento
-    event->ignore(); // impede o fechamento imediato
+    onCancel();
+    event->ignore();
 }
 
 void Backup::keyPressEvent(QKeyEvent* event)
 {
     if (event->key() == Qt::Key_Escape) {
-        onCancel();  // chama sua função personalizada
-        event->accept();  // impede o fechamento padrão
+        onCancel();
+        event->accept();
     }
     else {
-        QDialog::keyPressEvent(event);  // comportamento normal para outras teclas
+        QDialog::keyPressEvent(event);
     }
 }
 
@@ -336,7 +332,6 @@ void Backup::onConfirm()
             // qDebug() << "Processing table:" << table << "Structure:" << structure << "Data:" << data;
 
             processedTables++;
-            // int percent = (processedTables * 100) / totalTables;
             progressBar->setValue(processedTables);
             QApplication::processEvents();
 
@@ -415,7 +410,6 @@ void Backup::onConfirm()
                             if (!abort)
                             {
                                 processedRows++;
-                                // int percentRows = (processedRows * 100) / totalRows;
                                 progressBar2->setValue(processedRows);
                                 progressBar2->setFormat("%v / " + table + " / %m");
 
@@ -477,7 +471,6 @@ void Backup::onConfirm()
     }
     progressBar->setVisible(false);
     progressBar2->setVisible(false);
-    // Fecha o arquivo
     file.close();
 
     qDebug() << "exportToHostName" << exportToHostName;

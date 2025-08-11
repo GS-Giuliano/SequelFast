@@ -10,8 +10,8 @@ void waitWithProcessing(int seconds) {
     QTimer timer;
     timer.setSingleShot(true);
     QObject::connect(&timer, &QTimer::timeout, &loop, &QEventLoop::quit);
-    timer.start(seconds * 1000); // Converte segundos para milissegundos
-    loop.exec(); // Processa eventos enquanto espera
+    timer.start(seconds * 1000);
+    loop.exec();
     qDebug() << "Espera de" << seconds << "segundos concluída";
 }
 

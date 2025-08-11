@@ -71,6 +71,7 @@ MainWindow::MainWindow(QWidget* parent)
     ui->actionProcesses->setDisabled(true);
     ui->actionBackup->setDisabled(true);
     ui->actionRestore->setDisabled(true);
+    ui->toolBar->setStyleSheet("QToolButton { width: 80px;}");
 
     if (openPreferences())
     {
@@ -323,14 +324,12 @@ void MainWindow::refresh_connections() {
         }
     }
 
-    // Proxy de filtro
     QSortFilterProxyModel* proxy = new QSortFilterProxyModel(this);
     proxy->setSourceModel(modelo);
     proxy->setFilterCaseSensitivity(Qt::CaseInsensitive);
 
     ui->listViewConns->setModel(proxy);
 
-    // Filtro no LineEdit
     connect(ui->lineEditConns, &QLineEdit::textChanged, this, [=](const QString& texto) {
         QString pattern = QString("(%1)").arg(texto);
         QRegularExpression re(pattern, QRegularExpression::CaseInsensitiveOption);
@@ -410,14 +409,12 @@ void MainWindow::refresh_schemas(QString selectedHost, bool jumpToTables)
                 // refresh_schema(actual_first_schema);
             }
 
-            // Proxy de filtro
             QSortFilterProxyModel* proxy = new QSortFilterProxyModel(this);
             proxy->setSourceModel(modelo);
             proxy->setFilterCaseSensitivity(Qt::CaseInsensitive);
 
             ui->listViewSchemas->setModel(proxy);
 
-            // Filtro no LineEdit
             connect(ui->lineEditSchemas, &QLineEdit::textChanged, this, [=](const QString& texto) {
                 QString pattern = QString("(%1)").arg(texto);
                 QRegularExpression re(pattern, QRegularExpression::CaseInsensitiveOption);
@@ -577,7 +574,6 @@ void MainWindow::refresh_tables(QString selectedHost) {
             cnt++;
         }
 
-        // Proxy de filtro
         QSortFilterProxyModel* proxy = new QSortFilterProxyModel(this);
         proxy->setSourceModel(modelo);
         proxy->setFilterCaseSensitivity(Qt::CaseInsensitive);
@@ -596,8 +592,6 @@ void MainWindow::refresh_tables(QString selectedHost) {
         }
 
         ui->statusbar->showMessage("Tables updated");
-        // } else {
-        //     ui->statusbar->showMessage("Find tables error!");
     }
 
     QApplication::restoreOverrideCursor();
@@ -727,7 +721,7 @@ void MainWindow::open_selected_favorite(const QModelIndex& index, const bool& ru
 
         QMdiSubWindow* sub = new QMdiSubWindow;
         sub->setWidget(form);
-        sub->setAttribute(Qt::WA_DeleteOnClose);  // subjanela será destruída ao fechar
+        sub->setAttribute(Qt::WA_DeleteOnClose);
         ui->mdiArea->addSubWindow(sub);
         sub->resize(500, 360);
         if (maximize)
@@ -1116,7 +1110,6 @@ void MainWindow::show_context_menu_Schemas(const QPoint& pos)
         QString message = QString("Are you sure you want to drop database\n\"%1\"?").arg(dbName);
         msgBox.setText(message);
 
-        // Mostra a caixa de mensagem e captura a resposta
         QMessageBox::StandardButton reply = static_cast<QMessageBox::StandardButton>(msgBox.exec());
 
         if (reply == QMessageBox::Yes) {
@@ -1160,16 +1153,13 @@ void MainWindow::show_context_menu_Tables(const QPoint& pos)
         QString tableName = index.data(Qt::DisplayRole).toString();
         QString connectionName = "mysql_connection_" + actual_host;
 
-        // Gera o comando CREATE TABLE
         QString createTableSql = generateCreateTableStatement(tableName, connectionName);
 
         if (!createTableSql.isEmpty()) {
 
-            // Copia o comando para o clipboard
             QClipboard* clipboard = QApplication::clipboard();
             clipboard->setText(createTableSql);
 
-            // Exemplo de execução do comando CREATE TABLE (para uma nova tabela, se necessário)
             QSqlQuery query(QSqlDatabase::database(connectionName));
             if (query.exec(createTableSql)) {
                 // qDebug() << "Tabela criada com sucesso";
@@ -1184,11 +1174,10 @@ void MainWindow::show_context_menu_Tables(const QPoint& pos)
     else if (selectedAction == tableCopyCSV) {
         QString tableName = index.data(Qt::DisplayRole).toString();
         QString connectionName = "mysql_connection_" + actual_host;
-        // Gera o CSV com os campos
+
         QString csvContent = generateColumnsCsv(tableName, connectionName);
 
         if (!csvContent.isEmpty()) {
-            // Copia o conteúdo CSV para o clipboard
             QClipboard* clipboard = QApplication::clipboard();
             clipboard->setText(csvContent);
             // qDebug() << "Campos da tabela copiados para a área de transferência em formato CSV:\n" << csvContent;
@@ -1438,7 +1427,7 @@ void MainWindow::on_listViewTables_open(const QModelIndex& index)
 
     QMdiSubWindow* sub = new QMdiSubWindow;
     sub->setWidget(form);
-    sub->setAttribute(Qt::WA_DeleteOnClose);  // subjanela será destruída ao fechar
+    sub->setAttribute(Qt::WA_DeleteOnClose);
     ui->mdiArea->addSubWindow(sub);
     sub->resize(500, 360);
     if (maximize)
@@ -1463,7 +1452,7 @@ void MainWindow::on_listViewTables_edit(const QModelIndex& index)
 
     QMdiSubWindow* sub = new QMdiSubWindow;
     sub->setWidget(form);
-    sub->setAttribute(Qt::WA_DeleteOnClose);  // subjanela será destruída ao fechar
+    sub->setAttribute(Qt::WA_DeleteOnClose);
 
     ui->mdiArea->addSubWindow(sub);
     sub->resize(500, 360);
@@ -1509,7 +1498,7 @@ void MainWindow::on_actionUsers_triggered()
 
     QMdiSubWindow* sub = new QMdiSubWindow;
     sub->setWidget(form);
-    sub->setAttribute(Qt::WA_DeleteOnClose);  // subjanela será destruída ao fechar
+    sub->setAttribute(Qt::WA_DeleteOnClose);
     ui->mdiArea->addSubWindow(sub);
     sub->resize(500, 360);
     if (maximize)
@@ -1541,8 +1530,6 @@ void MainWindow::batch_run()
         sub->showMaximized();
     else
         sub->show();
-
-
 }
 
 void MainWindow::backup(const QString& bkp_host, const QString& bkp_schema, QWidget* parent)
@@ -1557,108 +1544,6 @@ void MainWindow::restore(const QString& bkp_host, const QString& bkp_schema, QWi
     Restore executor;
     executor.run("", "mysql_connection_", bkp_host, bkp_schema, this);
     refresh_schemas(actual_host, false);
-
-    // QFile fileLog(QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation)+"/restore.log");
-
-    // if (!fileLog.open(QIODevice::WriteOnly | QIODevice::Text)) {
-    //     QMessageBox::warning(this, "Error", "Failed to open file for writing: " + fileLog.errorString());
-    //     qDebug() << "Error opening file:" << fileLog.errorString();
-    //     return;
-    // }
-
-    // QTextStream out(&fileLog);
-
-    // QString fileName = QFileDialog::getOpenFileName(
-    //     parent,
-    //     "Open query file",
-    //     QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation),
-    //     "SQL files (*.sql);;All files (*)"
-    //     );
-
-    // if (fileName.isEmpty())
-    //     return;
-
-    // QFile file(fileName);
-    // if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
-    //     QMessageBox::critical(parent, "Error", "Unable to open the backup file.");
-    //     return;
-    // }
-
-    // // Criar barra de progresso modal
-    // // QDialog progressDialog(parent);
-    // bool aborted = false;
-    // InterruptibleProgressDialog progressDialog(aborted, parent);
-
-
-    // progressDialog.setWindowTitle("Restoring backup...");
-    // QVBoxLayout *layout = new QVBoxLayout(&progressDialog);
-    // QProgressBar *progressBar = new QProgressBar(&progressDialog);
-    // progressBar->setTextVisible(true);
-    // layout->addWidget(progressBar);
-    // progressDialog.setMinimumSize(400, 80);
-    // progressDialog.setModal(true);
-    // progressDialog.show();
-    // QApplication::processEvents();
-
-    // QTextStream in(&file);
-    // QStringList sqlCommands;
-    // QString currentLine;
-
-    // // Carrega comandos SQL do arquivo
-    // while (!in.atEnd()) {
-    //     QString line = in.readLine().trimmed();
-    //     if (line.isEmpty() || line.startsWith("--"))
-    //         continue;
-
-    //     currentLine += line + " ";
-
-    //     if (line.endsWith(";")) {
-    //         sqlCommands << currentLine.trimmed();
-    //         currentLine.clear();
-    //     }
-    // }
-
-    // file.close();
-
-    // progressBar->setRange(0, sqlCommands.size());
-
-    // QSqlDatabase db = QSqlDatabase::database("mysql_connection_" + bkp_host);
-    // if (!db.isOpen()) {
-    //     QMessageBox::critical(parent, "Error", "Database connection is not open.");
-    //     return;
-    // }
-
-    // QSqlQuery query(db);
-    // int i = 0;
-    // int ttl = 0;
-    // for (const QString &cmd : sqlCommands) {
-    //     ttl++;
-    // }
-    // progressBar->setFormat("%v / %m");
-
-    // for (const QString &cmd : sqlCommands) {
-    //     if (aborted)
-    //         break;
-    //     if (!query.exec(cmd)) {
-    //         qWarning() << "Command error:" << cmd;
-    //         qWarning() << query.lastError().text();
-    //         out << "Command error:" << cmd << "\n";
-    //         out << query.lastError().text() << "\n\n";
-    //     }
-    //     i++;
-    //     progressBar->setValue(i);
-    //     QApplication::processEvents();
-    // }
-    // fileLog.close();
-    // refresh_schemas(actual_host, false);
-
-    // progressDialog.accept();
-
-    // if (aborted) {
-    //     QMessageBox::information(parent, "Cancelled", "Backup restoration was aborted by the user.");
-    // } else {
-    //     QMessageBox::information(parent, "Done", "Backup restored successfully.");
-    // }
 }
 
 void MainWindow::on_actionBackup_triggered()

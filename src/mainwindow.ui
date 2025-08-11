@@ -13,6 +13,9 @@
   <property name="windowTitle">
    <string>SequelFast</string>
   </property>
+  <property name="styleSheet">
+   <string notr="true">QToolButton { width: 80px }</string>
+  </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QHBoxLayout" name="horizontalLayout_10">
     <property name="spacing">
@@ -71,8 +74,8 @@
          <rect>
           <x>0</x>
           <y>0</y>
-          <width>218</width>
-          <height>437</height>
+          <width>335</width>
+          <height>424</height>
          </rect>
         </property>
         <attribute name="icon">
@@ -202,8 +205,8 @@
          <rect>
           <x>0</x>
           <y>0</y>
-          <width>218</width>
-          <height>437</height>
+          <width>333</width>
+          <height>138</height>
          </rect>
         </property>
         <attribute name="icon">
@@ -454,8 +457,8 @@
          <rect>
           <x>0</x>
           <y>0</y>
-          <width>218</width>
-          <height>437</height>
+          <width>333</width>
+          <height>142</height>
          </rect>
         </property>
         <attribute name="icon">
@@ -700,8 +703,8 @@
          <rect>
           <x>0</x>
           <y>0</y>
-          <width>218</width>
-          <height>437</height>
+          <width>241</width>
+          <height>122</height>
          </rect>
         </property>
         <attribute name="icon">
@@ -822,7 +825,7 @@
      <x>0</x>
      <y>0</y>
      <width>1117</width>
-     <height>24</height>
+     <height>21</height>
     </rect>
    </property>
    <property name="sizePolicy">
@@ -855,15 +858,12 @@
    <addaction name="actionNew_connection"/>
    <addaction name="actionNew_schema"/>
    <addaction name="actionNew_table"/>
-   <addaction name="separator"/>
    <addaction name="actionBackup"/>
    <addaction name="actionRestore"/>
-   <addaction name="separator"/>
    <addaction name="actionInformation"/>
    <addaction name="actionUsers"/>
    <addaction name="actionStatistics"/>
    <addaction name="actionProcesses"/>
-   <addaction name="separator"/>
    <addaction name="actionTile"/>
    <addaction name="actionCascade"/>
    <addaction name="actionTheme"/>
@@ -874,7 +874,7 @@
      <normaloff>:/icons/resources/cloud connection.svg</normaloff>:/icons/resources/cloud connection.svg</iconset>
    </property>
    <property name="text">
-    <string>New connection</string>
+    <string>New conn</string>
    </property>
   </action>
   <action name="actionNew_schema">

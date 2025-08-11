@@ -5,7 +5,6 @@
 
 #include "mainwindow.h"
 
-// Extern variables (unchanged)
 extern QJsonArray connections;
 extern QSqlDatabase dbPreferences;
 extern QSqlDatabase dbMysql;
@@ -15,7 +14,6 @@ extern int pref_table_row_height;
 extern int pref_table_font_size;
 extern int pref_sql_font_size;
 
-// CustomDelegate class (unchanged, included for completeness)
 class CustomDelegate : public QStyledItemDelegate {
 public:
     CustomDelegate(QObject* parent, const QSqlRecord& record)
@@ -134,7 +132,6 @@ private:
     QSqlRecord currentRecord;
 };
 
-// Sql constructor
 Sql::Sql(const QString& host, const QString& schema, const QString& table,
     const QString& color, const QString& favName, const QString& favValue,
     const bool& run, QWidget* parent)
@@ -207,7 +204,7 @@ Sql::Sql(const QString& host, const QString& schema, const QString& table,
     new SqlHighlighter(ui->textQuery->document());
     ui->textQuery->setText(queryStr);
 
-    setupSqlCompleter();
+    // setupSqlCompleter();
 
     QWidget* spacer = new QWidget(this);
     spacer->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
@@ -482,7 +479,6 @@ void Sql::keyPressEvent(QKeyEvent* event)
     }
 }
 
-// Implementações dos outros métodos (mantidas do código original)
 void Sql::query2TableView(QTableView* tableView, const QString& queryStr, const QString& comando)
 {
     QStandardItemModel* model = new QStandardItemModel(tableView);

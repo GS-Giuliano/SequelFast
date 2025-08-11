@@ -98,7 +98,6 @@ void Statistics::on_tableView_cellClicked(const QModelIndex& index)
     if (!index.isValid())
         return;
 
-    // Obtem o modelo visível (proxy ou direto)
     const QAbstractItemModel* model = index.model();
 
 

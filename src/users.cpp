@@ -69,13 +69,11 @@ void Users::refresh_users()
 {
     QSqlDatabase db = QSqlDatabase::database("mysql_connection_" + usr_host);
 
-    // Usar QSqlTableModel diretamente com a tabela mysql.user
     QSqlTableModel* model = new QSqlTableModel(this, db);
     model->setTable("mysql.user");
     model->setEditStrategy(QSqlTableModel::OnFieldChange);
     model->select();
 
-    // Colunas que queremos exibir
     QList<QString> columns = { "User", "Host", "Select_priv", "Insert_priv", "Update_priv",
                               "Delete_priv", "Create_priv", "Drop_priv", "Reload_priv",
                               "Shutdown_priv", "Process_priv", "File_priv", "Grant_priv",
@@ -96,7 +94,6 @@ void Users::refresh_users()
             ui->tableView->setColumnHidden(idx, false);
     }
 
-    // Proxy para filtro
     QSortFilterProxyModel* proxy = new QSortFilterProxyModel(this);
     proxy->setSourceModel(model);
     proxy->setFilterCaseSensitivity(Qt::CaseInsensitive);
@@ -104,7 +101,6 @@ void Users::refresh_users()
     ui->tableView->setModel(proxy);
     ui->tableView->resizeColumnsToContents();
 
-    // Aplica delegate às colunas de permissões
     QStringList checkCols = { "Select_priv", "Insert_priv", "Update_priv", "Delete_priv",
                              "Create_priv", "Drop_priv", "Reload_priv",
                              "Shutdown_priv", "Process_priv", "File_priv", "Grant_priv",
@@ -121,7 +117,6 @@ void Users::refresh_users()
         ui->tableView->setItemDelegateForColumn(proxyColumn, new CheckBoxDelegate(this));
     }
 
-    // Conecta o sinal para executar FLUSH PRIVILEGES após edição
     connect(model, &QSqlTableModel::dataChanged, this,
         [db, model, checkCols](const QModelIndex& topLeft, const QModelIndex& bottomRight, const QVector<int>&) {
             for (int col = topLeft.column(); col <= bottomRight.column(); ++col) {
@@ -159,11 +154,10 @@ void Users::create_user_dialog(QWidget* parent, const QString& connectionName)
     layout->addRow("Host:", editHost);
     layout->addRow("Password:", editPassword);
 
-    // Radio buttons for role selection
     QRadioButton* radioReadOnly = new QRadioButton("Read only");
     QRadioButton* radioSoftware = new QRadioButton("Software");
     QRadioButton* radioAdmin = new QRadioButton("Admin");
-    radioReadOnly->setChecked(true);  // default
+    radioReadOnly->setChecked(true);
 
     QVBoxLayout* roleLayout = new QVBoxLayout();
     roleLayout->addWidget(radioReadOnly);
@@ -294,9 +288,6 @@ void Users::delete_selected_user()
 
     QMessageBox::StandardButton reply = static_cast<QMessageBox::StandardButton>(msgBox.exec());
 
-    // QMessageBox::StandardButton reply = QMessageBox::question(this, "Confirm Deletion",
-    //                                                           QString("Are you sure you want to delete the user:\n\n%1@%2 ?").arg(user, host),
-    //                                                           QMessageBox::Yes | QMessageBox::No);
     if (reply != QMessageBox::Yes)
         return;
 
@@ -312,8 +303,6 @@ void Users::delete_selected_user()
     if (!query.exec("FLUSH PRIVILEGES;")) {
         QMessageBox::warning(this, "Warning", "User deleted, but FLUSH PRIVILEGES failed:\n" + query.lastError().text());
     }
-
-    // QMessageBox::information(this, "Success", "User deleted successfully.");
 
     refresh_users();  // Atualiza a lista após exclusão
 }
@@ -334,8 +323,6 @@ void Users::show_context_menu(const QPoint& pos)
     }
 
 }
-
-
 
 void Users::on_actionRefresh_triggered()
 {
