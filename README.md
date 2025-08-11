@@ -189,6 +189,32 @@ Be sure to include the following during installation:
 ### MySQL / MariaDB Drivers
 > It is recommended to use **MariaDB** drivers for better compatibility.
 
+### Windows
+
+*Install MariaDB C Connector*
+
+https://downloads.mariadb.com/Connectors/c/
+
+Select default path: "C:\Program Files\MariaDB\MariaDB Connector C 64-bit"
+
+*Setup environment variables to enable run qt commands on prompt (PowerShell)*
+
+- Open Windows Explorer
+- On Windows Search Bar, type: environment variable
+- Open Environment Variables
+- Edit "Path" variable
+- Add: C:\Qt\6.9.1\mingw_64\bin
+
+*Build QMYSQL driver*
+
+```PowerShell
+mkdir build-sqldrivers
+cd build-sqldrivers
+qt-cmake -G Ninja C:\Qt\6.9.1\Src\qtbase\src\plugins\sqldrivers -DCMAKE_INSTALL_PREFIX=C:\Qt\6.9.1\mingw_64 -DMySQL_ROOT="C:\Program/ Files\MariaDB\MariaDB/ Connector/ C/ 64-bit"
+cmake --build .
+cmake --install .
+```
+
 ### Linux
 ```bash
 sudo apt -y install mariadb-server cmake build-essential libxcb-cursor0 libxcb-cursor-dev patchelf mariadb cmake ninja
