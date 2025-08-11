@@ -53,6 +53,8 @@
 <summary><strong>📁 Schemas</strong></summary>
 
 - Open, create, and drop schemas
+- Backup and restore from file
+- Transfer database to other connection
 - View schema statistics
 - Apply filters
 - Save favorite filters
