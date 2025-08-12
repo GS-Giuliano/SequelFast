@@ -53,6 +53,8 @@
 <summary><strong>📁 Schemas</strong></summary>
 
 - Open, create, and drop schemas
+- Backup and restore from file
+- Transfer database to other connection
 - View schema statistics
 - Apply filters
 - Save favorite filters
@@ -186,6 +188,36 @@ Be sure to include the following during installation:
 
 ### MySQL / MariaDB Drivers
 > It is recommended to use **MariaDB** drivers for better compatibility.
+
+### Windows
+
+*Setup environment variables to enable run qt commands on prompt (PowerShell)*
+
+- Open Windows Explorer
+- On Windows Search Bar, type: environment variable
+- Open Environment Variables
+- Edit "Path" variable
+- Add: C:\Qt\6.9.1\mingw_64\bin
+
+*Install MariaDB C Connector*
+
+https://downloads.mariadb.com/Connectors/c/
+
+Select default path: "C:\mariadb"
+
+*Build QMYSQL driver*
+
+```PowerShell
+cd C:\mariadb\lib
+gendef libmariadb.dll
+dlltool -D libmariadb.dll -d libmariadb.def -l libmariadb.dll.a
+cd \
+mkdir build-sqldrivers
+cd build-sqldrivers
+qt-cmake -G Ninja C:\Qt\6.9.1\Src\qtbase\src\plugins\sqldrivers -DCMAKE_INSTALL_PREFIX=C:\Qt\6.9.1\mingw_64 -DFEATURE_sql_mysql=ON -DMySQL_INCLUDE_DIR=C:\mariadb\include\ -DMySQL_LIBRARY=C:\mariadb\lib\ -DMySQL_ROOT=C:\mariadb
+cmake --build .
+cmake --install .
+```
 
 ### Linux
 ```bash
