@@ -600,6 +600,9 @@ void MainWindow::refresh_tables(QString selectedHost) {
 
 void MainWindow::on_listViewConns_clicked(const QModelIndex& index)
 {
+    ui->actionNew_schema->setDisabled(false);
+    ui->actionUsers->setDisabled(false);
+    ui->actionRestore->setDisabled(false);
 }
 
 void MainWindow::on_listViewConns_doubleClicked(const QModelIndex& index)
@@ -609,9 +612,6 @@ void MainWindow::on_listViewConns_doubleClicked(const QModelIndex& index)
         listViewConns_edit(index);
     }
     else {
-        ui->actionNew_schema->setDisabled(false);
-        ui->actionUsers->setDisabled(false);
-        ui->actionRestore->setDisabled(false);
         listViewConns_open(index);
     }
 }
@@ -621,6 +621,9 @@ void MainWindow::on_listViewSchemas_clicked(const QModelIndex& index)
 {
     actual_schema = index.data(Qt::DisplayRole).toString();
     ui->actionBackup->setDisabled(false);
+    ui->actionStatistics->setDisabled(false);
+    ui->actionNew_table->setDisabled(false);
+
 
     QSqlDatabase db = QSqlDatabase::database("mysql_connection_" + actual_host);
 
@@ -1555,5 +1558,12 @@ void MainWindow::on_actionBackup_triggered()
 void MainWindow::on_actionRestore_triggered()
 {
     restore(actual_host, actual_schema, this);
+}
+
+
+void MainWindow::on_actionStatistics_triggered()
+{
+    Statistics* janela = new Statistics(actual_host, actual_schema, this);
+    janela->exec();
 }
 

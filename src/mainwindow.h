@@ -336,6 +336,9 @@ private slots:
     /** @brief Slot ativado pela ação "Restaurar" do menu */
     void on_actionRestore_triggered();
 
+    /** @brief Slot ativado pela ação "Estatisticas" do menu */
+    void on_actionStatistics_triggered();
+
 private:
     Ui::MainWindow* ui;
 
