@@ -14,7 +14,7 @@
    <string>SequelFast</string>
   </property>
   <property name="styleSheet">
-   <string notr="true">QToolButton { width: 80px }</string>
+   <string notr="true"/>
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QHBoxLayout" name="horizontalLayout_10">
@@ -74,8 +74,8 @@
          <rect>
           <x>0</x>
           <y>0</y>
-          <width>335</width>
-          <height>424</height>
+          <width>219</width>
+          <height>437</height>
          </rect>
         </property>
         <attribute name="icon">
@@ -86,9 +86,6 @@
          <string>Favorites</string>
         </attribute>
         <layout class="QVBoxLayout" name="verticalLayout_5">
-         <property name="spacing">
-          <number>4</number>
-         </property>
          <property name="leftMargin">
           <number>4</number>
          </property>
@@ -205,8 +202,8 @@
          <rect>
           <x>0</x>
           <y>0</y>
-          <width>333</width>
-          <height>138</height>
+          <width>219</width>
+          <height>437</height>
          </rect>
         </property>
         <attribute name="icon">
@@ -457,8 +454,8 @@
          <rect>
           <x>0</x>
           <y>0</y>
-          <width>333</width>
-          <height>142</height>
+          <width>219</width>
+          <height>437</height>
          </rect>
         </property>
         <attribute name="icon">
@@ -703,8 +700,8 @@
          <rect>
           <x>0</x>
           <y>0</y>
-          <width>241</width>
-          <height>122</height>
+          <width>219</width>
+          <height>437</height>
          </rect>
         </property>
         <attribute name="icon">
@@ -825,7 +822,7 @@
      <x>0</x>
      <y>0</y>
      <width>1117</width>
-     <height>21</height>
+     <height>24</height>
     </rect>
    </property>
    <property name="sizePolicy">
