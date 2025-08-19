@@ -18,4 +18,6 @@ ln -s /Applications "$PROJECT_NAME"DMG/Applications
 hdiutil create -volname "$PROJECT_NAME" -srcfolder "$PROJECT_NAME"DMG -ov -format UDZO $PROJECT_NAME.dmg
 rm -fR $PROJECT_NAME.app
 rm -fR "$PROJECT_NAME"DMG
-
+cd ..
+rm $INSTAPATH/*.o;rm $INSTAPATH/*.h;rm $INSTAPATH/*.moc;rm $INSTAPATH/*.cpp
+rm $INSTAPATH/*.qrc;rm $INSTAPATH/Makefile
