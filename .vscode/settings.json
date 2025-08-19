@@ -39,7 +39,11 @@
         "**/build/**": false,
         "**/themes/**/rc/**": true,
         "**/*.png": true,
+        "**/*.git": true,
         "**/release_linux/**": true,
+        "**/release_macos_silicon/**": true,
+        "**/release_macos_intel/**": true,
+        "**/resources/**": true,
         "**/app/**": true
     },
     "search.exclude": {
@@ -54,7 +58,12 @@
         "**/build/**": false,
         "**/themes/**/rc/**": true,
         "**/*.png": true,
+        "**/*.git": true,
         "**/release_linux/**": true,
+        "**/release_macos_silicon/**": true,
+        "**/release_macos_intel/**": true,
+        "**/release_macos_silicon/**": true,
+        "**/resources/**": true,
         "**/app/**": true
     }
 }

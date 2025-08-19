@@ -500,7 +500,7 @@ void MainWindow::refresh_favorites()
     group1->setEditable(false);
     group2->setEditable(false);
     group3->setEditable(false);
-    QFont f = group1->font(); f.setBold(true); group1->setFont(f);group2->setFont(f);group3->setFont(f);
+    // QFont f = group1->font(); f.setBold(true); group1->setFont(f);group2->setFont(f);group3->setFont(f);
 
     QIcon icone = ui->buttonEditFavorites->isChecked()
         ? QIcon(":/icons/resources/heart 2.svg")

@@ -21,7 +21,7 @@ void TextEditCompleter::setCompleter(QCompleter* completer)
     c->setCaseSensitivity(Qt::CaseInsensitive);
     c->setMaxVisibleItems(10);
     connect(c, QOverload<const QString&>::of(&QCompleter::activated),
-        this, &TextEditCompleter::insertCompletion);
+            this, &TextEditCompleter::insertCompletion);
 }
 
 QCompleter* TextEditCompleter::completer() const
@@ -31,13 +31,13 @@ QCompleter* TextEditCompleter::completer() const
 
 void TextEditCompleter::insertCompletion(const QString& completion)
 {
-    if (c->widget() != this)
+    if (c && c->widget() != this)
         return;
 
     QTextCursor tc = textCursor();
     QString currentWord = getCurrentWord();
     if (currentWord.isEmpty()) {
-        currentWord = c->completionPrefix(); // Usa o prefixo do completador se a palavra atual estiver vazia
+        currentWord = c ? c->completionPrefix() : QString();
         qDebug() << "Palavra atual vazia, usando completionPrefix:" << currentWord;
     }
 
@@ -55,12 +55,12 @@ QString TextEditCompleter::getCurrentWord() const
 {
     QTextCursor tc = textCursor();
     tc.select(QTextCursor::WordUnderCursor);
-    QString word = tc.selectedText();
-    return word;
+    return tc.selectedText();
 }
 
 void TextEditCompleter::keyPressEvent(QKeyEvent* e)
 {
+    this->setStyleSheet("");
     if (c && c->popup()->isVisible()) {
         switch (e->key()) {
         case Qt::Key_Enter:
@@ -68,7 +68,7 @@ void TextEditCompleter::keyPressEvent(QKeyEvent* e)
         case Qt::Key_Tab:
             e->accept();
             c->popup()->hide();
-            if (c->currentCompletion().length() > 0) {
+            if (!c->currentCompletion().isEmpty()) {
                 insertCompletion(c->currentCompletion());
             }
             return;
@@ -120,4 +120,20 @@ void TextEditCompleter::focusInEvent(QFocusEvent* e)
     if (c)
         c->setWidget(this);
     QTextEdit::focusInEvent(e);
+}
+
+// --------- SOMENTE TEXTO PURO AO COLAR / ARRASTAR ---------
+
+bool TextEditCompleter::canInsertFromMimeData(const QMimeData* source) const
+{
+    // Aceita inserir apenas se houver texto (ignora html, imagens, urls, etc.)
+    return source && source->hasText();
+}
+
+void TextEditCompleter::insertFromMimeData(const QMimeData* source)
+{
+    if (!source) return;
+
+    // Insere sempre como texto puro
+    insertPlainText(source->text());
 }

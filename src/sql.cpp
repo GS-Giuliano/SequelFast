@@ -2,8 +2,10 @@
 #include "ui_sql.h"
 #include "sqlhighlighter.h"
 #include "texteditcompleter.h"
-
 #include "mainwindow.h"
+
+#include <QHeaderView>
+#include <QSortFilterProxyModel>
 
 extern QJsonArray connections;
 extern QSqlDatabase dbPreferences;
@@ -21,7 +23,7 @@ public:
     }
 
     QWidget* createEditor(QWidget* parent, const QStyleOptionViewItem& option,
-        const QModelIndex& index) const override {
+                          const QModelIndex& index) const override {
         QSqlField field = currentRecord.field(index.column());
         QVariant::Type type = field.type();
         int fieldSize = field.length();
@@ -97,7 +99,7 @@ public:
     }
 
     void setModelData(QWidget* editor, QAbstractItemModel* model,
-        const QModelIndex& index) const override {
+                      const QModelIndex& index) const override {
         QSqlField field = currentRecord.field(index.column());
         QVariant::Type type = field.type();
         int fieldSize = field.length();
@@ -133,8 +135,8 @@ private:
 };
 
 Sql::Sql(const QString& host, const QString& schema, const QString& table,
-    const QString& color, const QString& favName, const QString& favValue,
-    const bool& run, QWidget* parent)
+         const QString& color, const QString& favName, const QString& favValue,
+         const bool& run, QWidget* parent)
     : QMainWindow(parent), ui(new Ui::Sql)
 {
     sql_host = host;
@@ -143,13 +145,6 @@ Sql::Sql(const QString& host, const QString& schema, const QString& table,
     sql_color = color;
 
     ui->setupUi(this);
-
-    // Substituir QTextEdit por TextEditCompleter programaticamente
-    // QTextEdit *oldTextQuery = ui->textQuery;
-    // ui->textQuery = new TextEditCompleter(this);
-    // ui->textQuery->setObjectName("textQuery");
-    // ui->verticalLayout->replaceWidget(oldTextQuery, ui->textQuery);
-    // delete oldTextQuery;
 
     QString param;
     QString queryStr;
@@ -204,14 +199,15 @@ Sql::Sql(const QString& host, const QString& schema, const QString& table,
     new SqlHighlighter(ui->textQuery->document());
     ui->textQuery->setText(queryStr);
 
-    // setupSqlCompleter();
-
     QWidget* spacer = new QWidget(this);
     spacer->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
     QLabel* labelFavName = new QLabel(databaseName, this);
     QLabel* label = new QLabel("Every ", this);
     QLabel* labelSeconds = new QLabel("second(s) ", this);
     QLabel* labelTimes = new QLabel(" time(s)", this);
+    label->setMargin(0);
+    labelSeconds->setMargin(0);
+    labelTimes->setMargin(0);
 
     spacer->setStyleSheet("QWidget {background-color: transparent}");
 
@@ -219,6 +215,7 @@ Sql::Sql(const QString& host, const QString& schema, const QString& table,
     edit->setText("1");
     edit->setFixedWidth(50);
     edit->setPlaceholderText("Seconds");
+    edit->setTextMargins(0, 0, 0, 0);
     QIntValidator* validator = new QIntValidator(0, 3600, this);
     edit->setValidator(validator);
 
@@ -226,6 +223,7 @@ Sql::Sql(const QString& host, const QString& schema, const QString& table,
     editTimes->setText("5");
     editTimes->setFixedWidth(50);
     editTimes->setPlaceholderText("Times");
+    editTimes->setTextMargins(0, 0, 0, 0);
     QIntValidator* validatorTimes = new QIntValidator(0, 99999, this);
     editTimes->setValidator(validatorTimes);
 
@@ -252,7 +250,13 @@ Sql::Sql(const QString& host, const QString& schema, const QString& table,
 
     ui->tableData->setContextMenuPolicy(Qt::CustomContextMenu);
     connect(ui->tableData, &QTableView::customContextMenuRequested,
-        this, &Sql::show_context_menu);
+            this, &Sql::show_context_menu);
+
+    // --- Ordenação cíclica pelo cabeçalho ---
+    ui->tableData->setSortingEnabled(true);
+    ui->tableData->horizontalHeader()->setSortIndicatorShown(true);
+    connect(ui->tableData->horizontalHeader(), &QHeaderView::sectionClicked,
+            this, &Sql::on_tableHeader_sectionClicked);
 
     QApplication::processEvents();
     if (run)
@@ -326,11 +330,6 @@ QString Sql::processQueryWithMacros(QString queryStr, QWidget* parent)
 
 void Sql::setupSqlCompleter()
 {
-    // QStringList keywords = {
-    //     "SELECT", "FROM", "WHERE", "JOIN", "LEFT JOIN", "INNER JOIN", "RIGHT JOIN",
-    //     "INSERT", "UPDATE", "DELETE", "VALUES", "SET", "AS", "ON", "AND", "OR",
-    //     "IN", "NULL", "LIMIT", "ORDER BY", "GROUP BY"
-    // };
     QStringList keywords = {
         "FROM", "WHERE", "JOIN", "LEFT JOIN", "INNER JOIN", "RIGHT JOIN",
         "VALUES", "AS", "ON", "AND", "OR",
@@ -359,6 +358,7 @@ void Sql::setupSqlCompleter()
         if (auto match = reFrom.match(blockText); match.hasMatch()) {
             QString table = match.captured(1);
             QString alias = match.captured(2);
+            Q_UNUSED(alias);
             sqlCompleter->setModel(getColumnModel(table));
         }
         else if (auto match = reTableAlias.match(blockText); match.hasMatch()) {
@@ -379,7 +379,7 @@ void Sql::setupSqlCompleter()
             sqlCompleterModel->setStringList(suggestions);
             sqlCompleter->setModel(sqlCompleterModel);
         }
-        });
+    });
 }
 
 void Sql::handleButton_clicked()
@@ -430,7 +430,6 @@ QAbstractItemModel* Sql::getColumnModel(const QString& table) const
     return model;
 }
 
-
 void Sql::setInterfaceSize(int increase)
 {
     if (increase > 0 && pref_sql_font_size < 30)
@@ -447,12 +446,12 @@ void Sql::setInterfaceSize(int increase)
     }
     QFont fonte;
     fonte.setFamilies(QStringList()
-        << "Segoe UI"
-        << ".SF NS Text"
-        << "Ubuntu"
-        << "Cantarell"
-        << "Noto Sans"
-        << "Sans Serif");
+                      << "Segoe UI"
+                      << ".SF NS Text"
+                      << "Ubuntu"
+                      << "Cantarell"
+                      << "Noto Sans"
+                      << "Sans Serif");
     fonte.setPointSize(pref_table_font_size);
     ui->tableData->setFont(fonte);
 
@@ -481,11 +480,13 @@ void Sql::keyPressEvent(QKeyEvent* event)
 
 void Sql::query2TableView(QTableView* tableView, const QString& queryStr, const QString& comando)
 {
+    // Modelo base com dados
     QStandardItemModel* model = new QStandardItemModel(tableView);
     QSqlQuery query(dbMysqlLocal);
     if (!query.exec(queryStr)) {
         statusMessage("Query error: " + query.lastError().text());
-        qWarning() << "Erro na query:" << query.lastError().text();
+        ui->textQuery->setStyleSheet("QTextEdit { border: 1px solid red; }");
+        qWarning() << "Erro na query e table:" << query.lastError().text();
         delete model;
         return;
     }
@@ -503,6 +504,7 @@ void Sql::query2TableView(QTableView* tableView, const QString& queryStr, const 
         }
     }
 
+    int originalRow = 0; // guarda ordem original
     while (query.next()) {
         QApplication::processEvents();
         QList<QStandardItem*> rowItems;
@@ -532,6 +534,9 @@ void Sql::query2TableView(QTableView* tableView, const QString& queryStr, const 
             item->setData(displayText, Qt::DisplayRole);
             item->setData(displayText, Qt::UserRole);
 
+            // grava ordem original (mesmo valor em todas colunas da linha)
+            item->setData(originalRow, OriginalRowRole);
+
             switch (type) {
             case QVariant::Int:
             case QVariant::UInt:
@@ -553,9 +558,26 @@ void Sql::query2TableView(QTableView* tableView, const QString& queryStr, const 
             rowItems << item;
         }
         model->appendRow(rowItems);
+        ++originalRow;
     }
 
-    tableView->setModel(model);
+    // Encapa com proxy p/ ordenar sem perder ordem original
+    if (!tableProxy) {
+        tableProxy = new QSortFilterProxyModel(this);
+        tableProxy->setDynamicSortFilter(true);
+        tableView->setModel(tableProxy);
+    } else {
+        if (auto old = tableProxy->sourceModel())
+            old->deleteLater();
+    }
+    tableProxy->setSourceModel(model);
+
+    // reset de ordenação
+    currentSortColumn = -1;
+    currentSortState  = SortNone;
+    resetSortToOriginalOrder();
+    tableView->horizontalHeader()->setSortIndicator(-1, Qt::AscendingOrder);
+
     tableView->resizeColumnsToContents();
 
     for (int col = 0; col < tableView->model()->columnCount(); ++col) {
@@ -578,73 +600,81 @@ void Sql::query2TableView(QTableView* tableView, const QString& queryStr, const 
             QAbstractItemView::EditKeyPressed |
             QAbstractItemView::AnyKeyPressed |
             QAbstractItemView::DoubleClicked
-        );
+            );
 
         CustomDelegate* delegate = new CustomDelegate(tableView, currentRecord);
         tableView->setItemDelegate(delegate);
 
         connect(delegate, &QAbstractItemDelegate::commitData, this, [=](QWidget* editor) {
-            QModelIndex index = tableView->currentIndex();
-            if (!index.isValid() || !hasId || idPosition < 0)
+            QModelIndex proxyIndex = tableView->currentIndex();
+            if (!proxyIndex.isValid() || !hasId || idPosition < 0)
                 return;
 
+            // mapear índice do proxy para o source
+            QModelIndex index = tableProxy->mapToSource(proxyIndex);
+
             QString fieldName = currentRecord.fieldName(index.column());
-            QString idValue = model->item(index.row(), idPosition)->text();
+            QString idValue = static_cast<QStandardItemModel*>(tableProxy->sourceModel())
+                                  ->item(index.row(), idPosition)->text();
             QString newValue = index.model()->data(index, Qt::EditRole).toString();
-            QString oldValue = model->item(index.row(), index.column())->data(Qt::UserRole).toString();
+            QString oldValue = static_cast<QStandardItemModel*>(tableProxy->sourceModel())
+                                   ->item(index.row(), index.column())->data(Qt::UserRole).toString();
 
             if (!handleTableData_edit_trigger(idValue, fieldName, newValue)) {
-                model->blockSignals(true);
-                model->setData(index, oldValue, Qt::EditRole);
-                model->blockSignals(false);
+                tableProxy->sourceModel()->blockSignals(true);
+                tableProxy->sourceModel()->setData(index, oldValue, Qt::EditRole);
+                tableProxy->sourceModel()->blockSignals(false);
 
                 statusBar()->showMessage(
                     QString("Alteração REJEITADA em '%1'. Valor restaurado: %2")
-                    .arg(fieldName, oldValue)
-                );
+                        .arg(fieldName, oldValue)
+                    );
                 qWarning() << "Alteração rejeitada. Valor restaurado.";
             }
             else {
-                model->setData(index, newValue, Qt::UserRole);
+                static_cast<QStandardItemModel*>(tableProxy->sourceModel())
+                ->item(index.row(), index.column())->setData(newValue, Qt::UserRole);
                 statusBar()->showMessage(QString("Alteração salva em '%1'").arg(fieldName));
             }
-            });
+        });
 
         connect(tableView->selectionModel(), &QItemSelectionModel::currentChanged,
-            this, [this](const QModelIndex& current, const QModelIndex&) {
-                if (!currentRecord.isEmpty() && current.isValid()) {
-                    QSqlField field = currentRecord.field(current.column());
-                    QVariant::Type type = field.type();
-                    int fieldSize = field.length();
+                this, [this](const QModelIndex& current, const QModelIndex&) {
+                    if (!currentRecord.isEmpty() && current.isValid()) {
+                        // mapear índice selecionado do proxy para o source
+                        QModelIndex sourceIdx = tableProxy->mapToSource(current);
+                        QSqlField field = currentRecord.field(sourceIdx.column());
+                        QVariant::Type type = field.type();
+                        int fieldSize = field.length();
 
-                    static const QMap<QVariant::Type, QString> sqlTypeMap = {
-                        {QVariant::Int, "int"},
-                        {QVariant::UInt, "unsigned int"},
-                        {QVariant::LongLong, "bigint"},
-                        {QVariant::ULongLong, "unsigned bigint"},
-                        {QVariant::Double, "double"},
-                        {QVariant::Bool, "boolean"},
-                        {QVariant::Date, "date"},
-                        {QVariant::Time, "time"},
-                        {QVariant::DateTime, "datetime"},
-                        {QVariant::String, "varchar"},
-                        {QVariant::ByteArray, "blob"},
-                        {QVariant::Char, "char"},
-                        {QVariant::Invalid, "unknown"}
-                    };
+                        static const QMap<QVariant::Type, QString> sqlTypeMap = {
+                            {QVariant::Int, "int"},
+                            {QVariant::UInt, "unsigned int"},
+                            {QVariant::LongLong, "bigint"},
+                            {QVariant::ULongLong, "unsigned bigint"},
+                            {QVariant::Double, "double"},
+                            {QVariant::Bool, "boolean"},
+                            {QVariant::Date, "date"},
+                            {QVariant::Time, "time"},
+                            {QVariant::DateTime, "datetime"},
+                            {QVariant::String, "varchar"},
+                            {QVariant::ByteArray, "blob"},
+                            {QVariant::Char, "char"},
+                            {QVariant::Invalid, "unknown"}
+                        };
 
-                    QString sqlTypeName = sqlTypeMap.value(type, QMetaType(type).name());
-                    QString info;
+                        QString sqlTypeName = sqlTypeMap.value(type, QMetaType(type).name());
+                        QString info;
 
-                    if (fieldSize == 262140 && sqlTypeName == "varchar") {
-                        info = QString("%1 • text").arg(field.name());
+                        if (fieldSize == 262140 && sqlTypeName == "varchar") {
+                            info = QString("%1 • text").arg(field.name());
+                        }
+                        else {
+                            info = QString("%1 • %2(%3)").arg(field.name(), sqlTypeName).arg(fieldSize);
+                        }
+                        statusBar()->showMessage(info);
                     }
-                    else {
-                        info = QString("%1 • %2(%3)").arg(field.name(), sqlTypeName).arg(fieldSize);
-                    }
-                    statusBar()->showMessage(info);
-                }
-            });
+                });
 
         statusMessage("Success • Rows: " + QString::number(rowsAffected));
     }
@@ -657,6 +687,10 @@ void Sql::query2TableView(QTableView* tableView, const QString& queryStr, const 
 bool Sql::handleTableData_edit_trigger(QString& id, QString& fieldName, QString& newValue)
 {
     if (fieldName == "id")
+    {
+        return false;
+    }
+    if (!ui->actionAuto_commit->isChecked())
     {
         return false;
     }
@@ -812,12 +846,12 @@ void Sql::on_actionRun_triggered()
         else {
             editEnabled = false;
             ui->tableData->setEditTriggers(QAbstractItemView::NoEditTriggers);
-            QSqlQuery query(dbMysqlLocal);
-            if (!query.exec(queryStr)) {
-                statusMessage("Command error: " + query.lastError().text());
+            QSqlQuery query2(dbMysqlLocal);
+            if (!query2.exec(queryStr)) {
+                statusMessage("Command error: " + query2.lastError().text());
             }
             else {
-                int linhasAfetadas = query.numRowsAffected();
+                int linhasAfetadas = query2.numRowsAffected();
                 statusMessage("Success! Line affected: " + QString::number(linhasAfetadas));
             }
             ui->tableData->setModel(nullptr);
@@ -928,9 +962,9 @@ void Sql::handleTableClone_triggered()
     }
 
     QString insert = QString("INSERT INTO %1 (%2) VALUES (%3)")
-        .arg(sql_table)
-        .arg(fields.join(", "))
-        .arg(values.join(", "));
+                         .arg(sql_table)
+                         .arg(fields.join(", "))
+                         .arg(values.join(", "));
 
     QSqlQuery query(dbMysqlLocal);
     if (!query.exec(insert)) {
@@ -951,7 +985,7 @@ void Sql::handleTableDelete_triggered()
         rows.insert(index.row());
 
     if (QMessageBox::question(this, "Confirmar exclusão",
-        QString("Deseja excluir %1 linha(s)?").arg(rows.size())) != QMessageBox::Yes)
+                              QString("Deseja excluir %1 linha(s)?").arg(rows.size())) != QMessageBox::Yes)
         return;
 
     QSqlQuery query(dbMysqlLocal);
@@ -965,7 +999,9 @@ void Sql::handleTableDelete_triggered()
             qWarning() << "Erro ao excluir linha id=" << id << "^" << query.lastError().text();
         }
         else {
-            static_cast<QStandardItemModel*>(ui->tableData->model())->removeRow(row);
+            static_cast<QStandardItemModel*>(static_cast<QSortFilterProxyModel*>(ui->tableData->model())->sourceModel())->removeRow(
+                static_cast<QSortFilterProxyModel*>(ui->tableData->model())->mapToSource(ui->tableData->model()->index(row, 0)).row()
+                );
         }
     }
 }
@@ -975,12 +1011,18 @@ void Sql::handleTableCopyInsert_triggered()
     QModelIndexList selection = ui->tableData->selectionModel()->selectedIndexes();
     if (selection.isEmpty()) return;
 
-    QAbstractItemModel* model = ui->tableData->model();
+    QAbstractItemModel* proxyModel = ui->tableData->model();
+    auto* proxy = qobject_cast<QSortFilterProxyModel*>(proxyModel);
+    QAbstractItemModel* model = proxy ? proxy->sourceModel() : proxyModel;
+
+    // Remapear para índices do source para garantir consistência
     QMap<int, QMap<int, QString>> rowValues;
-    for (const QModelIndex& index : selection) {
+    for (const QModelIndex& proxyIdx : selection) {
+        QModelIndex index = proxy ? proxy->mapToSource(proxyIdx) : proxyIdx;
         int row = index.row();
         int col = index.column();
         QString header = model->headerData(col, Qt::Horizontal).toString();
+        Q_UNUSED(header);
         QString value = index.data().toString().replace("'", "\\'");
         rowValues[row][col] = "'" + value + "'";
     }
@@ -997,9 +1039,9 @@ void Sql::handleTableCopyInsert_triggered()
         }
 
         QString query = QString("INSERT INTO %1 (%2) VALUES (%3);")
-            .arg(sql_table)
-            .arg(columns.join(", "))
-            .arg(values.join(", "));
+                            .arg(sql_table)
+                            .arg(columns.join(", "))
+                            .arg(values.join(", "));
         insertCommands << query;
     }
 
@@ -1012,7 +1054,9 @@ void Sql::handleTableCopyUpdate_triggered()
     QModelIndexList selection = ui->tableData->selectionModel()->selectedIndexes();
     if (selection.isEmpty()) return;
 
-    QAbstractItemModel* model = ui->tableData->model();
+    auto* proxy = qobject_cast<QSortFilterProxyModel*>(ui->tableData->model());
+    QAbstractItemModel* model = proxy ? proxy->sourceModel() : ui->tableData->model();
+
     QMap<int, QMap<int, QString>> rowValues;
     int idColumn = -1;
 
@@ -1029,7 +1073,8 @@ void Sql::handleTableCopyUpdate_triggered()
         return;
     }
 
-    for (const QModelIndex& index : selection) {
+    for (const QModelIndex& proxyIdx : selection) {
+        QModelIndex index = proxy ? proxy->mapToSource(proxyIdx) : proxyIdx;
         int row = index.row();
         int col = index.column();
         if (col == idColumn) continue;
@@ -1056,9 +1101,9 @@ void Sql::handleTableCopyUpdate_triggered()
         }
 
         QString query = QString("UPDATE %1 SET %2 WHERE Id = %3;")
-            .arg(sql_table)
-            .arg(assignments.join(", "))
-            .arg(idValue);
+                            .arg(sql_table)
+                            .arg(assignments.join(", "))
+                            .arg(idValue);
         updateCommands << query;
     }
 
@@ -1071,14 +1116,20 @@ void Sql::handleTableCopyCsv_triggered()
     QModelIndexList selection = ui->tableData->selectionModel()->selectedIndexes();
     if (selection.isEmpty()) return;
 
+    // Ordenar seleção por linha/coluna
     std::sort(selection.begin(), selection.end(), [](const QModelIndex& a, const QModelIndex& b) {
         return a.row() == b.row() ? a.column() < b.column() : a.row() < b.row();
-        });
+    });
 
-    QAbstractItemModel* model = ui->tableData->model();
+    auto* proxy = qobject_cast<QSortFilterProxyModel*>(ui->tableData->model());
+    QAbstractItemModel* model = proxy ? proxy->sourceModel() : ui->tableData->model();
+
+    // Colunas selecionadas (source)
     QSet<int> selectedColumnsSet;
-    for (const QModelIndex& index : selection)
+    for (const QModelIndex& proxyIdx : selection) {
+        QModelIndex index = proxy ? proxy->mapToSource(proxyIdx) : proxyIdx;
         selectedColumnsSet.insert(index.column());
+    }
 
     QList<int> selectedColumns = selectedColumnsSet.values();
     std::sort(selectedColumns.begin(), selectedColumns.end());
@@ -1093,14 +1144,15 @@ void Sql::handleTableCopyCsv_triggered()
     QStringList csvText;
     csvText << headerRow.join(";");
 
-    int currentRow = selection.first().row();
+    // Produzir CSV respeitando a ordem exibida (proxy) mas pegando dados remapeados
+    int currentRow = -1;
     QStringList csvRow;
-    csvRow.fill("", selectedColumns.size());
+    for (const QModelIndex& proxyIdx : selection) {
+        QModelIndex index = proxy ? proxy->mapToSource(proxyIdx) : proxyIdx;
 
-    for (const QModelIndex& index : selection) {
         if (index.row() != currentRow) {
-            csvText << csvRow.join(";");
-            csvRow.fill("", selectedColumns.size());
+            if (currentRow != -1) csvText << csvRow.join(";");
+            csvRow = QStringList(QString(selectedColumns.size(), QChar('\0')).split(QChar('\0')));
             currentRow = index.row();
         }
 
@@ -1112,22 +1164,22 @@ void Sql::handleTableCopyCsv_triggered()
 
             QVariant::Type type = data.type();
             bool isNumeric = (type == QVariant::Int ||
-                type == QVariant::UInt ||
-                type == QVariant::LongLong ||
-                type == QVariant::ULongLong ||
-                type == QVariant::Double);
+                              type == QVariant::UInt ||
+                              type == QVariant::LongLong ||
+                              type == QVariant::ULongLong ||
+                              type == QVariant::Double);
 
             bool needsQuotes = !isNumeric ||
-                str.contains(";") ||
-                str.contains("\n") ||
-                str.contains("\"") ||
-                str.startsWith("{") || str.startsWith("[");
+                               str.contains(";") ||
+                               str.contains("\n") ||
+                               str.contains("\"") ||
+                               str.startsWith("{") || str.startsWith("[");
 
             csvRow[colIndex] = needsQuotes ? "\"" + str + "\"" : str;
         }
     }
-
-    csvText << csvRow.join(";");
+    if (!csvRow.isEmpty())
+        csvText << csvRow.join(";");
 
     QClipboard* clipboard = QApplication::clipboard();
     clipboard->setText(csvText.join("\n"));
@@ -1144,7 +1196,6 @@ void Sql::handletableCRUDLaravel_triggered()
     QClipboard* clipboard = QApplication::clipboard();
     clipboard->setText("<?php \n ?>");
 }
-
 
 void Sql::on_actionFavorites_triggered()
 {
@@ -1168,7 +1219,7 @@ void Sql::on_actionFavorites_triggered()
         "    margin: 20px;"
         "    min-height: 16px;"
         "}"
-    );
+        );
     QCheckBox* sharedCheckbox = new QCheckBox(&dialog);
     sharedCheckbox->setText("Shared favorite");
     layout->addWidget(sharedCheckbox);
@@ -1253,4 +1304,63 @@ void Sql::show_context_menu(const QPoint& pos)
     else if (selectedAction == tableCopyCsv) {
         handleTableCopyCsv_triggered();
     }
+}
+
+// =========================
+//  SUPORTE À ORDENAÇÃO
+// =========================
+
+void Sql::applySortState(int column)
+{
+    if (!tableProxy) return;
+
+    auto* header = ui->tableData->horizontalHeader();
+
+    switch (currentSortState) {
+    case SortAsc:
+        tableProxy->setSortRole(Qt::DisplayRole);
+        tableProxy->sort(column, Qt::AscendingOrder);
+        header->setSortIndicator(column, Qt::AscendingOrder);
+        header->setSortIndicatorShown(true);
+        break;
+
+    case SortDesc:
+        tableProxy->setSortRole(Qt::DisplayRole);
+        tableProxy->sort(column, Qt::DescendingOrder);
+        header->setSortIndicator(column, Qt::DescendingOrder);
+        header->setSortIndicatorShown(true);
+        break;
+
+    case SortNone:
+    default:
+        resetSortToOriginalOrder();
+        header->setSortIndicator(-1, Qt::AscendingOrder);
+        header->setSortIndicatorShown(true);
+        break;
+    }
+}
+
+void Sql::resetSortToOriginalOrder()
+{
+    if (!tableProxy) return;
+    tableProxy->setSortRole(OriginalRowRole);
+    tableProxy->sort(0, Qt::AscendingOrder);
+    tableProxy->setSortRole(Qt::DisplayRole);
+}
+
+void Sql::on_tableHeader_sectionClicked(int logicalIndex)
+{
+    if (currentSortColumn != logicalIndex) {
+        currentSortColumn = logicalIndex;
+        currentSortState = SortAsc;
+    } else {
+        if (currentSortState == SortAsc)
+            currentSortState = SortDesc;
+        else if (currentSortState == SortDesc)
+            currentSortState = SortNone;
+        else
+            currentSortState = SortAsc;
+    }
+
+    applySortState(currentSortColumn);
 }
