@@ -160,12 +160,12 @@ private slots:
     /**
      * @brief Handle query execution timer tick for performance monitoring
      */
-    void on_timer_tick();
+    void handleTimer_tick();
     
     /**
      * @brief Handle custom button click events
      */
-    void on_button_clicked();
+    void handleButton_clicked();
     
     /**
      * @brief Handle table data cell edit operations
@@ -174,47 +174,47 @@ private slots:
      * @param newValue New value for the field
      * @return True if edit was successful, false otherwise
      */
-    bool on_tableData_edit_trigger(QString& id, QString& fieldName, QString& newValue);
+    bool handleTableData_edit_trigger(QString& id, QString& fieldName, QString& newValue);
     
     /**
      * @brief Handle append new row to table action
      */
-    void on_tableAppend_triggered();
+    void handleTableAppend_triggered();
     
     /**
      * @brief Handle clone/duplicate selected row action
      */
-    void on_tableClone_triggered();
+    void handleTableClone_triggered();
     
     /**
      * @brief Handle delete selected rows action
      */
-    void on_tableDelete_triggered();
+    void handleTableDelete_triggered();
     
     /**
      * @brief Handle copy selected rows as INSERT statements
      */
-    void on_tableCopyInsert_triggered();
+    void handleTableCopyInsert_triggered();
     
     /**
      * @brief Handle copy selected rows as UPDATE statements
      */
-    void on_tableCopyUpdate_triggered();
+    void handleTableCopyUpdate_triggered();
     
     /**
      * @brief Handle copy selected rows as CSV format
      */
-    void on_tableCopyCsv_triggered();
+    void handleTableCopyCsv_triggered();
     
     /**
      * @brief Handle generation of CRUD operations for GFW framework
      */
-    void on_tableCRUDGfw_triggered();
+    void handletableCRUDGfw_triggered();
     
     /**
      * @brief Handle generation of CRUD operations for Laravel framework
      */
-    void on_tableCRUDLaravel_triggered();
+    void handletableCRUDLaravel_triggered();
     
     /**
      * @brief Handle favorites management dialog action

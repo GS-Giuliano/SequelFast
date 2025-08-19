@@ -38,6 +38,10 @@ Connection::Connection(QString selectedHost, QWidget* parent)
     ui->lineSSHuser->setText(item["ssh_user"].toString());
     ui->lineSSHpass->setText(item["ssh_pass"].toString());
     ui->lineSSHkey->setText(item["ssh_keyfile"].toString());
+    if (item["shared"].toString() == "1")
+    {
+        ui->sharedFavorites->setChecked(true);
+    }
 
     thatColor = item["color"].toString();
     int color_number = 0;
@@ -107,9 +111,10 @@ void Connection::saveConnection()
 
     QSqlQuery query(QSqlDatabase::database("pref_connection"));
 
-    QString updateSql = "UPDATE conns SET name = :new_name, schema = :new_schema, color = :new_color, host = :new_host, user = :new_user, pass = :new_pass, port = :new_port, ssh_host = :new_sshhost, ssh_user = :new_sshuser, ssh_pass = :new_sshpass, ssh_port = :new_sshport, ssh_keyfile = :new_sshkey WHERE name = :name_to_update";
+    QString updateSql = "UPDATE conns SET shared = :shared, name = :new_name, schema = :new_schema, color = :new_color, host = :new_host, user = :new_user, pass = :new_pass, port = :new_port, ssh_host = :new_sshhost, ssh_user = :new_sshuser, ssh_pass = :new_sshpass, ssh_port = :new_sshport, ssh_keyfile = :new_sshkey WHERE name = :name_to_update";
     query.prepare(updateSql);
     query.bindValue(":new_color", thatColor);
+    query.bindValue(":shared", ui->sharedFavorites->isChecked() ? 1 : 0);
     query.bindValue(":new_name", ui->lineName->text());
     query.bindValue(":new_schema", ui->lineSchema->text());
     query.bindValue(":new_host", ui->lineHost->text());
@@ -124,7 +129,7 @@ void Connection::saveConnection()
 
     query.bindValue(":name_to_update", thatHost);
     if (!query.exec()) {
-        qWarning() << "Erro ao testar host:" << query.lastError().text();
+        qWarning() << "Erro ao salvar host:" << query.lastError().text();
     }
     actual_host = ui->lineName->text();
     openPreferences();

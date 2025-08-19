@@ -45,6 +45,7 @@ QString actual_host = "";
 QString actual_schema = "";
 QString actual_table = "";
 QString actual_color = "";
+QString sharedFavoriteDB = "";
 
 int sshPort = 3307;
 int pref_sql_limit = 100;
@@ -69,7 +70,8 @@ bool openPreferences()
 
         // Conectar
         dbPreferences = QSqlDatabase::addDatabase("QSQLITE", "pref_connection");
-        // qDebug() << "Preferences path: " << dbPath;
+        // /home/usuario/.local/share/SequelFastTeam/SequelFast/preferences.db
+        qDebug() << "Preferences path: " << dbPath;
         dbPreferences.setDatabaseName(dbPath);
     }
 
@@ -83,6 +85,7 @@ bool openPreferences()
 
     QString createTableSql = "CREATE TABLE IF NOT EXISTS conns ("
         "id INTEGER PRIMARY KEY AUTOINCREMENT,"
+        "shared INT DEFAULT 0,"
         "name TEXT NULL,"
         "color TEXT NULL,"
         "host TEXT NULL,"
@@ -169,6 +172,7 @@ bool openPreferences()
         while (query.next()) {
             QJsonObject obj;
             obj["name"] = query.value("name").toString();
+            obj["shared"] = query.value("shared").toString();
             obj["color"] = query.value("color").toString();
             obj["host"] = query.value("host").toString();
             obj["port"] = query.value("port").toString();
@@ -309,6 +313,76 @@ QString setStringPreference(QString name, QString value)
 
         if (!query.exec()) {
             qWarning() << "Erro ao inserir host:" << query.lastError().text();
+        }
+
+    }
+    return(value);
+}
+
+QString getStringSharedPreference(QString name, QString user)
+{
+    if (sharedFavoriteDB == "")
+    {
+        return(QString());
+    }
+
+    QString value = "";
+    QSqlQuery query(QSqlDatabase::database("mysql_connection_" + sharedFavoriteDB));
+
+    query.prepare("SELECT value FROM _SequelFast.prefs WHERE name = :name");
+    query.bindValue(":name", name);
+
+    if (!query.exec()) {
+        qCritical() << "Erro ao consultar favorito:" << query.lastError().text();
+        return value;
+    }
+
+    if (query.next()) {
+        value = query.value(0).toString();
+    }
+    else {
+        // qDebug() << "Preferência não encontrada para:" << name;
+    }
+    return(value);
+}
+
+QString setStringSharedPreference(QString name, QString value)
+{
+    if (sharedFavoriteDB == "")
+    {
+        return(QString());
+    }
+    QSqlQuery query(QSqlDatabase::database("mysql_connection_" + sharedFavoriteDB));
+
+    query.prepare("SELECT value FROM _SequelFast.prefs WHERE name = :name");
+    query.bindValue(":name", name);
+
+    if (!query.exec()) {
+        qCritical() << "Erro ao consultar favorito:" << query.lastError().text();
+        return value;
+    }
+
+    if (query.next()) {
+        QString updateSql = "UPDATE _SequelFast.prefs SET value = :value WHERE name = :name";
+        query.prepare(updateSql);
+
+        query.bindValue(":name", name);
+        query.bindValue(":value", value);
+
+        if (!query.exec()) {
+            qWarning() << "Erro ao alterar favorito:" << query.lastError().text();
+        }
+    }
+    else {
+        qDebug() << "Preferência não encontrada para:" << name;
+        QString insertSql = "INSERT INTO _SequelFast.prefs (name, type, value) VALUES (:name, 'string', :value)";
+        query.prepare(insertSql);
+
+        query.bindValue(":name", name);
+        query.bindValue(":value", value);
+
+        if (!query.exec()) {
+            qWarning() << "Erro ao inserir favorito:" << query.lastError().text();
         }
 
     }
@@ -659,4 +733,14 @@ QString generateColumnsCsv(const QString& tableName, const QString& connectionNa
 
     // Junta as linhas com quebras de linha
     return csvLines.join("\n");
+}
+
+QString getUserName()
+{
+    QString homePath = QStandardPaths::writableLocation(QStandardPaths::HomeLocation);
+    QString userName = QDir(homePath).dirName();
+    if (!userName.isEmpty()) {
+        userName[0] = userName[0].toUpper();
+    }
+    return userName;
 }

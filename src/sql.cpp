@@ -160,7 +160,7 @@ Sql::Sql(const QString& host, const QString& schema, const QString& table,
     if (favValue != "")
     {
         queryStr = favValue;
-        QStringList fav = favName.split(":");
+        QStringList fav = favName.split("^");
         favoriteName = fav[5];
         this->setWindowTitle(favoriteName);
         connectMySQL(fav[1], this);
@@ -173,7 +173,7 @@ Sql::Sql(const QString& host, const QString& schema, const QString& table,
         connectMySQL(sql_host, parent);
         dbMysqlLocal = QSqlDatabase::database("mysql_connection_" + sql_host);
         databaseName = sql_schema;
-        param = sql_host + ":" + sql_schema + ":" + sql_table;
+        param = sql_host + "^" + sql_schema + "^" + sql_table;
         queryStr = getStringPreference(param);
     }
 
@@ -236,10 +236,10 @@ Sql::Sql(const QString& host, const QString& schema, const QString& table,
     button->setCheckable(true);
     button->setChecked(false);
 
-    connect(button, &QPushButton::clicked, this, &Sql::on_button_clicked);
+    connect(button, &QPushButton::clicked, this, &Sql::handleButton_clicked);
 
     timer = new QTimer(this);
-    connect(timer, &QTimer::timeout, this, &Sql::on_timer_tick);
+    connect(timer, &QTimer::timeout, this, &Sql::handleTimer_tick);
 
     ui->toolBarQuery->addWidget(labelFavName);
     ui->toolBarQuery->addWidget(spacer);
@@ -382,7 +382,7 @@ void Sql::setupSqlCompleter()
         });
 }
 
-void Sql::on_button_clicked()
+void Sql::handleButton_clicked()
 {
     if (button->isChecked())
     {
@@ -504,6 +504,7 @@ void Sql::query2TableView(QTableView* tableView, const QString& queryStr, const 
     }
 
     while (query.next()) {
+        QApplication::processEvents();
         QList<QStandardItem*> rowItems;
         for (int col = 0; col < colCount; ++col) {
             QVariant value = query.value(col);
@@ -592,7 +593,7 @@ void Sql::query2TableView(QTableView* tableView, const QString& queryStr, const 
             QString newValue = index.model()->data(index, Qt::EditRole).toString();
             QString oldValue = model->item(index.row(), index.column())->data(Qt::UserRole).toString();
 
-            if (!on_tableData_edit_trigger(idValue, fieldName, newValue)) {
+            if (!handleTableData_edit_trigger(idValue, fieldName, newValue)) {
                 model->blockSignals(true);
                 model->setData(index, oldValue, Qt::EditRole);
                 model->blockSignals(false);
@@ -653,7 +654,7 @@ void Sql::query2TableView(QTableView* tableView, const QString& queryStr, const 
     }
 }
 
-bool Sql::on_tableData_edit_trigger(QString& id, QString& fieldName, QString& newValue)
+bool Sql::handleTableData_edit_trigger(QString& id, QString& fieldName, QString& newValue)
 {
     if (fieldName == "id")
     {
@@ -753,6 +754,7 @@ void Sql::on_actionRun_triggered()
         QApplication::processEvents();
 
         QSqlQuery query(dbMysqlLocal);
+        QApplication::processEvents();
         QString consulta = "USE " + databaseName + " ";
         if (!query.exec(consulta)) {
             qWarning() << "Erro ao selecionar banco de dados:" << query.lastError().text();
@@ -803,7 +805,7 @@ void Sql::on_actionRun_triggered()
             hasJoin = queryStr.contains(QRegularExpression(R"(\bJOIN\b)", QRegularExpression::CaseInsensitiveOption));
             hasSubquery = queryStr.contains(QRegularExpression(R"(\(\s*SELECT\s+)", QRegularExpression::DotMatchesEverythingOption | QRegularExpression::CaseInsensitiveOption));
         }
-
+        QApplication::processEvents();
         if (comando == "SELECT" || comando == "SHOW" || comando == "DESCRIBE" || comando == "EXPLAIN") {
             query2TableView(ui->tableData, queryStr, comando);
         }
@@ -843,7 +845,7 @@ void Sql::on_actionReduce_triggered()
 void Sql::on_actionSave_triggered()
 {
     updatePreferences();
-    QString param = sql_host + ":" + sql_schema + ":" + sql_table;
+    QString param = sql_host + "^" + sql_schema + "^" + sql_table;
     QString queryStr = ui->textQuery->textCursor().selectedText();
     if (queryStr == "")
     {
@@ -857,7 +859,7 @@ void Sql::statusMessage(QString msg)
     ui->statusbar->showMessage(QTime::currentTime().toString("HH:mm:ss") + " • " + msg);
 }
 
-void Sql::on_timer_tick()
+void Sql::handleTimer_tick()
 {
     if (button->isChecked())
     {
@@ -896,7 +898,7 @@ void Sql::on_timer_tick()
     }
 }
 
-void Sql::on_tableAppend_triggered()
+void Sql::handleTableAppend_triggered()
 {
     QString insert = QString("INSERT INTO %1 () VALUES ()").arg(sql_table);
     QSqlQuery query(dbMysqlLocal);
@@ -908,7 +910,7 @@ void Sql::on_tableAppend_triggered()
     }
 }
 
-void Sql::on_tableClone_triggered()
+void Sql::handleTableClone_triggered()
 {
     QModelIndexList selection = ui->tableData->selectionModel()->selectedIndexes();
     if (selection.isEmpty()) return;
@@ -939,7 +941,7 @@ void Sql::on_tableClone_triggered()
     }
 }
 
-void Sql::on_tableDelete_triggered()
+void Sql::handleTableDelete_triggered()
 {
     QModelIndexList selection = ui->tableData->selectionModel()->selectedIndexes();
     if (selection.isEmpty()) return;
@@ -960,7 +962,7 @@ void Sql::on_tableDelete_triggered()
         QString id = ui->tableData->model()->data(ui->tableData->model()->index(row, idPosition)).toString();
         QString del = QString("DELETE FROM %1 WHERE id = %2").arg(sql_table).arg(id);
         if (!query.exec(del)) {
-            qWarning() << "Erro ao excluir linha id=" << id << ":" << query.lastError().text();
+            qWarning() << "Erro ao excluir linha id=" << id << "^" << query.lastError().text();
         }
         else {
             static_cast<QStandardItemModel*>(ui->tableData->model())->removeRow(row);
@@ -968,7 +970,7 @@ void Sql::on_tableDelete_triggered()
     }
 }
 
-void Sql::on_tableCopyInsert_triggered()
+void Sql::handleTableCopyInsert_triggered()
 {
     QModelIndexList selection = ui->tableData->selectionModel()->selectedIndexes();
     if (selection.isEmpty()) return;
@@ -1005,7 +1007,7 @@ void Sql::on_tableCopyInsert_triggered()
     clipboard->setText(insertCommands.join("\n"));
 }
 
-void Sql::on_tableCopyUpdate_triggered()
+void Sql::handleTableCopyUpdate_triggered()
 {
     QModelIndexList selection = ui->tableData->selectionModel()->selectedIndexes();
     if (selection.isEmpty()) return;
@@ -1064,7 +1066,7 @@ void Sql::on_tableCopyUpdate_triggered()
     clipboard->setText(updateCommands.join("\n"));
 }
 
-void Sql::on_tableCopyCsv_triggered()
+void Sql::handleTableCopyCsv_triggered()
 {
     QModelIndexList selection = ui->tableData->selectionModel()->selectedIndexes();
     if (selection.isEmpty()) return;
@@ -1131,13 +1133,13 @@ void Sql::on_tableCopyCsv_triggered()
     clipboard->setText(csvText.join("\n"));
 }
 
-void Sql::on_tableCRUDGfw_triggered()
+void Sql::handletableCRUDGfw_triggered()
 {
     QClipboard* clipboard = QApplication::clipboard();
     clipboard->setText("<?php \n ?>");
 }
 
-void Sql::on_tableCRUDLaravel_triggered()
+void Sql::handletableCRUDLaravel_triggered()
 {
     QClipboard* clipboard = QApplication::clipboard();
     clipboard->setText("<?php \n ?>");
@@ -1147,7 +1149,8 @@ void Sql::on_tableCRUDLaravel_triggered()
 void Sql::on_actionFavorites_triggered()
 {
     QDialog dialog(this);
-    dialog.setWindowTitle(tr("Add favorite"));
+    dialog.setWindowTitle(tr("Favorite"));
+    dialog.setMinimumWidth(300);
     QVBoxLayout* layout = new QVBoxLayout(&dialog);
     QLabel* label = new QLabel(tr("Name:"), &dialog);
     layout->addWidget(label);
@@ -1166,6 +1169,14 @@ void Sql::on_actionFavorites_triggered()
         "    min-height: 16px;"
         "}"
     );
+    QCheckBox* sharedCheckbox = new QCheckBox(&dialog);
+    sharedCheckbox->setText("Shared favorite");
+    layout->addWidget(sharedCheckbox);
+
+    QCheckBox* privateCheckbox = new QCheckBox(&dialog);
+    privateCheckbox->setText("Private");
+    layout->addWidget(privateCheckbox);
+
     QDialogButtonBox* buttons = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, &dialog);
     layout->addWidget(buttons);
     QObject::connect(buttons, &QDialogButtonBox::accepted, &dialog, &QDialog::accept);
@@ -1175,7 +1186,19 @@ void Sql::on_actionFavorites_triggered()
         QString name = lineEdit->text().trimmed();
         if (!name.isEmpty()) {
             QString value = ui->textQuery->toPlainText();
-            setStringPreference("fav:" + sql_host + ":" + sql_schema + ":" + sql_table + ":" + sql_color + ":" + name, value);
+            // fav^host:schema:table:color:name
+            if (sharedCheckbox->isChecked())
+            {
+                QString user = "";
+                if (privateCheckbox->isChecked())
+                {
+                    user = getUserName();
+                }
+                setStringSharedPreference("fav^" + sql_host + "^" + sql_schema + "^" + sql_table + "^" + sql_color + "^" + name + "^" + user, value);
+            }
+            else {
+                setStringPreference("fav^" + sql_host + "^" + sql_schema + "^" + sql_table + "^" + sql_color + "^" + name, value);
+            }
             MainWindow* mainWin = qobject_cast<MainWindow*>(this->window());
             if (mainWin) {
                 mainWin->refresh_favorites();
@@ -1213,21 +1236,21 @@ void Sql::show_context_menu(const QPoint& pos)
     QAction* selectedAction = menu.exec(ui->tableData->viewport()->mapToGlobal(pos));
 
     if (selectedAction == tableClone) {
-        on_tableClone_triggered();
+        handleTableClone_triggered();
     }
     else if (selectedAction == tableAppend) {
-        on_tableAppend_triggered();
+        handleTableAppend_triggered();
     }
     else if (selectedAction == tableDelete) {
-        on_tableDelete_triggered();
+        handleTableDelete_triggered();
     }
     else if (selectedAction == tableCopyInsert) {
-        on_tableCopyInsert_triggered();
+        handleTableCopyInsert_triggered();
     }
     else if (selectedAction == tableCopyUpdate) {
-        on_tableCopyUpdate_triggered();
+        handleTableCopyUpdate_triggered();
     }
     else if (selectedAction == tableCopyCsv) {
-        on_tableCopyCsv_triggered();
+        handleTableCopyCsv_triggered();
     }
 }

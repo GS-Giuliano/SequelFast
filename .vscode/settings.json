@@ -32,7 +32,8 @@
         "**/Makefile*": false,
         "**/.qm/**": true,
         "**/moc_predefs.h": true,
-        "**/restore.moc": true
+        "**/restore.moc": true,
+        "**/build/**": false
     },
     "search.exclude": {
         "**/*.o": true,
@@ -42,6 +43,7 @@
         "**/qrc_*.cpp": true,
         "**/.qm/**": true,
         "**/moc_predefs.h": true,
-        "**/restore.moc": true
+        "**/restore.moc": true,
+        "**/build/**": false
     }
 }

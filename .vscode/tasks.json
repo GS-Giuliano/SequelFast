@@ -2,12 +2,36 @@
     "version": "2.0.0",
     "tasks": [
         {
+            "label": "create-build-dir",
+            "type": "shell",
+            "command": "mkdir",
+            "args": [
+                "-p",
+                "build"
+            ],
+            "group": "build",
+            "presentation": {
+                "echo": false,
+                "reveal": "never",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": false,
+                "clear": false
+            },
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "problemMatcher": []
+        },
+        {
             "label": "qmake",
             "type": "shell",
             "command": "${workspaceFolder}/Qt-link/6.9.1/gcc_64/bin/qmake",
             "args": [
-                "SequelFast.pro",
-                "CONFIG+=debug"
+                "${workspaceFolder}/SequelFast.pro",
+                "CONFIG+=debug",
+                "-o",
+                "${workspaceFolder}/build/"
             ],
             "group": "build",
             "presentation": {
@@ -19,7 +43,7 @@
                 "clear": false
             },
             "options": {
-                "cwd": "${workspaceFolder}"
+                "cwd": "${workspaceFolder}/build"
             },
             "problemMatcher": []
         },
@@ -40,12 +64,15 @@
                 "clear": false
             },
             "options": {
-                "cwd": "${workspaceFolder}"
+                "cwd": "${workspaceFolder}/build"
             },
             "problemMatcher": [
                 "$gcc"
             ],
-            "dependsOn": "qmake"
+            "dependsOn": [
+                "create-build-dir",
+                "qmake"
+            ]
         },
         {
             "label": "build",
@@ -54,10 +81,7 @@
                 "qmake",
                 "make"
             ],
-            "group": {
-                "kind": "build",
-                "isDefault": true
-            },
+            "group": "build",
             "presentation": {
                 "echo": true,
                 "reveal": "always",
@@ -87,7 +111,7 @@
                 "clear": false
             },
             "options": {
-                "cwd": "${workspaceFolder}"
+                "cwd": "${workspaceFolder}/build"
             },
             "problemMatcher": []
         },
@@ -129,6 +153,29 @@
                 "cwd": "${workspaceFolder}"
             },
             "problemMatcher": []
+        },
+        {
+            "type": "cppbuild",
+            "label": "C/C++: g++ arquivo de build ativo",
+            "command": "/usr/bin/g++",
+            "args": [
+                "-fdiagnostics-color=always",
+                "-g",
+                "${file}",
+                "-o",
+                "${fileDirname}/${fileBasenameNoExtension}"
+            ],
+            "options": {
+                "cwd": "${fileDirname}"
+            },
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "detail": "Tarefa gerada pelo Depurador."
         }
     ]
 }

@@ -49,83 +49,83 @@ public:
      * Carrega e aplica folhas de estilo (QSS) diferentes conforme o tema selecionado
      */
     void changeTheme();
-    
+
     /**
      * @brief Abre diálogo para criação de novo banco de dados/schema
      * @param parent Widget pai para o diálogo modal
      */
     void createDatabaseDialog(QWidget* parent);
-    
+
     /**
      * @brief Abre diálogo para criação de nova tabela no banco de dados
      * @param parent Widget pai para o diálogo modal
      */
     void createTableDialog(QWidget* parent);
-    
+
     /**
      * @brief Estabelece conexão com o servidor MySQL/MariaDB especificado
      * @param selectedHost Nome da conexão configurada para conectar
      * @return true se a conexão foi estabelecida com sucesso, false caso contrário
      */
     bool host_connect(QString selectedHost);
-    
+
     /**
      * @brief Atualiza a lista de conexões disponíveis na interface
      * Recarrega as conexões salvas do arquivo de configuração
      */
     void refresh_connections();
-    
+
     /**
      * @brief Atualiza a lista de schemas/bancos de dados para uma conexão
      * @param selectedHost Nome da conexão ativa
      * @param jumpToTables Se true, automaticamente carrega as tabelas do primeiro schema
      */
     void refresh_schemas(QString selectedHost, bool jumpToTables);
-    
+
     /**
      * @brief Atualiza informações específicas de um schema selecionado
      * @param selectedSchema Nome do schema a ser atualizado
      */
     void refresh_schema(QString selectedSchema);
-    
+
     /**
      * @brief Atualiza a lista de tabelas do schema atualmente selecionado
      * @param selectedHost Nome da conexão ativa para buscar as tabelas
      */
     void refresh_tables(QString selectedHost);
-    
+
     /**
      * @brief Atualiza a lista de consultas SQL favoritas salvas
      * Recarrega os favoritos do arquivo de configuração
      */
     void refresh_favorites();
-    
+
     /**
      * @brief Inicia conexão SSH para tunneling seguro
      * @param selectedHost Referência para o nome da conexão que usará SSH (pode ser modificado)
      */
     void startSSH(QString& selectedHost);
-    
+
     /**
      * @brief Encerra conexão SSH ativa
      * @param selectedHost Referência para o nome da conexão com SSH a ser encerrada
      */
     void endSSH(QString& selectedHost);
-    
+
     /**
      * @brief Exibe caixa de diálogo de alerta personalizada
      * @param title Título da janela de alerta
      * @param message Mensagem a ser exibida no alerta
      */
     void customAlert(QString title, QString message);
-    
+
     /**
      * @brief Abre consulta favorita selecionada no editor SQL
      * @param index Índice do item selecionado na lista de favoritos
      * @param run Se true, executa a consulta automaticamente após abrir
      */
     void open_selected_favorite(const QModelIndex& index, const bool& run);
-    
+
     /**
      * @brief Inicia processo de backup de banco de dados
      * @param bkp_host Nome da conexão de onde fazer backup
@@ -133,7 +133,7 @@ public:
      * @param parent Widget pai para diálogos de progresso
      */
     void backup(const QString& bkp_host, const QString& bkp_schema, QWidget* parent);
-    
+
     /**
      * @brief Inicia processo de restauração de backup de banco de dados
      * @param bkp_host Nome da conexão onde restaurar
@@ -147,7 +147,7 @@ public:
      * @param parent Widget pai (normalmente nullptr para janela principal)
      */
     MainWindow(QWidget* parent = nullptr);
-    
+
     /**
      * @brief Destrutor da janela principal
      * Libera recursos e fecha conexões ativas
@@ -158,28 +158,28 @@ private slots:
 
     /** @brief Slot ativado ao clicar no botão "Nova Conexão" */
     void on_buttonNewConns_clicked();
-    
+
     /** @brief Slot ativado ao clicar no botão de filtro de schemas */
     void on_buttonFilterSchemas_clicked();
-    
+
     /** @brief Slot ativado ao clicar no botão "Editar Conexões" */
     void on_buttonEditConns_clicked();
-    
+
     /** @brief Slot ativado ao clicar no botão "Editar Tabelas" */
     void on_buttonEditTables_clicked();
-    
+
     /** @brief Slot ativado ao clicar no botão "Editar Schemas" */
     void on_buttonEditSchemas_clicked();
-    
+
     /** @brief Slot ativado ao clicar no botão de filtro de tabelas */
     void on_buttonFilterTables_clicked();
-    
+
     /** @brief Slot ativado ao clicar no botão "Atualizar Schemas" */
     void on_buttonUpdateSchemas_clicked();
-    
+
     /** @brief Slot ativado ao clicar no botão "Atualizar Tabelas" */
     void on_buttonUpdateTables_clicked();
-    
+
     /**
      * @brief Slot ativado quando a aba atual da caixa de ferramentas esquerda muda
      * @param index Índice da nova aba selecionada
@@ -188,13 +188,13 @@ private slots:
 
     /** @brief Slot ativado pela ação "Sair" do menu */
     void on_actionQuit_triggered();
-    
+
     /** @brief Slot ativado pela ação "Nova Conexão" do menu */
     void on_actionNew_connection_triggered();
-    
+
     /** @brief Slot ativado pela ação "Organizar em Mosaico" do menu */
     void on_actionTile_triggered();
-    
+
     /** @brief Slot ativado pela ação "Organizar em Cascata" do menu */
     void on_actionCascade_triggered();
 
@@ -203,13 +203,13 @@ private slots:
      * @param index Índice do item clicado na lista de conexões
      */
     void on_listViewConns_clicked(const QModelIndex& index);
-    
+
     /**
      * @brief Slot ativado ao clicar em um item da lista de schemas
      * @param index Índice do item clicado na lista de schemas
      */
     void on_listViewSchemas_clicked(const QModelIndex& index);
-    
+
     /**
      * @brief Slot ativado ao clicar em um item da lista de tabelas
      * @param index Índice do item clicado na lista de tabelas
@@ -221,43 +221,43 @@ private slots:
      * @param index Índice da conexão a ser aberta
      */
     void listViewConns_open(const QModelIndex& index);
-    
+
     /**
      * @brief Edita configurações da conexão selecionada
      * @param index Índice da conexão a ser editada
      */
     void listViewConns_edit(const QModelIndex& index);
-    
+
     /**
      * @brief Clona/duplica a conexão selecionada
      * @param index Índice da conexão a ser clonada
      */
     void listViewConns_clone(const QModelIndex& index);
-    
+
     /**
      * @brief Remove a conexão selecionada da lista
      * @param index Índice da conexão a ser removida
      */
     void listViewConns_remove(const QModelIndex& index);
-    
+
     /**
      * @brief Exibe menu de contexto para lista de conexões
      * @param pos Posição do clique para exibir o menu
      */
     void show_context_menu_Conns(const QPoint& pos);
-    
+
     /**
      * @brief Exibe menu de contexto para lista de schemas
      * @param pos Posição do clique para exibir o menu
      */
     void show_context_menu_Schemas(const QPoint& pos);
-    
+
     /**
      * @brief Exibe menu de contexto para lista de tabelas
      * @param pos Posição do clique para exibir o menu
      */
     void show_context_menu_Tables(const QPoint& pos);
-    
+
     /**
      * @brief Exibe menu de contexto para lista de favoritos
      * @param pos Posição do clique para exibir o menu
@@ -268,13 +268,13 @@ private slots:
      * @brief Abre tabela selecionada em nova janela SQL
      * @param index Índice da tabela a ser aberta
      */
-    void on_listViewTables_open(const QModelIndex& index);
-    
+    void handleListViewTables_open(const QModelIndex& index);
+
     /**
      * @brief Edita estrutura da tabela selecionada
      * @param index Índice da tabela a ser editada
      */
-    void on_listViewTables_edit(const QModelIndex& index);
+    void handleListViewTables_edit(const QModelIndex& index);
 
     /**
      * @brief Slot ativado ao duplo-clicar em um schema da lista
@@ -319,13 +319,13 @@ private slots:
      * @brief Slot ativado ao clicar em um item da lista de favoritos
      * @param index Índice do favorito clicado
      */
-    void on_listViewFavorites_clicked(const QModelIndex& index);
+    void on_treeViewFavorites_clicked(const QModelIndex& index);
 
     /**
      * @brief Slot ativado ao duplo-clicar em um item da lista de favoritos
      * @param index Índice do favorito clicado
      */
-    void on_listViewFavorites_doubleClicked(const QModelIndex& index);
+    void on_treeViewFavorites_doubleClicked(const QModelIndex& index);
 
     /** @brief Slot ativado ao clicar no botão "Atualizar Favoritos" */
     void on_buttonUpdateFavorites_clicked();
@@ -347,7 +347,7 @@ private:
 
 /**
  * @brief Delegate personalizado para destacar itens específicos em listas
- * 
+ *
  * Esta classe herda de QStyledItemDelegate e permite destacar visualmente
  * um item específico da lista com cores diferenciadas (fundo amarelo, texto azul).
  */
@@ -367,7 +367,7 @@ public:
      * @param painter Objeto QPainter para desenhar o item
      * @param option Opções de estilo para o item (posição, tamanho, etc.)
      * @param index Índice do modelo que está sendo pintado
-     * 
+     *
      * Se o texto do item corresponder ao nome destacado, aplica fundo amarelo
      * e texto azul. Caso contrário, usa a pintura padrão.
      */

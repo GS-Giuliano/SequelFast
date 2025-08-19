@@ -23,6 +23,8 @@ extern QString actual_schema;
 extern QString actual_table;
 extern QString actual_color;
 
+extern QString sharedFavoriteDB;
+
 extern bool prefLoaded;
 
 extern QJsonArray colors;
@@ -72,6 +74,7 @@ MainWindow::MainWindow(QWidget* parent)
     ui->actionBackup->setDisabled(true);
     ui->actionRestore->setDisabled(true);
     ui->toolBar->setStyleSheet("QToolButton { width: 80px;}");
+    ui->treeViewFavorites->setAlternatingRowColors(true);
 
     if (openPreferences())
     {
@@ -94,8 +97,8 @@ MainWindow::MainWindow(QWidget* parent)
         connect(ui->listViewTables, &QListView::customContextMenuRequested,
             this, &MainWindow::show_context_menu_Tables);
 
-        ui->listViewFavorites->setContextMenuPolicy(Qt::CustomContextMenu);
-        connect(ui->listViewFavorites, &QListView::customContextMenuRequested,
+        ui->treeViewFavorites->setContextMenuPolicy(Qt::CustomContextMenu);
+        connect(ui->treeViewFavorites, &QListView::customContextMenuRequested,
             this, &MainWindow::show_context_menu_Favorites);
 
 
@@ -107,7 +110,9 @@ MainWindow::MainWindow(QWidget* parent)
         customAlert("Error", "Can't create preferences file! Check permissions and try again...");
         QTimer::singleShot(0, qApp, &QApplication::quit);
     }
-    refresh_favorites();
+    QTimer::singleShot(2000, this, [=]() {
+        refresh_favorites();
+        });
     ui->statusbar->showMessage("Version: " + QString(APP_VERSION) + " - Build:" + QString(APP_BUILD_DATE) + " " + QString(APP_BUILD_TIME));
 
 }
@@ -316,6 +321,14 @@ void MainWindow::refresh_connections() {
             QString nome = item["name"].toString();
             QString corDeFundo = item["color"].toString().toLower();
 
+            // Verifica se eh uma conexao que possui favoritos compartilhados
+            if (item["shared"].toString() == "1")
+            {
+                sharedFavoriteDB = nome;
+                iconeConexao = QIcon(":/icons/resources/lovely.svg");
+
+            }
+
             QStandardItem* linha = new QStandardItem(iconeConexao, nome);  // Ícone aplicado aqui
 
             // Define a cor de fundo com base no texto
@@ -383,7 +396,7 @@ void MainWindow::refresh_schemas(QString selectedHost, bool jumpToTables)
             while (query.next()) {
                 QApplication::processEvents();
                 QString name = query.value(0).toString();
-                if (name == "mysql" || name == "information_schema" || name == "performance_schema" || name == "sys")
+                if (name == "_SequelFast" || name == "mysql" || name == "information_schema" || name == "performance_schema" || name == "sys")
                 {
                     QStandardItem* linha = new QStandardItem(iconeBanco1, name);
                     modelo->appendRow(linha);
@@ -463,81 +476,217 @@ void MainWindow::refresh_schema(QString selectedSchema)
 
 void MainWindow::refresh_favorites()
 {
+
+    QApplication::setOverrideCursor(Qt::WaitCursor);
+    QApplication::processEvents();
+
     QString name = "";
     QString value = "";
+
     QSqlQuery query(QSqlDatabase::database("pref_connection"));
-
-    query.prepare("SELECT name, value FROM prefs WHERE name LIKE :name");
-    query.bindValue(":name", "fav:%");
-
+    query.prepare("SELECT name, value FROM prefs WHERE name LIKE :name ORDER BY name");
+    query.bindValue(":name", "fav^%");
     if (!query.exec()) {
-        qCritical() << "Erro ao consultar dados:" << query.lastError().text();
+        qCritical() << "Erro:" << query.lastError().text();
+        return;
     }
 
+    auto* model = new QStandardItemModel(this);
+    auto* group1 = new QStandardItem("Local");
+    auto* group2 = new QStandardItem("Shared");
+    auto* group3 = new QStandardItem(getUserName());
+    group1->setEditable(false);
+    group2->setEditable(false);
+    group3->setEditable(false);
+    QFont f = group1->font(); f.setBold(true); group1->setFont(f);group2->setFont(f);group3->setFont(f);
 
-    ui->lineEditFavorites->setText("");
+    QIcon icone = ui->buttonEditFavorites->isChecked()
+        ? QIcon(":/icons/resources/heart 2.svg")
+        : QIcon(":/icons/resources/heart.svg");
 
-    QStandardItemModel* modelo = new QStandardItemModel(this);
-    QIcon iconeTabela;
-    if (ui->buttonEditFavorites->isChecked())
-    {
-        iconeTabela = QIcon(":/icons/resources/heart 2.svg");
-    }
-    else {
-        iconeTabela = QIcon(":/icons/resources/heart.svg");
-    }
-
-    int sel = -1;
-    int cnt = 0;
+    int sourceRowToSelect = -1;
+    int row = 0;
 
     favName.clear();
     favValue.clear();
 
+    // fav^host:schema:table:color:name
     while (query.next()) {
-
         name = query.value(0).toString();
         value = query.value(1).toString();
-        // fav:host:schema:table:name
+        const QStringList favList = name.split('^');
 
+        const QString title = favList.value(5, name);
+        // const QString bgColor = favList.value(4, "transparent");
         favName.append(name);
         favValue.append(value);
 
-        QStringList favList = name.split(":");
-        QStandardItem* linha = new QStandardItem(iconeTabela, favList[5]);
+        auto* item = new QStandardItem(icone, title);
+        item->setEditable(false);
+        // item->setBackground(QColor(getRgbFromColorName(bgColor)));
+        group1->appendRow(item);
 
-        QString corDeFundo = favList[4];
-
-        // Define a cor de fundo com base no texto
-        linha->setBackground(QColor(getRgbFromColorName(corDeFundo)));
-
-        modelo->appendRow(linha);
-
-        if (false) {
-            sel = cnt;
-        }
-        cnt++;
+        // se quiser selecionar o primeiro:
+        if (sourceRowToSelect < 0) sourceRowToSelect = row;
+        ++row;
+        QApplication::processEvents();
     }
 
-    QSortFilterProxyModel* proxy = new QSortFilterProxyModel(this);
-    proxy->setSourceModel(modelo);
+    model->appendRow(group1);
+
+    bool sharedFavExists = false;
+    bool sharedUserFavExists = false;
+    // Shared favorites
+    if (sharedFavoriteDB != "")
+    {
+        QString connectionName = "mysql_connection_";
+        if (connectMySQL(sharedFavoriteDB))
+        {
+            QApplication::processEvents();
+            QSqlDatabase db = QSqlDatabase::database(connectionName + sharedFavoriteDB);
+            if (!db.isValid()) {
+                qDebug() << "Erro: Conexão com o banco de dados inválida para" << connectionName;
+                return;
+            }
+            QSqlQuery query(db);
+
+
+            // Verifica se a base de dados existe
+
+            bool found = false;
+            qDebug() << "Favoritos compartilhados - Verificando se BD existe...";
+            if (query.exec("SHOW DATABASES"))
+            {
+                QApplication::processEvents();
+                while (query.next()) {
+                    QString name = query.value(0).toString();
+                    if (name == "_SequelFast")
+                    {
+                        found = true;
+                    }
+                }
+            }
+
+            if (!found)
+            {
+                qDebug() << "Favoritos compartilhados - Nao existe. Criando...";
+                // Cria a tabela se não existir
+                QString createDatabase = "CREATE DATABASE _SequelFast CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;";
+                if (query.exec(createDatabase)) {
+                    QApplication::processEvents();
+                    if (query.exec("USE _SequelFast")) {
+                        QString createTableSql = "CREATE TABLE IF NOT EXISTS prefs ("
+                            "id INT AUTO_INCREMENT PRIMARY KEY,"
+                            "name VARCHAR(255) NULL,"
+                            "value TEXT NULL,"
+                            "type VARCHAR(100) NULL"
+                            ");";
+                        if (!query.exec(createTableSql)) {
+                            qCritical() << "Erro ao criar a tabela 'pref':" << query.lastError().text();
+                        }
+                    }
+                }
+            }
+            else {
+                qDebug() << "Favoritos compartilhados - Buscando favoritos...";
+                QApplication::processEvents();
+                if (query.exec("USE _SequelFast")) {
+                    QApplication::processEvents();
+                    if (query.exec("SELECT name,value FROM _SequelFast.prefs ORDER BY name")) {
+                        while (query.next()) {
+                            QApplication::processEvents();
+
+                            sharedFavExists = true;
+                            name = query.value(0).toString();
+                            value = query.value(1).toString();
+
+                            qDebug() << "Name" << name;
+                            // qDebug() << "Value" << value;
+
+                            const QStringList favList = name.split('^');
+                            QString title = favList.value(5, name);
+                            QString user = favList.value(6);
+
+                            bool IsGroup2 = true;
+                            if (user != "")
+                            {
+                                qDebug() << "Fav. privado" << user << getUserName();
+                                if (user == getUserName())
+                                {
+                                    sharedUserFavExists = true;
+                                    IsGroup2 = false;
+                                }
+                                else {
+                                    continue;
+                                }
+                            }
+                            else {
+                            }
+
+                            favName.append(name);
+                            favValue.append(value);
+
+                            auto* item = new QStandardItem(icone, title);
+                            item->setEditable(false);
+
+                            if (IsGroup2)
+                                group2->appendRow(item);
+                            else
+                                group3->appendRow(item);
+
+                            // se quiser selecionar o primeiro:
+                            if (sourceRowToSelect < 0) sourceRowToSelect = row;
+                            ++row;
+                        }
+                    }
+                }
+
+            }
+        }
+        else {
+            qCritical() << "Nao foi possivel conectar a favoritos!" << sharedFavoriteDB;
+        }
+
+        if (sharedUserFavExists)
+        {
+            model->appendRow(group3);
+        }
+        if (sharedFavExists)
+        {
+            model->appendRow(group2);
+        }
+    }
+
+
+
+
+    auto* proxy = new QSortFilterProxyModel(this);
+    proxy->setSourceModel(model);
     proxy->setFilterCaseSensitivity(Qt::CaseInsensitive);
+#if (QT_VERSION >= QT_VERSION_CHECK(5, 10, 0))
+    proxy->setRecursiveFilteringEnabled(true); // importante p/ filtrar filhos
+#endif
 
-    ui->listViewFavorites->setModel(proxy);
+    // supondo que você tem um QTreeView no UI:
+    ui->treeViewFavorites->setModel(proxy);
+    ui->treeViewFavorites->setHeaderHidden(true);
+    ui->treeViewFavorites->expandAll(); // mostra os filhos
 
-    connect(ui->lineEditFavorites, &QLineEdit::textChanged, this, [=](const QString& texto) {
-        QString pattern = QString("(%1)").arg(texto);
-        QRegularExpression re(pattern, QRegularExpression::CaseInsensitiveOption);
-        proxy->setFilterRegularExpression(re);
+    connect(ui->lineEditFavorites, &QLineEdit::textChanged, this, [proxy](const QString& texto) {
+        proxy->setFilterRegularExpression(QRegularExpression(texto, QRegularExpression::CaseInsensitiveOption));
         });
 
-    if (sel > -1) {
-        QModelIndex index = ui->listViewFavorites->model()->index(sel, 0);
-        ui->listViewFavorites->setCurrentIndex(index);
+    if (sourceRowToSelect >= 0) {
+        QModelIndex srcIdx = model->index(sourceRowToSelect, 0, group1->index());
+        QModelIndex proxyIdx = proxy->mapFromSource(srcIdx);
+        ui->treeViewFavorites->setCurrentIndex(proxyIdx);
     }
 
     ui->statusbar->showMessage("Favorites updated");
-
+    QApplication::restoreOverrideCursor();
+    QApplication::processEvents();
 }
+
 
 void MainWindow::refresh_tables(QString selectedHost) {
 
@@ -683,10 +832,10 @@ void MainWindow::on_listViewTables_doubleClicked(const QModelIndex& index)
     // actual_table= index.data(Qt::DisplayRole).toString();
     if (ui->buttonEditTables->isChecked())
     {
-        on_listViewTables_edit(index);
+        handleListViewTables_edit(index);
     }
     else {
-        on_listViewTables_open(index);
+        handleListViewTables_open(index);
     }
 }
 
@@ -699,42 +848,51 @@ void MainWindow::open_selected_favorite(const QModelIndex& index, const bool& ru
 
     QString name = "";
     QString value = "";
+    QString selFav = index.data(Qt::DisplayRole).toString();
 
-    if (index.row() > -1)
-    {
-        QString fav = favName[index.row()];
+    int i = 0;
+    for (const QString favRec : favName) {
+        QList favList = favRec.split("^");
+        QString fav = favList[5];
+        if (fav == selFav)
+        {
+            qDebug() << selFav << "=" << fav;
 
-        QStringList favList = fav.split(":");
+            // QString fav = favName[index.row()];
 
-        QMdiSubWindow* prev = ui->mdiArea->activeSubWindow();
-        bool maximize = true;
+            // QStringList favList = fav.split("^");
 
-        if (prev) {
-            if (!prev->isMaximized()) {
-                maximize = false;
+            QMdiSubWindow* prev = ui->mdiArea->activeSubWindow();
+            bool maximize = true;
+
+            if (prev) {
+                if (!prev->isMaximized()) {
+                    maximize = false;
+                }
             }
+
+            a_host = favList[1];
+            a_schema = favList[2];
+            a_table = favList[3];
+            a_color = favList[4];
+
+            Sql* form = new Sql(a_host, a_schema, a_table, a_color, favName[i], favValue[i], run);
+
+            QMdiSubWindow* sub = new QMdiSubWindow;
+            sub->setWidget(form);
+            sub->setAttribute(Qt::WA_DeleteOnClose);
+            ui->mdiArea->addSubWindow(sub);
+            sub->resize(500, 360);
+            if (maximize)
+                sub->showMaximized();
+            else
+                sub->show();
         }
-
-        a_host = favList[1];
-        a_schema = favList[2];
-        a_table = favList[3];
-        a_color = favList[4];
-
-        Sql* form = new Sql(a_host, a_schema, a_table, a_color, favName[index.row()], favValue[index.row()], run);
-
-        QMdiSubWindow* sub = new QMdiSubWindow;
-        sub->setWidget(form);
-        sub->setAttribute(Qt::WA_DeleteOnClose);
-        ui->mdiArea->addSubWindow(sub);
-        sub->resize(500, 360);
-        if (maximize)
-            sub->showMaximized();
-        else
-            sub->show();
+        ++i;
     }
 }
 
-void MainWindow::on_listViewFavorites_doubleClicked(const QModelIndex& index)
+void MainWindow::on_treeViewFavorites_doubleClicked(const QModelIndex& index)
 {
     bool run = true;
     if (ui->buttonEditFavorites->isChecked())
@@ -744,7 +902,7 @@ void MainWindow::on_listViewFavorites_doubleClicked(const QModelIndex& index)
     open_selected_favorite(index, run);
 }
 
-void MainWindow::on_listViewFavorites_clicked(const QModelIndex& index)
+void MainWindow::on_treeViewFavorites_clicked(const QModelIndex& index)
 {
 
 }
@@ -1150,7 +1308,7 @@ void MainWindow::show_context_menu_Tables(const QPoint& pos)
     QAction* selectedAction = menu.exec(ui->listViewTables->viewport()->mapToGlobal(pos));
 
     if (selectedAction == tableOpen) {
-        on_listViewTables_open(index);
+        handleListViewTables_open(index);
     }
     else if (selectedAction == tableCopySQL) {
         QString tableName = index.data(Qt::DisplayRole).toString();
@@ -1193,7 +1351,7 @@ void MainWindow::show_context_menu_Tables(const QPoint& pos)
         refresh_tables(actual_host);
     }
     else if (selectedAction == tableEdit) {
-        on_listViewTables_edit(index);
+        handleListViewTables_edit(index);
     }
     else if (selectedAction == tableCreate) {
         createTableDialog(this);
@@ -1244,7 +1402,7 @@ void MainWindow::show_context_menu_Tables(const QPoint& pos)
 
 void MainWindow::show_context_menu_Favorites(const QPoint& pos)
 {
-    QModelIndex index = ui->listViewFavorites->indexAt(pos);
+    QModelIndex index = ui->treeViewFavorites->indexAt(pos);
     if (!index.isValid())
         return;
     QString selectedFavoriteName = index.data(Qt::DisplayRole).toString();
@@ -1257,8 +1415,7 @@ void MainWindow::show_context_menu_Favorites(const QPoint& pos)
     QAction* favoritesDelete = menu.addAction("Delete");
     menu.addSeparator();
     QAction* favoritesRefresh = menu.addAction("Refresh");
-
-    QAction* selectedAction = menu.exec(ui->listViewFavorites->viewport()->mapToGlobal(pos));
+    QAction* selectedAction = menu.exec(ui->treeViewFavorites->viewport()->mapToGlobal(pos));
 
     if (selectedAction == favoritesOpen) {
         open_selected_favorite(index, true);
@@ -1414,7 +1571,7 @@ void MainWindow::show_context_menu_Favorites(const QPoint& pos)
 
 
 
-void MainWindow::on_listViewTables_open(const QModelIndex& index)
+void MainWindow::handleListViewTables_open(const QModelIndex& index)
 {
     actual_table = index.data(Qt::DisplayRole).toString();
     QMdiSubWindow* prev = ui->mdiArea->activeSubWindow();
@@ -1440,7 +1597,7 @@ void MainWindow::on_listViewTables_open(const QModelIndex& index)
 
 }
 
-void MainWindow::on_listViewTables_edit(const QModelIndex& index)
+void MainWindow::handleListViewTables_edit(const QModelIndex& index)
 {
     actual_table = index.data(Qt::DisplayRole).toString();
     QMdiSubWindow* prev = ui->mdiArea->activeSubWindow();

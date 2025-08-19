@@ -43,6 +43,8 @@ void updateIntPreference(QString name, int value);
 int getIntPreference(QString name);
 QString getStringPreference(QString name);
 QString setStringPreference(QString name, QString value);
+QString getStringSharedPreference(QString name);
+QString setStringSharedPreference(QString name, QString value);
 void getPreferences();
 void updatePreferences();
 QString getRgbFromColorName(const QString& colorName);
@@ -51,4 +53,4 @@ QString extractCurrentQuery(const QString& text, int cursorPos);
 bool connectMySQL(const QString selectedHost, QObject* parent = nullptr, const QString prefix = "mysql_connection_");
 QString generateCreateTableStatement(const QString& tableName, const QString& connectionName);
 QString generateColumnsCsv(const QString& tableName, const QString& connectionName);
-
+QString getUserName();
