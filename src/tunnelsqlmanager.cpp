@@ -109,12 +109,13 @@ bool TunnelSqlManager::conectar(const QString& id, int& porta,
 
     QApplication::setOverrideCursor(Qt::WaitCursor);
     QApplication::processEvents();
-
     dbMysql.setHostName(servidorMysql);
     dbMysql.setPort(portaLocal);
     dbMysql.setDatabaseName(banco);
     dbMysql.setUserName(usuarioMysql);
     dbMysql.setPassword(senhaMysql);
+    dbMysql.setConnectOptions("MYSQL_OPT_CONNECT_TIMEOUT=10;MYSQL_OPT_READ_TIMEOUT=30;MYSQL_OPT_WRITE_TIMEOUT=20");
+
     qDebug() << "Conectando MySQL..." << QString::number(portaLocal) << banco << usuarioMysql << senhaMysql;
     if (!dbMysql.open()) {
         QApplication::restoreOverrideCursor();

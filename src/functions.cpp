@@ -162,6 +162,18 @@ bool openPreferences()
                 }
             }
         }
+        createTableSql = "CREATE TABLE IF NOT EXISTS logs ("
+                                 "id INTEGER PRIMARY KEY AUTOINCREMENT,"
+                                 "date DATETIME NULL,"
+                                 "host TEXT NULL,"
+                                 "schema TEXT NULL,"
+                                 "query TEXT NULL"
+                                 ")";
+        if (!query.exec(createTableSql)) {
+            qCritical() << "Erro ao criar a tabela 'pref':" << query.lastError().text();
+            dbPreferences.close();
+        }
+
     }
 
     if (!query.exec("SELECT * FROM conns")) {

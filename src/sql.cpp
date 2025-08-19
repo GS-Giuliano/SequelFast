@@ -84,7 +84,7 @@ public:
             dtEditor->setDateTime(index.model()->data(index, Qt::EditRole).toDateTime());
             return;
         }
-        if (type == QVariant::String && fieldSize > 128) {
+        if (type == QVariant::String && fieldSize > 150) {
             auto* textEditor = qobject_cast<QPlainTextEdit*>(editor);
             textEditor->setPlainText(value);
             return;
@@ -116,7 +116,7 @@ public:
             return;
         }
 
-        if (type == QVariant::String && fieldSize > 128) {
+        if (type == QVariant::String && fieldSize > 150) {
             auto* textEditor = qobject_cast<QPlainTextEdit*>(editor);
             model->setData(index, textEditor->toPlainText());
             return;
@@ -145,6 +145,8 @@ Sql::Sql(const QString& host, const QString& schema, const QString& table,
     sql_color = color;
 
     QString limit = getStringPreference("fav_limit");
+    QString autoCommit = getStringPreference("pref_autocommit");
+
     pref_sql_limit = limit.toInt();
 
     ui->setupUi(this);
@@ -303,16 +305,18 @@ Sql::Sql(const QString& host, const QString& schema, const QString& table,
         setStringPreference("fav_limit",  text);
     });
 
-
-
-
-
-
     // --- Ordenação cíclica pelo cabeçalho ---
     ui->tableData->setSortingEnabled(true);
     ui->tableData->horizontalHeader()->setSortIndicatorShown(true);
     connect(ui->tableData->horizontalHeader(), &QHeaderView::sectionClicked,
             this, &Sql::on_tableHeader_sectionClicked);
+
+
+    if (autoCommit == "1")
+    {
+        ui->actionAuto_commit->setChecked(true);
+    }
+
 
     QApplication::processEvents();
     if (run)
@@ -546,6 +550,7 @@ void Sql::query2TableView(QTableView* tableView, const QString& queryStr, const 
         delete model;
         return;
     }
+    log(queryStr);
 
     currentRecord = query.record();
     int colCount = currentRecord.count();
@@ -745,6 +750,17 @@ void Sql::query2TableView(QTableView* tableView, const QString& queryStr, const 
     }
 }
 
+void Sql::log(QString str)
+{
+    MainWindow* mainWin = qobject_cast<MainWindow*>(this->window());
+    if (mainWin) {
+        mainWin->log(sql_host, sql_schema, str);
+    }
+    else {
+        qWarning() << "MainWindow not found from Sql::on_actionFavorites_triggered";
+    }
+}
+
 bool Sql::handleTableData_edit_trigger(QString& id, QString& fieldName, QString& newValue)
 {
     if (fieldName == "id")
@@ -762,6 +778,8 @@ bool Sql::handleTableData_edit_trigger(QString& id, QString& fieldName, QString&
     if (!query.exec(queryStr) || query.numRowsAffected() == 0) {
         qWarning() << "Erro na query:" << query.lastError().text();
         return false;
+    } else {
+        log(queryStr);
     }
     return true;
 }
@@ -1429,6 +1447,7 @@ void Sql::on_tableHeader_sectionClicked(int logicalIndex)
 
 void Sql::on_actionAuto_commit_triggered()
 {
+    setStringPreference("pref_autocommit", (ui->actionAuto_commit->isChecked() ? "1" : "0"));
 }
 
 
@@ -1457,6 +1476,8 @@ void Sql::on_actionCommit_triggered()
             qWarning() << "Erro na query:" << query.lastError().text();
             ui->statusbar->showMessage("Commit failed!");
             return;
+        } else {
+            log(queryStr);
         }
     }
     commitCache.clear();

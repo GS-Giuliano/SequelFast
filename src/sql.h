@@ -93,6 +93,7 @@ private slots:
     void on_actionFavorites_triggered();
     void on_actionMacros_triggered();
     void show_context_menu(const QPoint& pos);
+    void log(QString str);
 
     // >>> ADIÇÃO: clique no cabeçalho para ordenar
     void on_tableHeader_sectionClicked(int logicalIndex);

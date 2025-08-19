@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>1117</width>
-    <height>678</height>
+    <height>713</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -50,7 +50,7 @@
        </property>
        <property name="minimumSize">
         <size>
-         <width>220</width>
+         <width>280</width>
          <height>300</height>
         </size>
        </property>
@@ -67,15 +67,89 @@
         <number>0</number>
        </property>
        <property name="tabSpacing">
-        <number>6</number>
+        <number>2</number>
        </property>
+       <widget class="QWidget" name="pageLog">
+        <property name="font">
+         <font>
+          <pointsize>10</pointsize>
+         </font>
+        </property>
+        <attribute name="icon">
+         <iconset resource="../icons.qrc">
+          <normaloff>:/icons/resources/task.svg</normaloff>:/icons/resources/task.svg</iconset>
+        </attribute>
+        <attribute name="label">
+         <string>Log</string>
+        </attribute>
+        <layout class="QVBoxLayout" name="verticalLayout_5">
+         <property name="spacing">
+          <number>4</number>
+         </property>
+         <property name="leftMargin">
+          <number>4</number>
+         </property>
+         <property name="topMargin">
+          <number>4</number>
+         </property>
+         <property name="rightMargin">
+          <number>4</number>
+         </property>
+         <property name="bottomMargin">
+          <number>4</number>
+         </property>
+         <item>
+          <layout class="QHBoxLayout" name="horizontalLayout_12">
+           <property name="spacing">
+            <number>4</number>
+           </property>
+           <item>
+            <widget class="QLineEdit" name="lineEditLog">
+             <property name="styleSheet">
+              <string notr="true">QLineEdit {padding: 4px; border-color: #ddd; border-width: 1px; border-radius: 6px}</string>
+             </property>
+             <property name="maxLength">
+              <number>80</number>
+             </property>
+             <property name="placeholderText">
+              <string>Filter</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QToolButton" name="buttonDeleteLog">
+             <property name="text">
+              <string>...</string>
+             </property>
+             <property name="icon">
+              <iconset resource="../icons.qrc">
+               <normaloff>:/icons/resources/trash.svg</normaloff>:/icons/resources/trash.svg</iconset>
+             </property>
+             <property name="iconSize">
+              <size>
+               <width>16</width>
+               <height>16</height>
+              </size>
+             </property>
+             <property name="checkable">
+              <bool>false</bool>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </item>
+         <item>
+          <widget class="QTableView" name="tableLogView"/>
+         </item>
+        </layout>
+       </widget>
        <widget class="QWidget" name="pageFavorites">
         <property name="geometry">
          <rect>
           <x>0</x>
           <y>0</y>
-          <width>218</width>
-          <height>438</height>
+          <width>278</width>
+          <height>462</height>
          </rect>
         </property>
         <attribute name="icon">
@@ -191,8 +265,8 @@
          <rect>
           <x>0</x>
           <y>0</y>
-          <width>218</width>
-          <height>438</height>
+          <width>278</width>
+          <height>462</height>
          </rect>
         </property>
         <attribute name="icon">
@@ -443,8 +517,8 @@
          <rect>
           <x>0</x>
           <y>0</y>
-          <width>218</width>
-          <height>438</height>
+          <width>278</width>
+          <height>462</height>
          </rect>
         </property>
         <attribute name="icon">
@@ -689,8 +763,8 @@
          <rect>
           <x>0</x>
           <y>0</y>
-          <width>218</width>
-          <height>438</height>
+          <width>278</width>
+          <height>462</height>
          </rect>
         </property>
         <attribute name="icon">
@@ -811,7 +885,7 @@
      <x>0</x>
      <y>0</y>
      <width>1117</width>
-     <height>21</height>
+     <height>24</height>
     </rect>
    </property>
    <property name="sizePolicy">

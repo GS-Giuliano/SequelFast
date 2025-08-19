@@ -105,6 +105,75 @@ MainWindow::MainWindow(QWidget* parent)
         refresh_connections();
         getPreferences();
 
+        modelLog = new QStandardItemModel(0, 0, this);
+
+        // ui->tableLogView->setModel(modelLog);
+        ui->tableLogView->setSelectionBehavior(QAbstractItemView::SelectRows);
+        ui->tableLogView->horizontalHeader()->setStretchLastSection(true);
+
+        modelLog->setColumnCount(4);
+        modelLog->setHeaderData(0, Qt::Horizontal, "Date");
+        modelLog->setHeaderData(1, Qt::Horizontal, "Host");
+        modelLog->setHeaderData(2, Qt::Horizontal, "Schema");
+        modelLog->setHeaderData(3, Qt::Horizontal, "Query");
+
+        QFont fonte;
+        fonte.setFamilies(QStringList()
+                          << "Segoe UI"
+                          << ".SF NS Text"
+                          << "Ubuntu"
+                          << "Cantarell"
+                          << "Noto Sans"
+                          << "Sans Serif");
+        fonte.setPointSize(9);
+        ui->tableLogView->setFont(fonte);
+        ui->tableLogView->setColumnWidth(0,62);
+        ui->tableLogView->setColumnWidth(1,62);
+        ui->tableLogView->setColumnWidth(2,62);
+
+
+        // Carrega log
+        QSqlQuery query(QSqlDatabase::database("pref_connection"));
+
+        if (!query.exec("SELECT date,host,schema,query FROM logs ORDER BY id DESC LIMIT 1000")) {
+            qCritical() << "Erro ao consultar dados:" << query.lastError().text();
+        }
+        else {
+            QModelIndex lastIdx;
+            while (query.next()) {
+                int row = modelLog->rowCount();
+                modelLog->insertRow(row);
+
+                modelLog->setData(modelLog->index(row, 0), query.value(0).toString());
+                modelLog->setData(modelLog->index(row, 1), query.value(1).toString());
+                modelLog->setData(modelLog->index(row, 2), query.value(2).toString());
+                modelLog->setData(modelLog->index(row, 3), query.value(3).toString());
+
+                lastIdx = modelLog->index(row, 0); // guarda o último índice
+            }
+            // Seleciona e exibe a última linha
+            if (lastIdx.isValid()) {
+                ui->tableLogView->setSelectionBehavior(QAbstractItemView::SelectRows);
+                ui->tableLogView->selectRow(lastIdx.row());                   // seleciona a linha inteira
+                ui->tableLogView->setCurrentIndex(lastIdx);                   // move o cursor
+                ui->tableLogView->scrollTo(lastIdx, QAbstractItemView::PositionAtBottom); // rola até ela
+                ui->tableLogView->setFocus();
+            }
+        }
+        QSortFilterProxyModel* proxyLog = new QSortFilterProxyModel(this);
+        proxyLog->setSourceModel(modelLog);
+        proxyLog->setFilterKeyColumn(-1);
+        proxyLog->setFilterCaseSensitivity(Qt::CaseInsensitive);
+
+        ui->tableLogView->setModel(proxyLog);
+
+        connect(ui->lineEditLog, &QLineEdit::textChanged, this, [=](const QString& texto) {
+            QString pattern = QString("(%1)").arg(texto);
+            QRegularExpression re(pattern, QRegularExpression::CaseInsensitiveOption);
+            proxyLog->setFilterRegularExpression(re);
+        });
+
+
     }
     else {
         customAlert("Error", "Can't create preferences file! Check permissions and try again...");
@@ -301,7 +370,7 @@ bool MainWindow::host_connect(QString selectedHost)
 }
 
 void MainWindow::refresh_connections() {
-    ui->toolBoxLeft->setCurrentIndex(3);
+    ui->toolBoxLeft->setCurrentIndex(4);
     ui->lineEditConns->setText("");
 
     QStandardItemModel* modelo = new QStandardItemModel(this);
@@ -470,7 +539,7 @@ void MainWindow::refresh_schema(QString selectedSchema)
 
         if (query.exec("USE " + selectedSchema)) {
             refresh_tables(actual_host);
-            ui->toolBoxLeft->setCurrentIndex(1);
+            ui->toolBoxLeft->setCurrentIndex(2);
             ui->buttonFilterTables->setChecked(false);
         }
     }
@@ -747,6 +816,69 @@ void MainWindow::refresh_tables(QString selectedHost) {
             QRegularExpression re(pattern, QRegularExpression::CaseInsensitiveOption);
             proxy->setFilterRegularExpression(re);
             });
+
+        if (sel > -1) {
+            QModelIndex index = ui->listViewTables->model()->index(sel, 0);
+            ui->listViewTables->setCurrentIndex(index);
+        }
+
+        ui->statusbar->showMessage("Tables updated");
+    }
+
+    QApplication::restoreOverrideCursor();
+    QApplication::processEvents();
+}
+
+
+void MainWindow::refresh_log(QString selectedHost) {
+
+    QApplication::setOverrideCursor(Qt::WaitCursor);
+    QApplication::processEvents();
+
+    ui->statusbar->showMessage("Connecting database...");
+
+    QSqlQuery query(QSqlDatabase::database("pref_connection"));
+    ui->statusbar->showMessage("Loading tables...");
+    if (query.exec("SHOW TABLES")) {
+        ui->lineEditTables->setText("");
+
+        QStandardItemModel* modelo = new QStandardItemModel(this);
+        QIcon iconeTabela;
+        if (ui->buttonEditTables->isChecked())
+        {
+            iconeTabela = QIcon(":/icons/resources/size.svg");
+        }
+        else {
+            iconeTabela = QIcon(":/icons/resources/copy.svg");
+        }
+
+        int sel = -1;
+        int cnt = 0;
+
+        while (query.next()) {
+            QApplication::processEvents();
+            QString name = query.value(0).toString();
+
+            QStandardItem* linha = new QStandardItem(iconeTabela, name);
+            modelo->appendRow(linha);
+
+            if (false) {
+                sel = cnt;
+            }
+            cnt++;
+        }
+
+        QSortFilterProxyModel* proxy = new QSortFilterProxyModel(this);
+        proxy->setSourceModel(modelo);
+        proxy->setFilterCaseSensitivity(Qt::CaseInsensitive);
+
+        ui->listViewTables->setModel(proxy);
+
+        connect(ui->lineEditTables, &QLineEdit::textChanged, this, [=](const QString& texto) {
+            QString pattern = QString("(%1)").arg(texto);
+            QRegularExpression re(pattern, QRegularExpression::CaseInsensitiveOption);
+            proxy->setFilterRegularExpression(re);
+        });
 
         if (sel > -1) {
             QModelIndex index = ui->listViewTables->model()->index(sel, 0);
@@ -1119,7 +1251,7 @@ void MainWindow::listViewConns_open(const QModelIndex& index)
     {
         ui->buttonFilterSchemas->setChecked(false);
         ui->buttonFilterTables->setChecked(false);
-        ui->toolBoxLeft->setCurrentIndex(2);
+        ui->toolBoxLeft->setCurrentIndex(3);
         QJsonObject item = getConnection(actual_host);
         actual_color = item["color"].toString();
     }
@@ -1271,10 +1403,10 @@ void MainWindow::show_context_menu_Schemas(const QPoint& pos)
             "    padding: 4px;"
             "    margin: 20px;"
             "    min-width: 90px;"
-            "    min-height: 16px;"
+            "    min-height: 20px;"
             "}"
         );
-        msgBox.setWindowTitle("Confirm Deletion");
+        msgBox.setWindowTitle("Confirm");
         msgBox.setIcon(QMessageBox::Question);
         msgBox.setStandardButtons(QMessageBox::Yes | QMessageBox::No);
         msgBox.setDefaultButton(QMessageBox::No);
@@ -1380,10 +1512,10 @@ void MainWindow::show_context_menu_Tables(const QPoint& pos)
             "QPushButton {"
             "    padding: 10px;"
             "    margin: 10px;"
-            "    min-height: 16px;"
+            "    min-height: 20px;"
             "}"
         );
-        msgBox.setWindowTitle("Confirm Delete");
+        msgBox.setWindowTitle("Confirm");
         msgBox.setIcon(QMessageBox::Question);
         msgBox.setStandardButtons(QMessageBox::Yes | QMessageBox::No);
         msgBox.setDefaultButton(QMessageBox::No);
@@ -1800,5 +1932,86 @@ void MainWindow::on_actionStatistics_triggered()
 {
     Statistics* janela = new Statistics(actual_host, actual_schema, this);
     janela->exec();
+}
+
+void MainWindow::log(QString host, QString schema, QString str)
+{
+    QString agora = QDateTime::currentDateTime().toString("yyyy-MM-dd HH:mm:ss");
+
+    int row = modelLog->rowCount();
+    modelLog->insertRow(row);
+
+    modelLog->setData(modelLog->index(row, 0), agora);
+    modelLog->setData(modelLog->index(row, 1), host);
+    modelLog->setData(modelLog->index(row, 2), schema);
+    modelLog->setData(modelLog->index(row, 3), str);
+
+    QModelIndex lastIdx = modelLog->index(row, 0); // guarda o último índice
+
+    // Seleciona e exibe a última linha
+    if (lastIdx.isValid()) {
+        ui->tableLogView->setSelectionBehavior(QAbstractItemView::SelectRows);
+        ui->tableLogView->selectRow(lastIdx.row());                   // seleciona a linha inteira
+        ui->tableLogView->setCurrentIndex(lastIdx);                   // move o cursor
+        ui->tableLogView->scrollTo(lastIdx, QAbstractItemView::PositionAtBottom); // rola até ela
+        ui->tableLogView->setFocus();
+    }
+
+    QSqlQuery query(QSqlDatabase::database("pref_connection"));
+
+    QString insertSql = "INSERT INTO logs (date, host, schema, query) VALUES (:date, :host, :schema, :query)";
+    query.prepare(insertSql); // Prepara a consulta para inserção segura (evita SQL injection)
+
+    query.bindValue(":date", agora);
+    query.bindValue(":host", host);
+    query.bindValue(":schema", schema);
+    query.bindValue(":query", str);
+
+    if (!query.exec()) {
+        qWarning() << "Erro ao inserir host:" << query.lastError().text();
+    }
+
+}
+
+void MainWindow::on_buttonDeleteLog_clicked()
+{
+    qDebug() << "Delete log";
+    QMessageBox msgBox;
+    msgBox.setStyleSheet(
+        "QLabel:last {"
+        "   padding-right: 10px;"
+        "   min-height: 30px;"
+        "   min-width: 280px;"
+        "}"
+        "QPushButton {"
+        "    padding: 4px;"
+        "    margin: 20px;"
+        "    min-width: 90px;"
+        "    min-height: 20px;"
+        "}"
+        );
+    msgBox.setWindowTitle("Confirm");
+    msgBox.setIcon(QMessageBox::Question);
+    msgBox.setStandardButtons(QMessageBox::Yes | QMessageBox::No);
+    msgBox.setDefaultButton(QMessageBox::No);
+
+    QString message = QString("Are you sure you want to clear log?");
+    msgBox.setText(message);
+
+    QMessageBox::StandardButton reply = static_cast<QMessageBox::StandardButton>(msgBox.exec());
+
+    if (reply == QMessageBox::Yes) {
+        modelLog->clear();
+
+        QSqlQuery query(QSqlDatabase::database("pref_connection"));
+
+        QString deleteSql = "DELETE FROM logs";
+        query.prepare(deleteSql); // Prepara a consulta para inserção segura (evita SQL injection)
+
+        if (!query.exec()) {
+            qWarning() << "Erro ao excluir log:" << query.lastError().text();
+        }
+    }
+
 }
 

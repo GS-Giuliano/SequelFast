@@ -101,6 +101,12 @@ public:
     void refresh_favorites();
 
     /**
+     * @brief Atualiza o Log de queries executadas
+     * Recarrega o log de atividades
+     */
+    void refresh_log(QString selectedHost);
+
+        /**
      * @brief Inicia conexão SSH para tunneling seguro
      * @param selectedHost Referência para o nome da conexão que usará SSH (pode ser modificado)
      */
@@ -141,6 +147,12 @@ public:
      * @param parent Widget pai para diálogos de progresso
      */
     void restore(const QString& bkp_host, const QString& bkp_schema, QWidget* parent);
+
+    /**
+     * @brief Salva e exibe log da atividade no BD
+     * @param str Query
+     */
+    void log(QString host, QString schema, QString str);
 
     /**
      * @brief Construtor da janela principal da aplicação
@@ -339,10 +351,13 @@ private slots:
     /** @brief Slot ativado pela ação "Estatisticas" do menu */
     void on_actionStatistics_triggered();
 
+    void on_buttonDeleteLog_clicked();
+
 private:
     Ui::MainWindow* ui;
-
     QAction* action_db_options;
+    QStandardItemModel *modelLog;
+
 };
 
 /**

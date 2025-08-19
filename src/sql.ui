@@ -17,21 +17,21 @@
    <property name="styleSheet">
     <string notr="true"/>
    </property>
-   <layout class="QVBoxLayout" name="verticalLayout">
+   <layout class="QHBoxLayout" name="horizontalLayout">
     <property name="spacing">
-     <number>5</number>
+     <number>4</number>
     </property>
     <property name="leftMargin">
-     <number>5</number>
+     <number>4</number>
     </property>
     <property name="topMargin">
-     <number>5</number>
+     <number>4</number>
     </property>
     <property name="rightMargin">
-     <number>5</number>
+     <number>4</number>
     </property>
     <property name="bottomMargin">
-     <number>5</number>
+     <number>4</number>
     </property>
     <item>
      <widget class="QSplitter" name="splitter">
@@ -39,7 +39,7 @@
        <enum>Qt::Orientation::Vertical</enum>
       </property>
       <property name="handleWidth">
-       <number>5</number>
+       <number>4</number>
       </property>
       <widget class="TextEditCompleter" name="textQuery">
        <property name="font">
@@ -81,7 +81,7 @@
      <x>0</x>
      <y>0</y>
      <width>800</width>
-     <height>21</height>
+     <height>24</height>
     </rect>
    </property>
    <property name="styleSheet">
@@ -117,6 +117,12 @@
   <widget class="QToolBar" name="toolBar">
    <property name="windowTitle">
     <string>toolBar</string>
+   </property>
+   <property name="iconSize">
+    <size>
+     <width>24</width>
+     <height>24</height>
+    </size>
    </property>
    <property name="toolButtonStyle">
     <enum>Qt::ToolButtonStyle::ToolButtonTextBesideIcon</enum>
