@@ -354,11 +354,11 @@ void MainWindow::refresh_connections() {
 
 void MainWindow::refresh_schemas(QString selectedHost, bool jumpToTables)
 {
+    ui->statusbar->showMessage("Loading schemas...");
     QApplication::setOverrideCursor(Qt::WaitCursor);
     QApplication::processEvents();
 
     if (!dbMysql.open()) {
-        ui->statusbar->showMessage("Connection failed!");
         QApplication::restoreOverrideCursor();
         QApplication::processEvents();
 
@@ -369,10 +369,12 @@ void MainWindow::refresh_schemas(QString selectedHost, bool jumpToTables)
         );
     }
     else {
+        ui->statusbar->showMessage("Connection failed!");
 
         QJsonObject item = getConnection(selectedHost);
         QSqlQuery query(QSqlDatabase::database("mysql_connection_" + selectedHost));
 
+        ui->statusbar->showMessage("Loading schemas...");
         if (query.exec("SHOW DATABASES"))
         {
             ui->lineEditSchemas->setText("");
@@ -476,7 +478,7 @@ void MainWindow::refresh_schema(QString selectedSchema)
 
 void MainWindow::refresh_favorites()
 {
-
+    ui->statusbar->showMessage("Loading favorites...");
     QApplication::setOverrideCursor(Qt::WaitCursor);
     QApplication::processEvents();
 
@@ -539,6 +541,8 @@ void MainWindow::refresh_favorites()
     // Shared favorites
     if (sharedFavoriteDB != "")
     {
+        ui->statusbar->showMessage("Connecting shared favorites SequelFast schema...");
+        QApplication::processEvents();
         QString connectionName = "mysql_connection_";
         if (connectMySQL(sharedFavoriteDB))
         {
@@ -554,7 +558,9 @@ void MainWindow::refresh_favorites()
             // Verifica se a base de dados existe
 
             bool found = false;
-            qDebug() << "Favoritos compartilhados - Verificando se BD existe...";
+            // qDebug() << "Favoritos compartilhados - Verificando se BD existe...";
+            ui->statusbar->showMessage("Checking if SequelFast schema exists...");
+
             if (query.exec("SHOW DATABASES"))
             {
                 QApplication::processEvents();
@@ -569,7 +575,9 @@ void MainWindow::refresh_favorites()
 
             if (!found)
             {
-                qDebug() << "Favoritos compartilhados - Nao existe. Criando...";
+                ui->statusbar->showMessage("Not found. Creating database and table...");
+
+                // qDebug() << "Favoritos compartilhados - Nao existe. Criando...";
                 // Cria a tabela se não existir
                 QString createDatabase = "CREATE DATABASE _SequelFast CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;";
                 if (query.exec(createDatabase)) {
@@ -588,7 +596,9 @@ void MainWindow::refresh_favorites()
                 }
             }
             else {
-                qDebug() << "Favoritos compartilhados - Buscando favoritos...";
+                ui->statusbar->showMessage("Loading shared favorites...");
+
+                // qDebug() << "Favoritos compartilhados - Buscando favoritos...";
                 QApplication::processEvents();
                 if (query.exec("USE _SequelFast")) {
                     QApplication::processEvents();
@@ -600,7 +610,7 @@ void MainWindow::refresh_favorites()
                             name = query.value(0).toString();
                             value = query.value(1).toString();
 
-                            qDebug() << "Name" << name;
+                            // qDebug() << "Name" << name;
                             // qDebug() << "Value" << value;
 
                             const QStringList favList = name.split('^');
@@ -610,7 +620,7 @@ void MainWindow::refresh_favorites()
                             bool IsGroup2 = true;
                             if (user != "")
                             {
-                                qDebug() << "Fav. privado" << user << getUserName();
+                                // qDebug() << "Fav. privado" << user << getUserName();
                                 if (user == getUserName())
                                 {
                                     sharedUserFavExists = true;
@@ -693,7 +703,10 @@ void MainWindow::refresh_tables(QString selectedHost) {
     QApplication::setOverrideCursor(Qt::WaitCursor);
     QApplication::processEvents();
 
+    ui->statusbar->showMessage("Connecting database...");
+
     QSqlQuery query(QSqlDatabase::database("mysql_connection_" + selectedHost));
+    ui->statusbar->showMessage("Loading tables...");
     if (query.exec("SHOW TABLES")) {
         ui->lineEditTables->setText("");
 
@@ -856,10 +869,8 @@ void MainWindow::open_selected_favorite(const QModelIndex& index, const bool& ru
         QString fav = favList[5];
         if (fav == selFav)
         {
-            qDebug() << selFav << "=" << fav;
 
             // QString fav = favName[index.row()];
-
             // QStringList favList = fav.split("^");
 
             QMdiSubWindow* prev = ui->mdiArea->activeSubWindow();
@@ -1406,6 +1417,28 @@ void MainWindow::show_context_menu_Favorites(const QPoint& pos)
     if (!index.isValid())
         return;
     QString selectedFavoriteName = index.data(Qt::DisplayRole).toString();
+    QModelIndex parentIndex = index.parent();
+    QString parentName = "Local";
+    if (parentIndex.isValid()) {
+        parentName = parentIndex.data(Qt::DisplayRole).toString();
+        qDebug() << "O item pertence ao grupo:" << parentName;
+    }
+    else {
+        return;
+    }
+    qDebug() << selectedFavoriteName << "Parent:" << parentName;
+    int i = 0;
+    int favIndex = 0;
+
+    for (const QString favRec : favName) {
+        QList favList = favRec.split("^");
+        QString fav = favList[5];
+        if (fav == selectedFavoriteName)
+        {
+            favIndex = i;
+        }
+        i++;
+    }
 
     QMenu menu(this);
     QAction* favoritesOpen = menu.addAction("Open");
@@ -1459,10 +1492,16 @@ void MainWindow::show_context_menu_Favorites(const QPoint& pos)
             QString name = lineEdit->text().trimmed();
             if (!name.isEmpty() && name != selectedFavoriteName) {
                 QString value = getStringPreference(favName[index.row()]);
-                QString newFavName = favName[index.row()].replace(selectedFavoriteName, name);
-                setStringPreference(newFavName, value);
+                QString newFavName = favName[favIndex].replace(selectedFavoriteName, name);
+                if (parentName == "Local")
+                {
+                    setStringPreference(newFavName, value);
+                }
+                else {
+                    setStringSharedPreference(newFavName, value);
+                }
 
-                QSqlQuery query(QSqlDatabase::database("pref_connection"));
+                // QSqlQuery query(QSqlDatabase::database("pref_connection"));
 
                 refresh_favorites();
             }
@@ -1503,23 +1542,46 @@ void MainWindow::show_context_menu_Favorites(const QPoint& pos)
         if (dialog.exec() == QDialog::Accepted) {
             QString name = lineEdit->text().trimmed();
             if (!name.isEmpty() && name != selectedFavoriteName) {
-                QString value = getStringPreference(favName[index.row()]);
-                QString newFavName = favName[index.row()];
-                newFavName.replace(selectedFavoriteName, name);
-
-                // qDebug() << "nome antigo: " << favName[index.row()];
-                // qDebug() << "nome novo: " << newFavName;
-                setStringPreference(newFavName, value);
 
 
-                QSqlQuery query(QSqlDatabase::database("pref_connection"));
+                if (parentName == "Local")
+                {
+                    QString value = getStringPreference(favName[favIndex]);
+                    QString newFavName = favName[favIndex];
+                    newFavName.replace(selectedFavoriteName, name);
 
-                query.prepare("DELETE FROM prefs WHERE name = :name");
-                query.bindValue(":name", favName[index.row()]);
+                    // qDebug() << "nome antigo: " << favName[favIndex];
+                    // qDebug() << "nome novo: " << newFavName;
+                    setStringPreference(newFavName, value);
 
-                if (!query.exec()) {
-                    qCritical() << "Erro ao excluir favorito:" << query.lastError().text();
-                    return;
+
+                    QSqlQuery query(QSqlDatabase::database("pref_connection"));
+
+                    query.prepare("DELETE FROM prefs WHERE name = :name");
+                    query.bindValue(":name", favName[favIndex]);
+                    if (!query.exec()) {
+                        qCritical() << "Erro ao excluir favorito:" << query.lastError().text();
+                        return;
+                    }
+
+                }
+                else {
+                    QString value = getStringSharedPreference(favName[favIndex]);
+                    QString newFavName = favName[favIndex];
+                    newFavName.replace(selectedFavoriteName, name);
+
+                    setStringSharedPreference(newFavName, value);
+
+
+                    QSqlQuery query(QSqlDatabase::database("mysql_connection_" + sharedFavoriteDB));
+
+                    query.prepare("DELETE FROM _SequelFast.prefs WHERE name = :name");
+                    query.bindValue(":name", favName[favIndex]);
+                    if (!query.exec()) {
+                        qCritical() << "Erro ao excluir favorito:" << query.lastError().text();
+                        return;
+                    }
+
                 }
 
                 refresh_favorites();
@@ -1552,14 +1614,30 @@ void MainWindow::show_context_menu_Favorites(const QPoint& pos)
         QMessageBox::StandardButton reply = static_cast<QMessageBox::StandardButton>(msgBox.exec());
 
         if (reply == QMessageBox::Yes) {
-            QSqlQuery query(QSqlDatabase::database("pref_connection"));
+            if (parentName == "Local")
+            {
+                QSqlQuery query(QSqlDatabase::database("pref_connection"));
 
-            query.prepare("DELETE FROM prefs WHERE name = :name");
-            query.bindValue(":name", favName[index.row()]);
+                query.prepare("DELETE FROM prefs WHERE name = :name");
+                query.bindValue(":name", favName[favIndex]);
 
-            if (!query.exec()) {
-                qCritical() << "Erro ao excluir favorito:" << query.lastError().text();
-                return;
+                if (!query.exec()) {
+                    qCritical() << "Erro ao excluir favorito:" << query.lastError().text();
+                    return;
+                }
+
+            }
+            else {
+                QSqlQuery query(QSqlDatabase::database("mysql_connection_" + sharedFavoriteDB));
+
+                query.prepare("DELETE FROM _SequelFast.prefs WHERE name = :name");
+                query.bindValue(":name", favName[favIndex]);
+
+                if (!query.exec()) {
+                    qCritical() << "Erro ao excluir favorito:" << query.lastError().text();
+                    return;
+                }
+
             }
             refresh_favorites();
         }

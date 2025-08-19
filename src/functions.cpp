@@ -319,7 +319,7 @@ QString setStringPreference(QString name, QString value)
     return(value);
 }
 
-QString getStringSharedPreference(QString name, QString user)
+QString getStringSharedPreference(QString name)
 {
     if (sharedFavoriteDB == "")
     {
