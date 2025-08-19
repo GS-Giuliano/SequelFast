@@ -144,6 +144,9 @@ Sql::Sql(const QString& host, const QString& schema, const QString& table,
     sql_table = table;
     sql_color = color;
 
+    QString limit = getStringPreference("fav_limit");
+    pref_sql_limit = limit.toInt();
+
     ui->setupUi(this);
 
     QString param;
@@ -251,6 +254,59 @@ Sql::Sql(const QString& host, const QString& schema, const QString& table,
     ui->tableData->setContextMenuPolicy(Qt::CustomContextMenu);
     connect(ui->tableData, &QTableView::customContextMenuRequested,
             this, &Sql::show_context_menu);
+
+
+
+
+    // --- Filtro na barra inferior (status bar) ---
+    auto *filterLabel = new QLabel("Filter", this);
+    auto *filterEdit  = new QLineEdit(this);
+    filterEdit->setPlaceholderText("Filter");
+    filterEdit->setClearButtonEnabled(true);
+    filterEdit->setFixedWidth(220);
+
+    // adiciona na barra inferior (lado direito)
+    ui->toolBar->addWidget(filterLabel);
+    ui->toolBar->addWidget(filterEdit);
+
+    // quando o usuário digitar, aplica o filtro no proxy
+    connect(filterEdit, &QLineEdit::textChanged, this, [this](const QString &text){
+        if (!tableProxy) return;                    // ainda não há dados/modelo
+        tableProxy->setFilterKeyColumn(-1);         // filtra em todas as colunas
+        QRegularExpression re(text, QRegularExpression::CaseInsensitiveOption);
+        tableProxy->setFilterRegularExpression(re); // aplica regex
+    });
+
+
+    auto *limitLabel = new QLabel("Limit", this);
+    limitEdit  = new QLineEdit(this);
+    if (limit ==  "" || limit.toInt() == 0)
+    {
+        limit = "500";
+    }
+    pref_sql_limit = limit.toInt();
+    limitEdit->setText(limit);
+    limitEdit->setClearButtonEnabled(true);
+    limitEdit->setFixedWidth(100);
+
+    // adiciona na barra inferior (lado direito)
+    ui->toolBar->addWidget(limitLabel);
+    ui->toolBar->addWidget(limitEdit);
+
+    // quando o usuário digitar, aplica o filtro no proxy
+    connect(limitEdit, &QLineEdit::textChanged, this, [this](const QString &text){
+        if (text=="" || text.toInt() == 0)
+        {
+            limitEdit->setText("500");
+            return;
+        }
+        setStringPreference("fav_limit",  text);
+    });
+
+
+
+
+
 
     // --- Ordenação cíclica pelo cabeçalho ---
     ui->tableData->setSortingEnabled(true);
@@ -571,6 +627,8 @@ void Sql::query2TableView(QTableView* tableView, const QString& queryStr, const 
             old->deleteLater();
     }
     tableProxy->setSourceModel(model);
+    tableProxy->setFilterKeyColumn(-1); // procurar em todas as colunas
+
 
     // reset de ordenação
     currentSortColumn = -1;
@@ -632,10 +690,13 @@ void Sql::query2TableView(QTableView* tableView, const QString& queryStr, const 
                 qWarning() << "Alteração rejeitada. Valor restaurado.";
             }
             else {
-                static_cast<QStandardItemModel*>(tableProxy->sourceModel())
-                ->item(index.row(), index.column())->setData(newValue, Qt::UserRole);
-                statusBar()->showMessage(QString("Alteração salva em '%1'").arg(fieldName));
-            }
+                auto* item = static_cast<QStandardItemModel*>(tableProxy->sourceModel())
+                ->item(index.row(), index.column());
+                item->setData(newValue, Qt::UserRole);
+
+                QFont font = item->font();
+                font.setBold(true);
+                item->setFont(font);            }
         });
 
         connect(tableView->selectionModel(), &QItemSelectionModel::currentChanged,
@@ -690,13 +751,14 @@ bool Sql::handleTableData_edit_trigger(QString& id, QString& fieldName, QString&
     {
         return false;
     }
+    newValue.remove('\'');
+    QString queryStr = "UPDATE " + sql_table + " SET " + fieldName + " = '" + newValue + "' WHERE id = " + id;
     if (!ui->actionAuto_commit->isChecked())
     {
-        return false;
+        commitCache.append(queryStr);
+        return true;
     }
-    newValue.remove('\'');
     QSqlQuery query(dbMysqlLocal);
-    QString queryStr = "UPDATE " + sql_table + " SET " + fieldName + " = '" + newValue + "' WHERE id = " + id;
     if (!query.exec(queryStr) || query.numRowsAffected() == 0) {
         qWarning() << "Erro na query:" << query.lastError().text();
         return false;
@@ -1364,3 +1426,41 @@ void Sql::on_tableHeader_sectionClicked(int logicalIndex)
 
     applySortState(currentSortColumn);
 }
+
+void Sql::on_actionAuto_commit_triggered()
+{
+}
+
+
+void Sql::on_actionCommit_triggered()
+{
+    if (tableProxy && tableProxy->sourceModel()) {
+        auto* model = static_cast<QStandardItemModel*>(tableProxy->sourceModel());
+
+        for (int row = 0; row < model->rowCount(); ++row) {
+            for (int col = 0; col < model->columnCount(); ++col) {
+                QStandardItem* item = model->item(row, col);
+                if (item) {
+                    QFont font = item->font();
+                    font.setBold(false);   // remove negrito
+                    item->setFont(font);
+                }
+            }
+        }
+    }
+
+    QSqlQuery query(dbMysqlLocal);
+    for (int i = 0; i < commitCache.size(); ++i) {
+        qDebug() << "Item" << i << ":" << commitCache[i];
+        QString queryStr = commitCache[i];
+        if (!query.exec(queryStr) || query.numRowsAffected() == 0) {
+            qWarning() << "Erro na query:" << query.lastError().text();
+            ui->statusbar->showMessage("Commit failed!");
+            return;
+        }
+    }
+    commitCache.clear();
+    ui->statusbar->showMessage("Commit done.");
+    return;
+}
+

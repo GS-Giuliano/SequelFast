@@ -188,6 +188,12 @@ bool openPreferences()
         }
     }
 
+    QString limit = getStringPreference("fav_limit");
+    if (limit ==  "")
+    {
+        setStringPreference("fav_limit",  "500");
+    }
+
     for (const QJsonValue& valor : connections) {
         if (valor.isObject()) {
             QJsonObject item = valor.toObject();

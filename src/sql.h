@@ -98,6 +98,10 @@ private slots:
     void on_tableHeader_sectionClicked(int logicalIndex);
     // <<<
 
+    void on_actionAuto_commit_triggered();
+
+    void on_actionCommit_triggered();
+
 private:
     QAbstractItemModel* getTableModel() const;
     QAbstractItemModel* getColumnModel(const QString& table) const;
@@ -144,4 +148,6 @@ private:
     // <<<
 protected:
     void keyPressEvent(QKeyEvent* event) override;
+    QLineEdit *limitEdit;
+    QStringList commitCache;
 };
