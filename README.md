@@ -120,6 +120,14 @@ SELECT * FROM table WHERE field = :ask_field
 
 </details>
 
+<details>
+<summary><strong>📊 Chart</strong></summary>
+
+- Show dinamic charts
+- Auto-refresh on sort, filter ou query refresh
+
+</details>
+
 ---
 
 ## 🧱 Technology Stack
