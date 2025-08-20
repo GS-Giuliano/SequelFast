@@ -124,7 +124,7 @@ SELECT * FROM table WHERE field = :ask_field
 <summary><strong>📊 Chart</strong></summary>
 
 - Show dinamic charts
-- Auto-refresh on sort, filter ou query refresh
+- Auto-refresh on sort, filter or query refresh
 
 </details>
 
