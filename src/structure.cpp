@@ -1,6 +1,7 @@
 #include "structure.h"
 #include "ui_structure.h"
 
+#include "mainwindow.h"
 #include <functions.h>
 
 extern QSqlDatabase dbMysql;
@@ -256,7 +257,7 @@ void Structure::on_tableData_changed(const QModelIndex& topLeft, const QModelInd
 
             if (query.exec(queryStr)) {
                 ui->statusbar->showMessage("Success!");
-                log(fieldName, "Name changed", value_old, value_new);
+                log(fieldName, "Name changed", value_old, value_new, queryStr);
                 previousValue = value_new;
                 editIndex = topLeft;
                 ui->tableView->resizeColumnsToContents();
@@ -277,7 +278,7 @@ void Structure::on_tableData_changed(const QModelIndex& topLeft, const QModelInd
 
             if (query.exec(queryStr)) {
                 ui->statusbar->showMessage("Success!");
-                log(fieldName, "Type changed", value_old, value_new);
+                log(fieldName, "Type changed", value_old, value_new, queryStr);
                 previousValue = value_new;
                 editIndex = topLeft;
                 ui->tableView->resizeColumnsToContents();
@@ -303,7 +304,7 @@ void Structure::on_tableData_changed(const QModelIndex& topLeft, const QModelInd
 
             if (query.exec(queryStr)) {
                 ui->statusbar->showMessage("Success!");
-                log(fieldName, "Null changed", value_old.toUpper(), value_new.toUpper());
+                log(fieldName, "Null changed", value_old.toUpper(), value_new.toUpper(), queryStr);
                 previousValue = value_new;
                 editIndex = topLeft;
             }
@@ -320,7 +321,7 @@ void Structure::on_tableData_changed(const QModelIndex& topLeft, const QModelInd
 
             if (query.exec(queryStr)) {
                 ui->statusbar->showMessage("Success!");
-                log(fieldName, "Default changed", value_old, value_new);
+                log(fieldName, "Default changed", value_old, value_new, queryStr);
                 previousValue = value_new;
                 editIndex = topLeft;
                 ui->tableView->resizeColumnsToContents();
@@ -336,7 +337,7 @@ void Structure::on_tableData_changed(const QModelIndex& topLeft, const QModelInd
     }
 }
 
-void Structure::log(QString name, QString what, QString value_from, QString value_to)
+void Structure::log(QString name, QString what, QString value_from, QString value_to, QString str)
 {
     modelLog->setItem(logCount, 0, new QStandardItem(name));
     modelLog->setItem(logCount, 1, new QStandardItem(what));
@@ -357,6 +358,14 @@ void Structure::log(QString name, QString what, QString value_from, QString valu
         ui->tableLog->selectionModel()->select(index, QItemSelectionModel::Select | QItemSelectionModel::Rows);
         ui->tableLog->setCurrentIndex(index);  // define o foco/seleção atual
     }
+    MainWindow* mainWin = qobject_cast<MainWindow*>(this->window());
+    if (mainWin) {
+        mainWin->log(str_host, str_schema, str);
+    }
+    else {
+        qWarning() << "MainWindow not found from Sql::on_actionFavorites_triggered";
+    }
+
 }
 
 void Structure::add_new(const QModelIndex& index)
@@ -383,7 +392,7 @@ void Structure::add_new(const QModelIndex& index)
 
         if (query.exec(queryStr)) {
             ui->statusbar->showMessage("Success!");
-            log(fieldName, "Add new", new_field_name, "");
+            log(fieldName, "Add new", new_field_name, "", queryStr);
             previousValue = new_field_name;
             editIndex = index;
             refresh_structure();
@@ -445,7 +454,7 @@ void Structure::delete_row()
 
         if (query.exec(queryStr)) {
             ui->statusbar->showMessage("Removed!");
-            log(value.toString(), "Remove", "", "");
+            log(value.toString(), "Remove", "", "", queryStr);
             previousValue = value.toString();
             editIndex = indexField;
         }

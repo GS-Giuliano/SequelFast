@@ -7,6 +7,13 @@
 #include <QHeaderView>
 #include <QSortFilterProxyModel>
 
+#include <QtCharts/QChartView>
+#include <QtCharts/QBarSeries>
+#include <QtCharts/QBarSet>
+#include <QtCharts/QLegend>
+#include <QtCharts/QBarCategoryAxis>
+#include <QtCharts/QValueAxis>
+
 extern QJsonArray connections;
 extern QSqlDatabase dbPreferences;
 extern QSqlDatabase dbMysql;
@@ -15,6 +22,163 @@ extern int pref_sql_limit;
 extern int pref_table_row_height;
 extern int pref_table_font_size;
 extern int pref_sql_font_size;
+
+class SmartSortProxy : public QSortFilterProxyModel {
+public:
+    explicit SmartSortProxy(QObject* parent=nullptr)
+        : QSortFilterProxyModel(parent)
+    {
+        setDynamicSortFilter(true);
+        setSortCaseSensitivity(Qt::CaseInsensitive);
+    }
+
+    void setSqlRecord(const QSqlRecord& rec) { rec_ = rec; }
+
+protected:
+    bool lessThan(const QModelIndex& left, const QModelIndex& right) const override
+    {
+        // Se estiver pedindo para ordenar por um role específico (ex.: OriginalRowRole), respeite-o
+        if (sortRole() != Qt::EditRole) {
+            const QVariant L = sourceModel()->data(left,  sortRole());
+            const QVariant R = sourceModel()->data(right, sortRole());
+            return compareVariants(L, R);
+        }
+
+        const int col = left.column();
+
+        auto getTyped = [&](const QModelIndex& idx) -> QVariant {
+            QVariant v = sourceModel()->data(idx, Qt::EditRole);
+            if (!v.isValid()) v = sourceModel()->data(idx, Qt::DisplayRole);
+            return v;
+        };
+
+        QVariant l = getTyped(left);
+        QVariant r = getTyped(right);
+
+        // Tipo declarado no record do SELECT (pode ajudar)
+        QVariant::Type declared = (col < rec_.count()) ? rec_.field(col).type() : QVariant::Invalid;
+
+        // 1) Datas
+        if (declared == QVariant::Date || declared == QVariant::DateTime || declared == QVariant::Time) {
+            bool okL=false, okR=false;
+            QDateTime dl = toDateTime(l, &okL);
+            QDateTime dr = toDateTime(r, &okR);
+            if (okL && okR) return dl < dr;
+        }
+
+        // 2) Numérico nativo
+        if (declared == QVariant::Int || declared == QVariant::UInt ||
+            declared == QVariant::LongLong || declared == QVariant::ULongLong ||
+            declared == QVariant::Double)
+        {
+            bool okL=false, okR=false;
+            double dl = toDouble(l, &okL);
+            double dr = toDouble(r, &okR);
+            if (okL && okR) return dl < dr;
+        }
+
+        // 3) “Numérico em string” (ex.: DECIMAL retorna QString)
+        {
+            bool okL=false, okR=false;
+            double dl = toDouble(l, &okL);
+            double dr = toDouble(r, &okR);
+            if (okL && okR) return dl < dr;
+        }
+
+        // 4) Fallback: texto (locale-aware, case-insensitive)
+        const QString sl = sourceModel()->data(left,  Qt::DisplayRole).toString();
+        const QString sr = sourceModel()->data(right, Qt::DisplayRole).toString();
+        return QString::localeAwareCompare(sl, sr) < 0;
+    }
+
+private:
+    QSqlRecord rec_;
+
+    static double toDouble(const QVariant& v, bool* okOut)
+    {
+        bool ok=false;
+        double d = v.toDouble(&ok);
+        if (!ok) {
+            // tenta com locale do usuário
+            d = QLocale().toDouble(v.toString(), &ok);
+        }
+        if (!ok) {
+            // tenta locale "C" (ponto decimal)
+            d = QLocale::c().toDouble(v.toString(), &ok);
+        }
+        if (okOut) *okOut = ok;
+        return d;
+    }
+
+    static QDateTime toDateTime(const QVariant& v, bool* okOut)
+    {
+        bool ok = false;
+        QDateTime dt;
+
+        switch (v.type()) {
+        case QVariant::Date: {
+            const QDate d = v.toDate();
+            if (d.isValid()) {
+                // Qt 6: usar data + 00:00:00 (ou d.startOfDay())
+                dt = QDateTime(d, QTime(0,0,0));
+                ok = dt.isValid();
+            }
+            break;
+        }
+        case QVariant::Time: {
+            const QTime t = v.toTime();
+            if (t.isValid()) {
+                // usar uma data fixa + hora
+                dt = QDateTime(QDate(1970,1,1), t);
+                ok = dt.isValid();
+            }
+            break;
+        }
+        case QVariant::DateTime: {
+            dt = v.toDateTime();
+            ok = dt.isValid();
+            break;
+        }
+        default:
+            // tenta ISO e formatos comuns
+            dt = QDateTime::fromString(v.toString(), Qt::ISODate);
+            ok = dt.isValid();
+            if (!ok) {
+                dt = QDateTime::fromString(v.toString(), "yyyy-MM-dd HH:mm:ss");
+                ok = dt.isValid();
+            }
+            if (!ok) {
+                // só data
+                const QDate d = QDate::fromString(v.toString(), "yyyy-MM-dd");
+                if (d.isValid()) {
+                    dt = QDateTime(d, QTime(0,0,0));
+                    ok = true;
+                }
+            }
+            break;
+        }
+
+        if (okOut) *okOut = ok;
+        return dt;
+    }
+
+    static bool compareVariants(const QVariant& L, const QVariant& R)
+    {
+        // tenta numérico
+        bool okL=false, okR=false;
+        double dl = toDouble(L, &okL);
+        double dr = toDouble(R, &okR);
+        if (okL && okR) return dl < dr;
+
+        // tenta data/hora
+        QDateTime tl = toDateTime(L, &okL);
+        QDateTime tr = toDateTime(R, &okR);
+        if (okL && okR) return tl < tr;
+
+        // fallback texto
+        return QString::localeAwareCompare(L.toString(), R.toString()) < 0;
+    }
+};
 
 class CustomDelegate : public QStyledItemDelegate {
 public:
@@ -265,7 +429,7 @@ Sql::Sql(const QString& host, const QString& schema, const QString& table,
     auto *filterEdit  = new QLineEdit(this);
     filterEdit->setPlaceholderText("Filter");
     filterEdit->setClearButtonEnabled(true);
-    filterEdit->setFixedWidth(220);
+    filterEdit->setFixedWidth(120);
 
     // adiciona na barra inferior (lado direito)
     ui->toolBar->addWidget(filterLabel);
@@ -277,6 +441,7 @@ Sql::Sql(const QString& host, const QString& schema, const QString& table,
         tableProxy->setFilterKeyColumn(-1);         // filtra em todas as colunas
         QRegularExpression re(text, QRegularExpression::CaseInsensitiveOption);
         tableProxy->setFilterRegularExpression(re); // aplica regex
+        showChart();
     });
 
 
@@ -289,7 +454,7 @@ Sql::Sql(const QString& host, const QString& schema, const QString& table,
     pref_sql_limit = limit.toInt();
     limitEdit->setText(limit);
     limitEdit->setClearButtonEnabled(true);
-    limitEdit->setFixedWidth(100);
+    limitEdit->setFixedWidth(70);
 
     // adiciona na barra inferior (lado direito)
     ui->toolBar->addWidget(limitLabel);
@@ -311,6 +476,8 @@ Sql::Sql(const QString& host, const QString& schema, const QString& table,
     connect(ui->tableData->horizontalHeader(), &QHeaderView::sectionClicked,
             this, &Sql::on_tableHeader_sectionClicked);
 
+
+    ui->chartArea->setVisible(false);
 
     if (autoCommit == "1")
     {
@@ -624,16 +791,20 @@ void Sql::query2TableView(QTableView* tableView, const QString& queryStr, const 
 
     // Encapa com proxy p/ ordenar sem perder ordem original
     if (!tableProxy) {
-        tableProxy = new QSortFilterProxyModel(this);
+        // tableProxy = new QSortFilterProxyModel(this);
+        tableProxy = new SmartSortProxy(this);
         tableProxy->setDynamicSortFilter(true);
-        tableView->setModel(tableProxy);
+        ui->tableData->setModel(tableProxy);
     } else {
         if (auto old = tableProxy->sourceModel())
             old->deleteLater();
     }
     tableProxy->setSourceModel(model);
-    tableProxy->setFilterKeyColumn(-1); // procurar em todas as colunas
 
+    // >>> informe o record atual ao proxy, para ele saber os tipos declarados
+    if (auto smart = dynamic_cast<SmartSortProxy*>(tableProxy)) {
+        smart->setSqlRecord(currentRecord);
+    }
 
     // reset de ordenação
     currentSortColumn = -1;
@@ -749,6 +920,194 @@ void Sql::query2TableView(QTableView* tableView, const QString& queryStr, const 
         tableView->setEditTriggers(QAbstractItemView::NoEditTriggers);
     }
 }
+
+void Sql::showChart()
+{
+    if (!ui->actionChart->isChecked())
+    {
+        return;
+    }
+    // Modelo atualmente mostrado na tabela (pode ser proxy)
+    QAbstractItemModel *viewModel = ui->tableData->model();
+    if (!viewModel) {
+        statusMessage("Chart: sem dados (modelo nulo).");
+        ui->actionChart->setChecked(false);
+        ui->chartArea->setVisible(false);
+        return;
+    }
+
+    // Se for proxy, usaremos o proxy diretamente para refletir filtro/ordem visíveis
+    auto *proxy = qobject_cast<QSortFilterProxyModel*>(viewModel);
+
+    const int rows = viewModel->rowCount();
+    const int cols = viewModel->columnCount();
+
+    if (rows == 0 || cols < 2) {
+        statusMessage("Chart: é necessário pelo menos 1 linha e 2 colunas.");
+        ui->actionChart->setChecked(false);
+        ui->chartArea->setVisible(false);
+        return;
+    }
+
+    // Helpers para classificação de tipos
+    auto isNumericType = [](QVariant::Type t){
+        return t == QVariant::Int || t == QVariant::UInt ||
+               t == QVariant::LongLong || t == QVariant::ULongLong ||
+               t == QVariant::Double;
+    };
+    auto isCategoryType = [](QVariant::Type t){
+        return t == QVariant::String || t == QVariant::Char ||
+               t == QVariant::Date || t == QVariant::DateTime || t == QVariant::Time;
+    };
+
+    // Encontrar uma coluna categórica (texto/data) para eixo X
+    // Usa 'currentRecord' (tipos vindos do SELECT) e ignora a coluna "id"
+    int categoryCol = -1;
+    for (int c = 0; c < currentRecord.count() && c < cols; ++c) {
+        const QString header = viewModel->headerData(c, Qt::Horizontal).toString().toLower();
+        if (header == "id") continue;
+
+        QVariant::Type t = currentRecord.field(c).type();
+        if (isCategoryType(t)) {
+            categoryCol = c;
+            break;
+        }
+    }
+
+    if (categoryCol == -1) {
+        statusMessage("Chart: não há coluna categórica (texto/data) para o eixo X.");
+        ui->actionChart->setChecked(false);
+        ui->chartArea->setVisible(false);
+        return;
+    }
+
+    // Selecionar colunas numéricas (séries)
+    QVector<int> valueCols;
+    for (int c = 0; c < currentRecord.count() && c < cols; ++c) {
+        if (c == categoryCol) continue;
+        QVariant::Type t = currentRecord.field(c).type();
+        if (isNumericType(t)) valueCols.push_back(c);
+    }
+
+    if (valueCols.isEmpty()) {
+        statusMessage("Chart: nenhuma coluna numérica encontrada para valores das barras.");
+        ui->actionChart->setChecked(false);
+        ui->chartArea->setVisible(false);
+        return;
+    }
+
+    // Extrair categorias (rótulos do eixo X) a partir da coluna categórica,
+    // usando o que está VISÍVEL (proxy/filtro/ordem). Usamos DisplayRole,
+    // pois você já formatou datas no DisplayRole durante o preenchimento.
+    QStringList categories;
+    categories.reserve(rows);
+    for (int r = 0; r < rows; ++r) {
+        const QModelIndex idx = viewModel->index(r, categoryCol);
+        categories << idx.data(Qt::DisplayRole).toString();
+    }
+
+    // Montar séries: cada coluna numérica vira um QBarSet
+    auto *series = new QBarSeries();
+    series->setLabelsVisible(false);
+
+    double globalMax = 0.0;
+    int colValidCount = 0;
+
+    for (int c : valueCols) {
+        const QString setName = viewModel->headerData(c, Qt::Horizontal).toString();
+        auto *set = new QBarSet(setName);
+
+        bool anyOk = false;
+        for (int r = 0; r < rows; ++r) {
+            const QModelIndex idx = viewModel->index(r, c);
+
+            // Preferimos EditRole (valor bruto) para garantir conversão numérica estável
+            bool ok = false;
+            double v = idx.data(Qt::EditRole).toDouble(&ok);
+            if (!ok) {
+                // Tenta pelo DisplayRole como fallback (p.ex.: "123,45" em locais com vírgula)
+                v = QLocale().toDouble(idx.data(Qt::DisplayRole).toString(), &ok);
+            }
+            if (!ok) v = 0.0; else anyOk = true;
+
+            *set << v;
+            if (v > globalMax) globalMax = v;
+        }
+
+        if (anyOk) {
+            series->append(set);
+            ++colValidCount;
+        } else {
+            // Nenhum valor numérico válido nessa coluna — descarta o set
+            delete set;
+        }
+    }
+
+    if (colValidCount == 0) {
+        statusMessage("Chart: colunas numéricas não possuem valores válidos.");
+        return;
+    }
+
+    // Construir o gráfico
+    auto *chart = new QChart();
+    chart->addSeries(series);
+    chart->setAnimationOptions(QChart::SeriesAnimations);
+    chart->legend()->setVisible(true);
+    chart->legend()->setAlignment(Qt::AlignBottom);
+
+    // Eixo X categórico
+    auto *axisX = new QBarCategoryAxis();
+    axisX->append(categories);
+    chart->addAxis(axisX, Qt::AlignBottom);
+    series->attachAxis(axisX);
+
+    // // Eixo Y numérico — ajusta range automaticamente com folga
+    // auto *axisY = new QValueAxis();
+    // double upper = (globalMax <= 0.0) ? 1.0 : globalMax * 1.1;
+    // axisY->setRange(0.0, upper);
+    // axisY->setLabelFormat("%g");
+    // chart->addAxis(axisY, Qt::AlignLeft);
+    // series->attachAxis(axisY);
+
+    // Eixo Y numérico — apenas inteiros nas labels
+    auto *axisY = new QValueAxis();
+
+    // arredonda o topo para o próximo inteiro
+    int upperInt = static_cast<int>(std::ceil(globalMax));
+    if (upperInt <= 0) upperInt = 1;
+
+    axisY->setRange(0, upperInt);
+    axisY->setLabelFormat("%d");    // <<< força exibir só inteiros
+    axisY->setMinorTickCount(0);    // opcional: sem marcas menores
+    // axisY->setTickCount(qMin(11, upperInt + 1)); // opcional: controla qtde de marcas
+
+    chart->addAxis(axisY, Qt::AlignLeft);
+    series->attachAxis(axisY);
+
+
+    // Título opcional (nome da tabela e/ou campo categórico)
+    const QString catHeader = viewModel->headerData(categoryCol, Qt::Horizontal).toString();
+    chart->setTitle(QString("%1 • %2")
+                        .arg(databaseName, catHeader));
+
+    // ChartView e colocação no QStackedWidget
+    auto *chartView = new QChartView(chart);
+    chartView->setRenderHint(QPainter::Antialiasing);
+    chartView->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+
+    if (auto old = ui->chartArea->currentWidget()) {
+        ui->chartArea->removeWidget(old);
+        old->deleteLater();
+    }
+    const int idx = ui->chartArea->addWidget(chartView);
+    ui->chartArea->setCurrentIndex(idx);
+    ui->chartArea->setVisible(true);
+
+    statusMessage(QString("Chart: %1 categorias • %2 série(s) numérica(s).")
+                      .arg(categories.size())
+                      .arg(colValidCount));
+}
+
 
 void Sql::log(QString str)
 {
@@ -922,6 +1281,7 @@ void Sql::on_actionRun_triggered()
         QApplication::processEvents();
         if (comando == "SELECT" || comando == "SHOW" || comando == "DESCRIBE" || comando == "EXPLAIN") {
             query2TableView(ui->tableData, queryStr, comando);
+            showChart();
         }
         else {
             editEnabled = false;
@@ -1393,24 +1753,21 @@ void Sql::show_context_menu(const QPoint& pos)
 void Sql::applySortState(int column)
 {
     if (!tableProxy) return;
-
     auto* header = ui->tableData->horizontalHeader();
 
     switch (currentSortState) {
     case SortAsc:
-        tableProxy->setSortRole(Qt::DisplayRole);
+        tableProxy->setSortRole(Qt::EditRole);
         tableProxy->sort(column, Qt::AscendingOrder);
         header->setSortIndicator(column, Qt::AscendingOrder);
         header->setSortIndicatorShown(true);
         break;
-
     case SortDesc:
-        tableProxy->setSortRole(Qt::DisplayRole);
+        tableProxy->setSortRole(Qt::EditRole);
         tableProxy->sort(column, Qt::DescendingOrder);
         header->setSortIndicator(column, Qt::DescendingOrder);
         header->setSortIndicatorShown(true);
         break;
-
     case SortNone:
     default:
         resetSortToOriginalOrder();
@@ -1425,7 +1782,7 @@ void Sql::resetSortToOriginalOrder()
     if (!tableProxy) return;
     tableProxy->setSortRole(OriginalRowRole);
     tableProxy->sort(0, Qt::AscendingOrder);
-    tableProxy->setSortRole(Qt::DisplayRole);
+    tableProxy->setSortRole(Qt::EditRole);
 }
 
 void Sql::on_tableHeader_sectionClicked(int logicalIndex)
@@ -1443,6 +1800,7 @@ void Sql::on_tableHeader_sectionClicked(int logicalIndex)
     }
 
     applySortState(currentSortColumn);
+    showChart();
 }
 
 void Sql::on_actionAuto_commit_triggered()
@@ -1481,7 +1839,20 @@ void Sql::on_actionCommit_triggered()
         }
     }
     commitCache.clear();
+    showChart();
     ui->statusbar->showMessage("Commit done.");
     return;
+}
+
+
+void Sql::on_actionChart_triggered()
+{
+    if (ui->actionChart->isChecked())
+    {
+        ui->chartArea->setVisible(true);
+        showChart();
+    } else {
+        ui->chartArea->setVisible(false);
+    }
 }
 

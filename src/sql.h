@@ -71,6 +71,7 @@ public:
     QVector<MacroField> extractFields(const QString& queryStr);
     QString processQueryWithMacros(QString queryStr, QWidget* parent);
     void setupSqlCompleter();
+    void showChart();
 
 private slots:
     void statusMessage(QString msg);
@@ -102,6 +103,8 @@ private slots:
     void on_actionAuto_commit_triggered();
 
     void on_actionCommit_triggered();
+
+    void on_actionChart_triggered();
 
 private:
     QAbstractItemModel* getTableModel() const;

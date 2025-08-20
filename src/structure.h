@@ -35,8 +35,7 @@ public:
     explicit Structure(QString& host, QString& schema, QString& table, QWidget* parent = nullptr);
     ~Structure();
     void refresh_structure();
-    void log(QString name, QString what, QString value_from, QString value_to);
-
+    void log(QString name, QString what, QString value_from, QString value_to, QString str);
 private:
     Ui::Structure* ui;
     QSqlDatabase dbMysqlLocal;

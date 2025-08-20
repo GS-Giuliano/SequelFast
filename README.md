@@ -6,9 +6,10 @@
 
 **Open-source MySQL and MariaDB client focused on speed**
 
-![Screenshot of light theme](assets/shot1.png)
+![Screenshot of light theme](assets/shot3.png)
 
-![Screenshot of dark theme](assets/shot2.png)
+![Screenshot of light theme](assets/shot4.png)
+
 
 ---
 
