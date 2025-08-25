@@ -127,9 +127,9 @@ MainWindow::MainWindow(QWidget* parent)
                           << "Sans Serif");
         fonte.setPointSize(9);
         ui->tableLogView->setFont(fonte);
-        ui->tableLogView->setColumnWidth(0,62);
-        ui->tableLogView->setColumnWidth(1,62);
-        ui->tableLogView->setColumnWidth(2,62);
+        // ui->tableLogView->setColumnWidth(0,52);
+        // ui->tableLogView->setColumnWidth(1,42);
+        // ui->tableLogView->setColumnWidth(2,42);
 
 
         // Carrega log
@@ -160,12 +160,14 @@ MainWindow::MainWindow(QWidget* parent)
                 ui->tableLogView->setFocus();
             }
         }
+
         QSortFilterProxyModel* proxyLog = new QSortFilterProxyModel(this);
         proxyLog->setSourceModel(modelLog);
         proxyLog->setFilterKeyColumn(-1);
         proxyLog->setFilterCaseSensitivity(Qt::CaseInsensitive);
 
         ui->tableLogView->setModel(proxyLog);
+        ui->tableLogView->resizeColumnsToContents();
 
         connect(ui->lineEditLog, &QLineEdit::textChanged, this, [=](const QString& texto) {
             QString pattern = QString("(%1)").arg(texto);
@@ -1949,6 +1951,7 @@ void MainWindow::log(QString host, QString schema, QString str)
     QModelIndex lastIdx = modelLog->index(row, 0); // guarda o último índice
 
     // Seleciona e exibe a última linha
+    ui->tableLogView->resizeColumnsToContents();
     if (lastIdx.isValid()) {
         ui->tableLogView->setSelectionBehavior(QAbstractItemView::SelectRows);
         ui->tableLogView->selectRow(lastIdx.row());                   // seleciona a linha inteira
@@ -1956,7 +1959,6 @@ void MainWindow::log(QString host, QString schema, QString str)
         ui->tableLogView->scrollTo(lastIdx, QAbstractItemView::PositionAtBottom); // rola até ela
         ui->tableLogView->setFocus();
     }
-
     QSqlQuery query(QSqlDatabase::database("pref_connection"));
 
     QString insertSql = "INSERT INTO logs (date, host, schema, query) VALUES (:date, :host, :schema, :query)";

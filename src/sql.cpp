@@ -185,12 +185,10 @@ public:
     CustomDelegate(QObject* parent, const QSqlRecord& record)
         : QStyledItemDelegate(parent), currentRecord(record) {
     }
-
     QWidget* createEditor(QWidget* parent, const QStyleOptionViewItem& option,
                           const QModelIndex& index) const override {
         QSqlField field = currentRecord.field(index.column());
         QVariant::Type type = field.type();
-        int fieldSize = field.length();
 
         if (type == QVariant::Date) {
             auto* editor = new QDateEdit(parent);
@@ -206,10 +204,17 @@ public:
             return editor;
         }
 
-        if (type == QVariant::String && fieldSize > 150) {
-            auto* editor = new QPlainTextEdit(parent);
-            editor->setMinimumHeight(80);
-            return editor;
+        if (type == QVariant::String) {
+            const QString v = index.model()->data(index, Qt::EditRole).toString();
+            if (v.size() > 50 || v.contains('\n')) {
+                auto* editor = new QPlainTextEdit(parent);
+                editor->setMinimumHeight(80);
+                return editor;
+            } else {
+                // Caso contrário, editor de linha única
+                auto* editor = new QLineEdit(parent);
+                return editor;
+            }
         }
 
         if (type == QVariant::Int || type == QVariant::UInt ||
@@ -231,29 +236,31 @@ public:
         return QStyledItemDelegate::createEditor(parent, option, index);
     }
 
-    void setEditorData(QWidget* editor, const QModelIndex& index) const override {
-        QString value = index.model()->data(index, Qt::EditRole).toString();
-        QSqlField field = currentRecord.field(index.column());
-        QVariant::Type type = field.type();
-        int fieldSize = field.length();
+    void setEditorData(QWidget* editor, const QModelIndex& index) const override
+    {
+        const QString value = index.model()->data(index, Qt::EditRole).toString();
+        const QSqlField field = currentRecord.field(index.column());
+        const QVariant::Type type = field.type();
 
         if (type == QVariant::Date) {
-            auto* dateEditor = qobject_cast<QDateEdit*>(editor);
-            dateEditor->setDate(index.model()->data(index, Qt::EditRole).toDate());
-            return;
+            if (auto* dateEditor = qobject_cast<QDateEdit*>(editor)) {
+                dateEditor->setDate(index.model()->data(index, Qt::EditRole).toDate());
+                return;
+            }
         }
 
         if (type == QVariant::DateTime || type == QVariant::Time) {
-            auto* dtEditor = qobject_cast<QDateTimeEdit*>(editor);
-            dtEditor->setDateTime(index.model()->data(index, Qt::EditRole).toDateTime());
-            return;
+            if (auto* dtEditor = qobject_cast<QDateTimeEdit*>(editor)) {
+                dtEditor->setDateTime(index.model()->data(index, Qt::EditRole).toDateTime());
+                return;
+            }
         }
-        if (type == QVariant::String && fieldSize > 150) {
-            auto* textEditor = qobject_cast<QPlainTextEdit*>(editor);
+
+        // Para QString, definimos no editor correspondente criado em createEditor
+        if (auto* textEditor = qobject_cast<QPlainTextEdit*>(editor)) {
             textEditor->setPlainText(value);
             return;
         }
-
         if (auto* lineEdit = qobject_cast<QLineEdit*>(editor)) {
             lineEdit->setText(value);
             return;
@@ -266,24 +273,30 @@ public:
                       const QModelIndex& index) const override {
         QSqlField field = currentRecord.field(index.column());
         QVariant::Type type = field.type();
-        int fieldSize = field.length();
 
         if (type == QVariant::Date) {
-            auto* dateEditor = qobject_cast<QDateEdit*>(editor);
-            model->setData(index, dateEditor->date().toString("yyyy-MM-dd"));
-            return;
+            if (auto* dateEditor = qobject_cast<QDateEdit*>(editor)) {
+                model->setData(index, dateEditor->date().toString("yyyy-MM-dd"));
+                return;
+            }
         }
 
         if (type == QVariant::DateTime || type == QVariant::Time) {
-            auto* dtEditor = qobject_cast<QDateTimeEdit*>(editor);
-            model->setData(index, dtEditor->dateTime().toString("yyyy-MM-dd HH:mm:ss"));
-            return;
+            if (auto* dtEditor = qobject_cast<QDateTimeEdit*>(editor)) {
+                model->setData(index, dtEditor->dateTime().toString("yyyy-MM-dd HH:mm:ss"));
+                return;
+            }
         }
 
-        if (type == QVariant::String && fieldSize > 150) {
-            auto* textEditor = qobject_cast<QPlainTextEdit*>(editor);
-            model->setData(index, textEditor->toPlainText());
-            return;
+        if (type == QVariant::String) {
+            if (auto* textEditor = qobject_cast<QPlainTextEdit*>(editor)) {
+                model->setData(index, textEditor->toPlainText());
+                return;
+            }
+            if (auto* lineEdit = qobject_cast<QLineEdit*>(editor)) {
+                model->setData(index, lineEdit->text());
+                return;
+            }
         }
 
         if (auto* lineEdit = qobject_cast<QLineEdit*>(editor)) {
@@ -853,26 +866,29 @@ void Sql::query2TableView(QTableView* tableView, const QString& queryStr, const 
             QString newValue = index.model()->data(index, Qt::EditRole).toString();
             QString oldValue = static_cast<QStandardItemModel*>(tableProxy->sourceModel())
                                    ->item(index.row(), index.column())->data(Qt::UserRole).toString();
+            if (oldValue != newValue) {
+                if (!handleTableData_edit_trigger(idValue, fieldName, newValue)) {
+                    tableProxy->sourceModel()->blockSignals(true);
+                    tableProxy->sourceModel()->setData(index, oldValue, Qt::EditRole);
+                    tableProxy->sourceModel()->blockSignals(false);
 
-            if (!handleTableData_edit_trigger(idValue, fieldName, newValue)) {
-                tableProxy->sourceModel()->blockSignals(true);
-                tableProxy->sourceModel()->setData(index, oldValue, Qt::EditRole);
-                tableProxy->sourceModel()->blockSignals(false);
+                    statusBar()->showMessage(
+                        QString("Alteração REJEITADA em '%1'. Valor restaurado: %2")
+                            .arg(fieldName, oldValue)
+                        );
+                    qWarning() << "Alteração rejeitada. Valor restaurado.";
+                }
+                else {
+                    auto* item = static_cast<QStandardItemModel*>(tableProxy->sourceModel())
+                    ->item(index.row(), index.column());
+                    item->setData(newValue, Qt::UserRole);
 
-                statusBar()->showMessage(
-                    QString("Alteração REJEITADA em '%1'. Valor restaurado: %2")
-                        .arg(fieldName, oldValue)
-                    );
-                qWarning() << "Alteração rejeitada. Valor restaurado.";
+                    QFont font = item->font();
+                    font.setBold(true);
+                    item->setFont(font);
+                }
+
             }
-            else {
-                auto* item = static_cast<QStandardItemModel*>(tableProxy->sourceModel())
-                ->item(index.row(), index.column());
-                item->setData(newValue, Qt::UserRole);
-
-                QFont font = item->font();
-                font.setBold(true);
-                item->setFont(font);            }
         });
 
         connect(tableView->selectionModel(), &QItemSelectionModel::currentChanged,
@@ -1128,13 +1144,14 @@ bool Sql::handleTableData_edit_trigger(QString& id, QString& fieldName, QString&
     }
     newValue.remove('\'');
     QString queryStr = "UPDATE " + sql_table + " SET " + fieldName + " = '" + newValue + "' WHERE id = " + id;
+    qDebug() << queryStr;
     if (!ui->actionAuto_commit->isChecked())
     {
         commitCache.append(queryStr);
         return true;
     }
     QSqlQuery query(dbMysqlLocal);
-    if (!query.exec(queryStr) || query.numRowsAffected() == 0) {
+    if (!query.exec(queryStr)) {
         qWarning() << "Erro na query:" << query.lastError().text();
         return false;
     } else {
@@ -1830,10 +1847,9 @@ void Sql::on_actionCommit_triggered()
     for (int i = 0; i < commitCache.size(); ++i) {
         qDebug() << "Item" << i << ":" << commitCache[i];
         QString queryStr = commitCache[i];
-        if (!query.exec(queryStr) || query.numRowsAffected() == 0) {
+        if (!query.exec(queryStr)) {
             qWarning() << "Erro na query:" << query.lastError().text();
             ui->statusbar->showMessage("Commit failed!");
-            return;
         } else {
             log(queryStr);
         }
