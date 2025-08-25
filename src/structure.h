@@ -13,6 +13,7 @@
 #include <QMessageBox>
 #include <QModelIndex>
 #include <QRegularExpressionValidator>
+#include <QShortcut>
 #include <QSqlDatabase>
 #include <QSqlDatabase>
 #include <QSqlError>

@@ -4,9 +4,6 @@
 #include "texteditcompleter.h"
 #include "mainwindow.h"
 
-#include <QHeaderView>
-#include <QSortFilterProxyModel>
-
 #include <QtCharts/QChartView>
 #include <QtCharts/QBarSeries>
 #include <QtCharts/QBarSet>
@@ -1397,7 +1394,41 @@ void Sql::handleTableAppend_triggered()
         qWarning() << "Erro ao adicionar linha:" << query.lastError().text();
     }
     else {
-        refresh_structure();
+        on_actionRun_triggered();
+
+        // Depois que o modelo for aplicado, posiciona na última linha e coluna após o "id"
+        QTimer::singleShot(0, this, [this]{
+            QAbstractItemModel* model = ui->tableData->model();
+            if (!model) return;
+
+            const int lastRow = model->rowCount() - 1;
+            if (lastRow < 0) return;
+
+            const int cols = model->columnCount();
+
+            // Usa a coluna após a do "id" (idPosition é atualizado em query2TableView)
+            int targetCol = 0;
+            if (idPosition >= 0 && idPosition + 1 < cols) {
+                targetCol = idPosition + 1;
+            } else if (cols > 1) {
+                targetCol = 1;            // fallback: segunda coluna
+            } else {
+                targetCol = 0;            // fallback: primeira coluna
+            }
+
+            const QModelIndex idx = model->index(lastRow, targetCol);
+            if (!idx.isValid()) return;
+
+            ui->tableData->setCurrentIndex(idx);
+            ui->tableData->scrollTo(idx, QAbstractItemView::PositionAtBottom);
+
+            if (auto *sel = ui->tableData->selectionModel()) {
+                sel->select(idx, QItemSelectionModel::ClearAndSelect | QItemSelectionModel::Rows);
+            }
+
+            // Entra em edição se permitido
+            if (editEnabled) ui->tableData->edit(idx);
+        });
     }
 }
 
@@ -1428,7 +1459,42 @@ void Sql::handleTableClone_triggered()
         qWarning() << "Erro ao clonar linha:" << query.lastError().text();
     }
     else {
-        refresh_structure();
+        on_actionRun_triggered();
+
+        // Depois que o modelo for aplicado, posiciona na última linha e coluna após o "id"
+        QTimer::singleShot(0, this, [this]{
+            QAbstractItemModel* model = ui->tableData->model();
+            if (!model) return;
+
+            const int lastRow = model->rowCount() - 1;
+            if (lastRow < 0) return;
+
+            const int cols = model->columnCount();
+
+            // Usa a coluna após a do "id" (idPosition é atualizado em query2TableView)
+            int targetCol = 0;
+            if (idPosition >= 0 && idPosition + 1 < cols) {
+                targetCol = idPosition + 1;
+            } else if (cols > 1) {
+                targetCol = 1;            // fallback: segunda coluna
+            } else {
+                targetCol = 0;            // fallback: primeira coluna
+            }
+
+            const QModelIndex idx = model->index(lastRow, targetCol);
+            if (!idx.isValid()) return;
+
+            ui->tableData->setCurrentIndex(idx);
+            ui->tableData->scrollTo(idx, QAbstractItemView::PositionAtBottom);
+
+            if (auto *sel = ui->tableData->selectionModel()) {
+                sel->select(idx, QItemSelectionModel::ClearAndSelect | QItemSelectionModel::Rows);
+            }
+
+            // Entra em edição se permitido
+            if (editEnabled) ui->tableData->edit(idx);
+        });
+
     }
 }
 
@@ -1730,8 +1796,25 @@ void Sql::on_actionMacros_triggered()
 
 void Sql::show_context_menu(const QPoint& pos)
 {
+    // --- atalho persistente (criado uma única vez) ---
+    static QShortcut* newShortcut = nullptr;
+    if (!newShortcut) {
+        newShortcut = new QShortcut(QKeySequence::New, ui->tableData); // Ctrl+N / Cmd+N
+        newShortcut->setContext(Qt::WidgetWithChildrenShortcut);
+        connect(newShortcut, &QShortcut::activated, this, [this]() {
+            // usa a seleção atual quando o menu não está aberto
+            QModelIndex current = ui->tableData->currentIndex();
+            if (current.isValid())
+                handleTableAppend_triggered();
+        });
+    }
+
     QMenu menu(this);
+
     QAction* tableAppend = menu.addAction("Append row");
+    tableAppend->setShortcut(QKeySequence::New);                         // mostra "Ctrl+N" / "⌘N" no menu
+    tableAppend->setShortcutContext(Qt::WidgetWithChildrenShortcut);     // funciona enquanto o menu está visível
+
     QAction* tableClone = menu.addAction("Clone row");
     QAction* tableDelete = menu.addAction("Delete row(s)");
     menu.addSeparator();
@@ -1740,8 +1823,10 @@ void Sql::show_context_menu(const QPoint& pos)
     QAction* tableCopyCsv = menu.addAction("Copy as CSV");
     menu.addSeparator();
     QAction* tableExportCSV = menu.addAction("Export as CSV");
-
     QAction* selectedAction = menu.exec(ui->tableData->viewport()->mapToGlobal(pos));
+
+
+
 
     if (selectedAction == tableClone) {
         handleTableClone_triggered();

@@ -50,7 +50,7 @@
        </property>
        <property name="minimumSize">
         <size>
-         <width>280</width>
+         <width>360</width>
          <height>300</height>
         </size>
        </property>
@@ -70,6 +70,14 @@
         <number>2</number>
        </property>
        <widget class="QWidget" name="pageLog">
+        <property name="geometry">
+         <rect>
+          <x>0</x>
+          <y>0</y>
+          <width>358</width>
+          <height>463</height>
+         </rect>
+        </property>
         <property name="font">
          <font>
           <pointsize>10</pointsize>
@@ -148,8 +156,8 @@
          <rect>
           <x>0</x>
           <y>0</y>
-          <width>278</width>
-          <height>462</height>
+          <width>358</width>
+          <height>463</height>
          </rect>
         </property>
         <attribute name="icon">
@@ -265,8 +273,8 @@
          <rect>
           <x>0</x>
           <y>0</y>
-          <width>278</width>
-          <height>462</height>
+          <width>358</width>
+          <height>463</height>
          </rect>
         </property>
         <attribute name="icon">
@@ -517,8 +525,8 @@
          <rect>
           <x>0</x>
           <y>0</y>
-          <width>278</width>
-          <height>462</height>
+          <width>358</width>
+          <height>463</height>
          </rect>
         </property>
         <attribute name="icon">
@@ -763,8 +771,8 @@
          <rect>
           <x>0</x>
           <y>0</y>
-          <width>278</width>
-          <height>462</height>
+          <width>358</width>
+          <height>463</height>
          </rect>
         </property>
         <attribute name="icon">
@@ -885,7 +893,7 @@
      <x>0</x>
      <y>0</y>
      <width>1117</width>
-     <height>24</height>
+     <height>21</height>
     </rect>
    </property>
    <property name="sizePolicy">

@@ -127,6 +127,12 @@ Structure::Structure(QString& host, QString& schema, QString& table, QWidget* pa
     connect(ui->tableView, &QTableView::customContextMenuRequested,
         this, &Structure::show_context_menu);
 
+    // Aguarda 1 ciclo do event loop para o splitter ter tamanho
+    QTimer::singleShot(0, this, [this]{
+        QSplitter* s = ui->splitter; // substitua pelo nome real do seu splitter, se diferente
+        const int total = (s->orientation() == Qt::Horizontal) ? s->width() : s->height();
+        s->setSizes({ int(total * 0.70), int(total * 0.30) });
+    });
 }
 
 Structure::~Structure()
@@ -402,9 +408,7 @@ void Structure::add_new(const QModelIndex& index)
             for (int row = 0; row < model->rowCount(); ++row) {
                 QModelIndex indexFind = model->index(row, 0);  // primeira coluna
                 QString valor = model->data(indexFind).toString();
-                qDebug() << "busca: " << valor << "=" << new_field_name;
                 if (valor.contains(new_field_name, Qt::CaseInsensitive)) {
-                    qDebug() << "achou!!!!!!!!!!!";
                     ui->tableView->selectionModel()->select(indexFind, QItemSelectionModel::ClearAndSelect | QItemSelectionModel::Rows);
                     ui->tableView->setCurrentIndex(indexFind);
                     ui->tableView->scrollTo(indexFind);
@@ -462,8 +466,6 @@ void Structure::delete_row()
             qWarning() << "Erro ao remover campo:" << query.lastError().text();
         }
 
-        qDebug() << "Linha" << row << "| Valor da primeira coluna:" << value.toString();
-
         // Importante: remova a linha apenas no modelo visual, já que refresh_structure recarrega tudo
         model->removeRow(row);
     }
@@ -477,10 +479,31 @@ void Structure::show_context_menu(const QPoint& pos)
     if (!index.isValid())
         return;
 
+    // --- atalho persistente (criado uma única vez) ---
+    static QShortcut* newShortcut = nullptr;
+    if (!newShortcut) {
+        newShortcut = new QShortcut(QKeySequence::New, ui->tableView); // Ctrl+N / Cmd+N
+        newShortcut->setContext(Qt::WidgetWithChildrenShortcut);
+        connect(newShortcut, &QShortcut::activated, this, [this]() {
+            // usa a seleção atual quando o menu não está aberto
+            QModelIndex current = ui->tableView->currentIndex();
+            if (current.isValid())
+                add_new(current);
+        });
+    }
+
     QMenu menu(this);
-    QAction* tableNew = menu.addAction("New after");
-    QAction* tableRem = menu.addAction("Remove selected");
-    QAction* tableUp = menu.addAction("Move up");
+
+    QAction* tableNew  = menu.addAction("New after");
+    tableNew->setShortcut(QKeySequence::New);                         // mostra "Ctrl+N" / "⌘N" no menu
+    tableNew->setShortcutContext(Qt::WidgetWithChildrenShortcut);     // funciona enquanto o menu está visível
+    // Opcional: vincular a ação diretamente aqui também
+    connect(tableNew, &QAction::triggered, this, [this, index]() {
+        add_new(index);
+    });
+
+    QAction* tableRem  = menu.addAction("Remove selected");
+    QAction* tableUp   = menu.addAction("Move up");
     QAction* tableDown = menu.addAction("Move down");
 
     QAction* selectedAction = menu.exec(ui->tableView->viewport()->mapToGlobal(pos));
@@ -492,11 +515,12 @@ void Structure::show_context_menu(const QPoint& pos)
         delete_row();
     }
     else if (selectedAction == tableUp) {
+        // ...
     }
     else if (selectedAction == tableDown) {
+        // ...
     }
 }
-
 void Structure::on_buttonUpdateFields_clicked()
 {
     refresh_structure();

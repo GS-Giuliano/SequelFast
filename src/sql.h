@@ -39,6 +39,9 @@
 #include <QTimer>
 #include <QToolButton>
 #include <QVBoxLayout>
+#include <QHeaderView>
+#include <QSortFilterProxyModel>
+#include <QShortcut>
 
 // >>> ADIÇÕES
 #include <QSortFilterProxyModel>

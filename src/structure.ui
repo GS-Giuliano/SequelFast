@@ -76,7 +76,13 @@
             <property name="minimumSize">
              <size>
               <width>0</width>
-              <height>24</height>
+              <height>28</height>
+             </size>
+            </property>
+            <property name="maximumSize">
+             <size>
+              <width>16777215</width>
+              <height>16777215</height>
              </size>
             </property>
             <property name="styleSheet">
@@ -97,6 +103,9 @@
         </item>
         <item>
          <widget class="QTableView" name="tableView">
+          <property name="editTriggers">
+           <set>QAbstractItemView::EditTrigger::AllEditTriggers</set>
+          </property>
           <property name="gridStyle">
            <enum>Qt::PenStyle::DotLine</enum>
           </property>
@@ -120,7 +129,7 @@
           <property name="minimumSize">
            <size>
             <width>0</width>
-            <height>24</height>
+            <height>28</height>
            </size>
           </property>
           <property name="styleSheet">
@@ -159,7 +168,7 @@
      <x>0</x>
      <y>0</y>
      <width>800</width>
-     <height>24</height>
+     <height>21</height>
     </rect>
    </property>
   </widget>
