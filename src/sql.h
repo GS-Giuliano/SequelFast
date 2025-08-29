@@ -42,11 +42,9 @@
 #include <QHeaderView>
 #include <QSortFilterProxyModel>
 #include <QShortcut>
-
-// >>> ADIÇÕES
 #include <QSortFilterProxyModel>
 #include <QHeaderView>
-// <<<
+#include <QUndoStack>
 
 #include <functions.h>
 #include "texteditcompleter.h"
@@ -56,6 +54,8 @@
 namespace Ui {
 class Sql;
 }
+
+class UpdateCellCommand;
 
 class Sql : public QMainWindow
 {
@@ -110,6 +110,8 @@ private slots:
     void on_actionChart_triggered();
 
 private:
+    friend class UpdateCellCommand; // permite a esta classe acessar privados da sql
+
     QAbstractItemModel* getTableModel() const;
     QAbstractItemModel* getColumnModel(const QString& table) const;
 
@@ -144,15 +146,16 @@ private:
     QStringList whereFields;
     QStringList orderByFields;
 
-    // >>> ADIÇÕES: suporte à ordenação cíclica
     QSortFilterProxyModel* tableProxy = nullptr;
     enum SortState { SortNone = 0, SortAsc = 1, SortDesc = 2 };
     int currentSortColumn = -1;
     SortState currentSortState = SortNone;
     enum { OriginalRowRole = Qt::UserRole + 77 };
-    void applySortState(int column); // helper
-    void resetSortToOriginalOrder(); // helper
-    // <<<
+    void applySortState(int column); 
+    void resetSortToOriginalOrder(); 
+
+    QUndoStack* undoStack = nullptr;
+    
 protected:
     void keyPressEvent(QKeyEvent* event) override;
     QLineEdit *limitEdit;

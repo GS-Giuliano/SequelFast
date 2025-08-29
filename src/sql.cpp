@@ -11,6 +11,11 @@
 #include <QtCharts/QBarCategoryAxis>
 #include <QtCharts/QValueAxis>
 
+#include <QUndoStack>
+#include <QUndoCommand>
+
+#include "SafetyLinterHandler.h"
+
 extern QJsonArray connections;
 extern QSqlDatabase dbPreferences;
 extern QSqlDatabase dbMysql;
@@ -308,6 +313,77 @@ private:
     QSqlRecord currentRecord;
 };
 
+class UpdateCellCommand : public QUndoCommand {
+public:
+    UpdateCellCommand(Sql* self,
+                      const QPersistentModelIndex& sourceIndex,
+                      int idColumn,
+                      QString fieldName,
+                      QString oldValue,
+                      QString newValue)
+        : self(self),
+          sourceIndex(sourceIndex),
+          idColumn(idColumn),
+          fieldName(std::move(fieldName)),
+          oldValue(std::move(oldValue)),
+          newValue(std::move(newValue))
+    {
+        setText(QString("Edit %1").arg(this->fieldName));
+    }
+
+    void redo() override { apply(newValue); }
+    void undo() override { apply(oldValue); }
+
+private:
+    Sql* self;
+    QPersistentModelIndex sourceIndex;  // índice no *source* (QStandardItemModel)
+    int idColumn;
+    QString fieldName, oldValue, newValue;
+
+    void apply(const QString& value)
+    {
+        if (!sourceIndex.isValid()) return;
+
+        auto* srcModel = qobject_cast<QStandardItemModel*>(self->tableProxy->sourceModel());
+        if (!srcModel) return;
+
+        // seta no modelo (EditRole + espelha Display/UserRole)
+        srcModel->setData(sourceIndex, value, Qt::EditRole);
+        srcModel->setData(sourceIndex, value, Qt::DisplayRole);
+        srcModel->setData(sourceIndex, value, Qt::UserRole);
+
+        // negrito para indicar “alterado”
+        if (auto* item = srcModel->item(sourceIndex.row(), sourceIndex.column())) {
+            QFont f = item->font();
+            f.setBold(true);
+            item->setFont(f);
+        }
+
+        // id da linha (coluna “id” já identificada na sua montagem)
+        const QString idValue = srcModel->item(sourceIndex.row(), idColumn)
+                                    ? srcModel->item(sourceIndex.row(), idColumn)->text()
+                                    : QString();
+
+        if (!idValue.isEmpty())
+            self->handleTableData_edit_trigger(const_cast<QString&>(idValue),
+                                               fieldName,
+                                               const_cast<QString&>(value));
+    }
+};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 Sql::Sql(const QString& host, const QString& schema, const QString& table,
          const QString& color, const QString& favName, const QString& favValue,
          const bool& run, QWidget* parent)
@@ -330,6 +406,32 @@ Sql::Sql(const QString& host, const QString& schema, const QString& table,
 
     QApplication::setOverrideCursor(Qt::WaitCursor);
     QApplication::processEvents();
+
+    // no construtor, logo após ui->setupUi(this);
+    ui->textQuery->setUndoRedoEnabled(true);
+
+    // Ações de Undo/Redo com atalhos padrão (Ctrl+Z / Ctrl+Y ou Cmd+Z / Shift+Cmd+Z)
+    auto *actTextUndo = new QAction(QIcon(":/icons/resources/arrow square left.svg"), tr("Undo"), this);
+    actTextUndo->setShortcut(QKeySequence::Undo);
+    actTextUndo->setShortcutContext(Qt::WidgetWithChildrenShortcut);
+    connect(actTextUndo, &QAction::triggered, ui->textQuery, &QTextEdit::undo);
+
+    auto *actTextRedo = new QAction(QIcon(":/icons/resources/arrow square right.svg"), tr("Redo"), this);
+    actTextRedo->setShortcut(QKeySequence::Redo);
+    actTextRedo->setShortcutContext(Qt::WidgetWithChildrenShortcut);
+    connect(actTextRedo, &QAction::triggered, ui->textQuery, &QTextEdit::redo);
+
+    // (Opcional) refletir disponibilidade habilitando/desabilitando os botões
+    actTextUndo->setEnabled(false);
+    actTextRedo->setEnabled(false);
+    connect(ui->textQuery->document(), &QTextDocument::undoAvailable,
+            actTextUndo, &QAction::setEnabled);
+    connect(ui->textQuery->document(), &QTextDocument::redoAvailable,
+            actTextRedo, &QAction::setEnabled);
+
+    // (Opcional) adicionar na sua toolbar existente
+    ui->toolBarQuery->addAction(actTextUndo);
+    ui->toolBarQuery->addAction(actTextRedo);
 
     if (favValue != "")
     {
@@ -380,7 +482,7 @@ Sql::Sql(const QString& host, const QString& schema, const QString& table,
 
     QWidget* spacer = new QWidget(this);
     spacer->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
-    QLabel* labelFavName = new QLabel(databaseName, this);
+    // QLabel* labelFavName = new QLabel(databaseName, this);
     QLabel* label = new QLabel("Every ", this);
     QLabel* labelSeconds = new QLabel("second(s) ", this);
     QLabel* labelTimes = new QLabel(" time(s)", this);
@@ -418,7 +520,7 @@ Sql::Sql(const QString& host, const QString& schema, const QString& table,
     timer = new QTimer(this);
     connect(timer, &QTimer::timeout, this, &Sql::handleTimer_tick);
 
-    ui->toolBarQuery->addWidget(labelFavName);
+    // ui->toolBarQuery->addWidget(labelFavName);
     ui->toolBarQuery->addWidget(spacer);
     ui->toolBarQuery->addWidget(label);
     ui->toolBarQuery->addWidget(edit);
@@ -493,6 +595,19 @@ Sql::Sql(const QString& host, const QString& schema, const QString& table,
     {
         ui->actionAuto_commit->setChecked(true);
     }
+
+    undoStack = new QUndoStack(this);
+
+    // (opcional) atalhos padrão de undo/redo:
+    auto actUndo = undoStack->createUndoAction(this, tr("Undo"));
+    actUndo->setShortcut(QKeySequence::Undo);
+    addAction(actUndo);
+
+    auto actRedo = undoStack->createRedoAction(this, tr("Redo"));
+    actRedo->setShortcut(QKeySequence::Redo);
+    addAction(actRedo);
+
+
 
 
     QApplication::processEvents();
@@ -849,44 +964,72 @@ void Sql::query2TableView(QTableView* tableView, const QString& queryStr, const 
         CustomDelegate* delegate = new CustomDelegate(tableView, currentRecord);
         tableView->setItemDelegate(delegate);
 
-        connect(delegate, &QAbstractItemDelegate::commitData, this, [=](QWidget* editor) {
-            QModelIndex proxyIndex = tableView->currentIndex();
+        connect(delegate, &QAbstractItemDelegate::commitData, this, [=](QWidget* /*editor*/) {
+            QModelIndex proxyIndex = ui->tableData->currentIndex();
             if (!proxyIndex.isValid() || !hasId || idPosition < 0)
                 return;
 
-            // mapear índice do proxy para o source
-            QModelIndex index = tableProxy->mapToSource(proxyIndex);
+            // mapeia do proxy para o source
+            QModelIndex srcIdx = tableProxy->mapToSource(proxyIndex);
 
-            QString fieldName = currentRecord.fieldName(index.column());
-            QString idValue = static_cast<QStandardItemModel*>(tableProxy->sourceModel())
-                                  ->item(index.row(), idPosition)->text();
-            QString newValue = index.model()->data(index, Qt::EditRole).toString();
-            QString oldValue = static_cast<QStandardItemModel*>(tableProxy->sourceModel())
-                                   ->item(index.row(), index.column())->data(Qt::UserRole).toString();
-            if (oldValue != newValue) {
-                if (!handleTableData_edit_trigger(idValue, fieldName, newValue)) {
-                    tableProxy->sourceModel()->blockSignals(true);
-                    tableProxy->sourceModel()->setData(index, oldValue, Qt::EditRole);
-                    tableProxy->sourceModel()->blockSignals(false);
+            const QString fieldName = currentRecord.fieldName(srcIdx.column());
+            auto* srcModel = qobject_cast<QStandardItemModel*>(tableProxy->sourceModel());
+            if (!srcModel) return;
 
-                    statusBar()->showMessage(
-                        QString("Alteração REJEITADA em '%1'. Valor restaurado: %2")
-                            .arg(fieldName, oldValue)
-                        );
-                    qWarning() << "Alteração rejeitada. Valor restaurado.";
-                }
-                else {
-                    auto* item = static_cast<QStandardItemModel*>(tableProxy->sourceModel())
-                    ->item(index.row(), index.column());
-                    item->setData(newValue, Qt::UserRole);
+            const QString newValue = srcIdx.model()->data(srcIdx, Qt::EditRole).toString();
+            const QString oldValue = srcModel->item(srcIdx.row(), srcIdx.column())
+                                         ? srcModel->item(srcIdx.row(), srcIdx.column())->data(Qt::UserRole).toString()
+                                         : QString();
 
-                    QFont font = item->font();
-                    font.setBold(true);
-                    item->setFont(font);
-                }
+            if (newValue == oldValue) return; // nada mudou
 
-            }
+            // empilha o comando; ele aplica e registra (DB ou cache), com undo/redo
+            undoStack->push(new UpdateCellCommand(this,
+                                                  QPersistentModelIndex(srcIdx),
+                                                  idPosition,
+                                                  fieldName,
+                                                  oldValue,
+                                                  newValue));
         });
+
+        // connect(delegate, &QAbstractItemDelegate::commitData, this, [=](QWidget* editor) {
+        //     QModelIndex proxyIndex = tableView->currentIndex();
+        //     if (!proxyIndex.isValid() || !hasId || idPosition < 0)
+        //         return;
+
+        //     // mapear índice do proxy para o source
+        //     QModelIndex index = tableProxy->mapToSource(proxyIndex);
+
+        //     QString fieldName = currentRecord.fieldName(index.column());
+        //     QString idValue = static_cast<QStandardItemModel*>(tableProxy->sourceModel())
+        //                           ->item(index.row(), idPosition)->text();
+        //     QString newValue = index.model()->data(index, Qt::EditRole).toString();
+        //     QString oldValue = static_cast<QStandardItemModel*>(tableProxy->sourceModel())
+        //                            ->item(index.row(), index.column())->data(Qt::UserRole).toString();
+        //     if (oldValue != newValue) {
+        //         if (!handleTableData_edit_trigger(idValue, fieldName, newValue)) {
+        //             tableProxy->sourceModel()->blockSignals(true);
+        //             tableProxy->sourceModel()->setData(index, oldValue, Qt::EditRole);
+        //             tableProxy->sourceModel()->blockSignals(false);
+
+        //             statusBar()->showMessage(
+        //                 QString("Alteração REJEITADA em '%1'. Valor restaurado: %2")
+        //                     .arg(fieldName, oldValue)
+        //                 );
+        //             qWarning() << "Alteração rejeitada. Valor restaurado.";
+        //         }
+        //         else {
+        //             auto* item = static_cast<QStandardItemModel*>(tableProxy->sourceModel())
+        //             ->item(index.row(), index.column());
+        //             item->setData(newValue, Qt::UserRole);
+
+        //             QFont font = item->font();
+        //             font.setBold(true);
+        //             item->setFont(font);
+        //         }
+
+        //     }
+        // });
 
         connect(tableView->selectionModel(), &QItemSelectionModel::currentChanged,
                 this, [this](const QModelIndex& current, const QModelIndex&) {
@@ -1298,6 +1441,16 @@ void Sql::on_actionRun_triggered()
             showChart();
         }
         else {
+            SafetyLinterHandler linter;
+            QString sql = queryStr; // a mesma string que você vai executar
+
+            if (!linter.handle(sql, this)) {
+                statusMessage("Execução cancelada pelo usuário.");
+                QApplication::restoreOverrideCursor();
+                return; // aborta o run
+            }
+            // se chegou aqui, o usuário confirmou (ou não havia risco).
+
             editEnabled = false;
             ui->tableData->setEditTriggers(QAbstractItemView::NoEditTriggers);
             QSqlQuery query2(dbMysqlLocal);
@@ -1313,6 +1466,7 @@ void Sql::on_actionRun_triggered()
         QApplication::restoreOverrideCursor();
         QApplication::processEvents();
     }
+    ui->textQuery->setFocus();
 }
 
 void Sql::on_actionFormat_triggered()
