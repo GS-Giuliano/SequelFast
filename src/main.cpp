@@ -11,6 +11,9 @@ int main(int argc, char *argv[])
 
     QCoreApplication::setOrganizationName("SequelFastTeam");
     QCoreApplication::setApplicationName("SequelFast");
+    QCoreApplication::setApplicationVersion(APP_VERSION);
+
+    qDebug() << "Versão:" << QCoreApplication::applicationVersion();
 
     a.setWindowIcon(QIcon(":/icons/SequelFast.png")); // ou qualquer tamanho desejado
 

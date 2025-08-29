@@ -65,6 +65,8 @@ MainWindow::MainWindow(QWidget* parent)
 {
     ui->setupUi(this);
 
+    this->setWindowTitle("SequelFast - "+QCoreApplication::applicationVersion());
+
     ui->actionNew_schema->setDisabled(true);
     ui->actionNew_table->setDisabled(true);
     ui->actionUsers->setDisabled(true);
