@@ -176,7 +176,7 @@ bool openPreferences()
 
     }
 
-    if (!query.exec("SELECT * FROM conns")) {
+    if (!query.exec("SELECT * FROM conns ORDER BY name")) {
         qCritical() << "Erro ao consultar dados:" << query.lastError().text();
     }
     else {

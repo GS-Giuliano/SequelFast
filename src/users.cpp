@@ -2,6 +2,7 @@
 #include "ui_users.h"
 
 #include <functions.h>
+#include "mainwindow.h"
 
 extern QJsonArray connections;
 extern QSqlDatabase dbPreferences;
@@ -206,6 +207,14 @@ void Users::create_user_dialog(QWidget* parent, const QString& connectionName)
         QMessageBox::critical(parent, "Error", "Failed to create user:\n" + query.lastError().text());
         return;
     }
+    MainWindow* mainWin = qobject_cast<MainWindow*>(this->window());
+
+    if (mainWin) {
+        mainWin->log(usr_host, usr_schema, createUserSQL);
+    }
+    else {
+        qWarning() << "MainWindow not found from Sql::on_actionFavorites_triggered";
+    }
 
     // Aplica as permissões
     QString perms = permissions.join(", ");
@@ -214,6 +223,12 @@ void Users::create_user_dialog(QWidget* parent, const QString& connectionName)
     if (!query.exec(grantSQL)) {
         QMessageBox::critical(parent, "Error", "Failed to grant privileges:\n" + query.lastError().text());
         return;
+    }
+    if (mainWin) {
+        mainWin->log(usr_host, usr_schema, grantSQL);
+    }
+    else {
+        qWarning() << "MainWindow not found from Sql::on_actionFavorites_triggered";
     }
 
     // Aplica as permissões na prática
