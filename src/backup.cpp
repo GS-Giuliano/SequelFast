@@ -318,6 +318,12 @@ void Backup::onConfirm()
     progressBar->setRange(0, totalTables);
     QApplication::processEvents();
 
+    out << "SET FOREIGN_KEY_CHECKS=0;\n";
+    out << "SET UNIQUE_CHECKS=0;\n";
+    out << "SET autocommit=0;\n";
+    out << "START TRANSACTION;\n";
+
+
     for (int row = 0; row < model->rowCount(); ++row) {
         if (!abort)
         {
@@ -405,7 +411,6 @@ void Backup::onConfirm()
                         for (int i = 0; i < columnCount; ++i) {
                             columnNames << "`" + record.fieldName(i) + "`" ;
                         }
-
                         while (query.next()) {
                             if (!abort)
                             {
@@ -422,7 +427,11 @@ void Backup::onConfirm()
                                         values << "NULL";
                                     }
                                     else if (value.type() == QVariant::String) {
-                                        values << "'" + value.toString().replace("'", "''") + "'";
+                                        QString safeStr = value.toString();
+                                        safeStr.replace("'", "''");     // escapa aspas simples
+                                        safeStr.replace("\r", "\\r");   // escapa CR
+                                        safeStr.replace("\n", "\\n");   // escapa LF
+                                        values << "'" + safeStr + "'";
                                     }
                                     else if (value.type() == QVariant::Date || value.type() == QVariant::DateTime) {
                                         values << "'" + value.toDateTime().toString("yyyy-MM-dd HH:mm:ss") + "'";
@@ -438,7 +447,7 @@ void Backup::onConfirm()
                                         values << value.toString();
                                     }
                                     else {
-                                        values << "'" + value.toString().replace("'", "''") + "'";
+                                        values << "'" + value.toString() + "'";
                                     }
                                 }
                                 if (exportToFile)
@@ -448,6 +457,7 @@ void Backup::onConfirm()
                                 }
                             }
                         }
+
                         progressBar2->setVisible(false);
                         if (exportToFile)
                         {
@@ -469,6 +479,11 @@ void Backup::onConfirm()
             }
         }
     }
+    out << "COMMIT;\n";
+    out << "SET autocommit=1;\n";
+    out << "SET FOREIGN_KEY_CHECKS=1;\n";
+    out << "SET UNIQUE_CHECKS=1;\n";
+
     progressBar->setVisible(false);
     progressBar2->setVisible(false);
     file.close();
