@@ -321,7 +321,7 @@ void Backup::onConfirm()
     out << "SET FOREIGN_KEY_CHECKS=0;\n";
     out << "SET UNIQUE_CHECKS=0;\n";
     out << "SET autocommit=0;\n";
-    out << "START TRANSACTION;\n";
+    out << "START TRANSACTION;\n\n";
 
 
     for (int row = 0; row < model->rowCount(); ++row) {
@@ -479,7 +479,7 @@ void Backup::onConfirm()
             }
         }
     }
-    out << "COMMIT;\n";
+    out << "\nCOMMIT;\n";
     out << "SET autocommit=1;\n";
     out << "SET FOREIGN_KEY_CHECKS=1;\n";
     out << "SET UNIQUE_CHECKS=1;\n";
