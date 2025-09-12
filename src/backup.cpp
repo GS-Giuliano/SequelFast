@@ -403,7 +403,7 @@ void Backup::onConfirm()
                         int columnCount = record.count();
                         QStringList columnNames;
                         for (int i = 0; i < columnCount; ++i) {
-                            columnNames << record.fieldName(i);
+                            columnNames << "`" + record.fieldName(i) + "`" ;
                         }
 
                         while (query.next()) {

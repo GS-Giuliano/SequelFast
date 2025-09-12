@@ -6,7 +6,9 @@
         "*.ts": "xml",
         "qstandarditemmodel": "cpp",
         "qformlayout": "cpp",
-        "qabstractitemmodel": "cpp"
+        "qabstractitemmodel": "cpp",
+        "qapplication": "cpp",
+        "qtranslator": "cpp"
     },
     "cmake.configureOnOpen": false,
     "cmake.configureOnEdit": false,
