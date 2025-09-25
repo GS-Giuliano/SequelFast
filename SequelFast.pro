@@ -5,7 +5,7 @@ greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 CONFIG += c++17
 INCLUDEPATH += src
 TARGET = SequelFast
-VERSION  = 0.2.1
+VERSION  = 0.2.2
 DEFINES += APP_VERSION=\\\"$$VERSION\\\"
 
 

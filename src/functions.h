@@ -1,6 +1,6 @@
 #pragma once
 
-#define APP_VERSION "0.1.0"
+// #define APP_VERSION "0.1.0"
 #define APP_BUILD_DATE __DATE__
 #define APP_BUILD_TIME __TIME__
 
