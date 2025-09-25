@@ -44,6 +44,7 @@ class MainWindow : public QMainWindow
     Q_OBJECT
 
 public:
+
     /**
      * @brief Alterna entre temas claro e escuro da aplicação
      * Carrega e aplica folhas de estilo (QSS) diferentes conforme o tema selecionado
@@ -167,6 +168,11 @@ public:
     ~MainWindow();
 
 private slots:
+
+    /**
+     * @brief Mantem a conexao viva (evitando desconectar por falta de uso)
+     */
+    void keepConnection();
 
     /** @brief Slot ativado ao clicar no botão "Nova Conexão" */
     void on_buttonNewConns_clicked();

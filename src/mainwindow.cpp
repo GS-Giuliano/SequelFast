@@ -188,6 +188,12 @@ MainWindow::MainWindow(QWidget* parent)
         });
     ui->statusbar->showMessage("Version: " + QString(APP_VERSION) + " - Build:" + QString(APP_BUILD_DATE) + " " + QString(APP_BUILD_TIME));
 
+    // Temporizador pra manter conexoes ativas
+    QTimer *timerKeep = new QTimer(this);
+    connect(timerKeep, &QTimer::timeout, this, [=]() {
+        keepConnection();
+    });
+    timerKeep->start(15000);
 }
 
 MainWindow::~MainWindow()
@@ -195,6 +201,15 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
+void MainWindow::keepConnection()
+{
+    if (actual_host!="")
+    {
+        qDebug() << "Keeping connection alive...";
+        QSqlQuery query(QSqlDatabase::database("mysql_connection_" + actual_host));
+        query.exec("SELECT 1;");
+    }
+}
 
 void MainWindow::changeTheme()
 {

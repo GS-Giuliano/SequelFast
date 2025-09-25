@@ -1,0 +1,6 @@
+<RCC>
+    <qresource prefix="/">
+        <file>fonts/Gilroy.otf</file>
+        <file>fonts/PathwayExtreme.ttf</file>
+    </qresource>
+</RCC>

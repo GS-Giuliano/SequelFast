@@ -75,6 +75,7 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
 
 RESOURCES += \
+    fontresources.qrc \
     icons.qrc \
     themes/dark/darkstyle.qrc \
     themes/light/lightstyle.qrc
@@ -91,6 +92,8 @@ mac {
 }
 
 DISTFILES += \
+    fonts/Gilroy.otf \
+    fonts/PathwayExtreme.ttf \
     themes/dark/darkstyle.qss \
     themes/dark/rc/arrow_down.png \
     themes/dark/rc/arrow_down@2x.png \

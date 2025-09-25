@@ -566,7 +566,7 @@ Sql::Sql(const QString& host, const QString& schema, const QString& table,
     pref_sql_limit = limit.toInt();
     limitEdit->setText(limit);
     limitEdit->setClearButtonEnabled(true);
-    limitEdit->setFixedWidth(70);
+    limitEdit->setFixedWidth(80);
 
     // adiciona na barra inferior (lado direito)
     ui->toolBar->addWidget(limitLabel);
