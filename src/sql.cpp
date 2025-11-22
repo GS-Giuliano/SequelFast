@@ -835,9 +835,12 @@ void Sql::query2TableView(QTableView* tableView, const QString& queryStr, const 
     // Modelo base com dados
     QStandardItemModel* model = new QStandardItemModel(tableView);
     QSqlQuery query(dbMysqlLocal);
+    query.setForwardOnly(true);
     if (!query.exec(queryStr)) {
         statusMessage("Query error: " + query.lastError().text());
-        ui->textQuery->setStyleSheet("QTextEdit { border: 1px solid red; }");
+        QString texto = ui->textQuery->toPlainText();
+        texto = texto.trimmed() +  "\n-- Error: " + query.lastError().text();
+        ui->textQuery->setPlainText(texto);
         qWarning() << "Erro na query e table:" << query.lastError().text();
         delete model;
         return;
@@ -1456,6 +1459,9 @@ void Sql::on_actionRun_triggered()
             QSqlQuery query2(dbMysqlLocal);
             if (!query2.exec(queryStr)) {
                 statusMessage("Command error: " + query2.lastError().text());
+                QString texto = ui->textQuery->toPlainText();
+                texto = texto.trimmed() +  "\n-- Error: " + query2.lastError().text();
+                ui->textQuery->setPlainText(texto);
             }
             else {
                 int linhasAfetadas = query2.numRowsAffected();

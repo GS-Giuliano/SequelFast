@@ -174,16 +174,32 @@ void Connection::on_buttonConnect_clicked()
     dbMysql.setUserName(item["user"].toVariant().toString());
     dbMysql.setPassword(item["pass"].toVariant().toString());
 
-    if (!dbMysql.open()) {
-        QMessageBox::information(this,
-            "Connection",
-            "Connection failed! Check parameters and try again",
-            QMessageBox::Ok
+    dbMysql.setConnectOptions(
+        "MYSQL_OPT_CONNECT_TIMEOUT=60;"
+        "MYSQL_OPT_READ_TIMEOUT=28800;"
+        "MYSQL_OPT_WRITE_TIMEOUT=28800;"
+        "CLIENT_INTERACTIVE=1;"
+        "MYSQL_OPT_RECONNECT=1;"
+        "CLIENT_COMPRESS=1;"
         );
+
+    if (!dbMysql.open()) {
+        QMessageBox::information(
+            this, "Connection",
+            QStringLiteral("Connection failed!\n\n%1").arg(dbMysql.lastError().text()),
+            QMessageBox::Ok
+            );
+        return;
     }
     else {
         qDebug() << "Conexão bem-sucedida!";
-        dbMysql.close();
+        QSqlQuery q(dbMysql);
+        // Força UTF-8 completo
+        // q.exec("SET NAMES utf8mb4 COLLATE utf8mb4_unicode_ci");
+
+        q.exec("SET SESSION net_read_timeout=28800");
+        q.exec("SET SESSION net_write_timeout=28800");
+        q.exec("SET SESSION innodb_lock_wait_timeout=900");
     }
 }
 

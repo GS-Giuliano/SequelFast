@@ -193,7 +193,7 @@ MainWindow::MainWindow(QWidget* parent)
     connect(timerKeep, &QTimer::timeout, this, [=]() {
         keepConnection();
     });
-    timerKeep->start(15000);
+    timerKeep->start(5000);
 }
 
 MainWindow::~MainWindow()
