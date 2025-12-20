@@ -228,7 +228,7 @@ cmake --build .
 cmake --install .
 ```
 
-### Linux
+### Ubuntu Linux
 ```bash
 sudo apt -y install mariadb-server cmake build-essential libxcb-cursor0 libxcb-cursor-dev patchelf mariadb cmake ninja
 
@@ -241,7 +241,32 @@ cmake --install .
 cp plugins/sqldrivers/libqsqlmysql.so ~/Qt/6.9.1/gcc_64/plugins/sqldrivers/
 ```
 
-### macOS
+### Arch/Omarchy Linux
+
+```bash
+sudo pacman -S --needed \
+  mariadb \
+  base-devel \
+  cmake \
+  ninja \
+  libxcb \
+  xcb-util-cursor \
+  patchelf
+
+mkdir -p build-sqldrivers
+cd build-sqldrivers
+~/Qt/6.10.1/gcc_64/bin/qt-cmake \
+  -G Ninja \
+  ~/Qt/6.10.1/Src/qtbase/src/plugins/sqldrivers \
+  -DCMAKE_INSTALL_PREFIX=~/Qt/6.10.1/gcc_64/
+
+cmake --build . --parallel
+cmake --install .
+cp plugins/sqldrivers/libqsqlmysql.so \
+   ~/Qt/6.10.1/gcc_64/plugins/sqldrivers/
+```
+
+# macOS
 
 **Install Command Line Tools and MariaDB**
 ```bash
