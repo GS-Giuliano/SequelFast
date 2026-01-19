@@ -2,7 +2,7 @@
 #include "two_checkbox_delegate.h"
 #include "functions.h"
 #include "mainwindow.h"
-#include "restore.h";
+#include "restore.h"
 
 
 extern QJsonArray connections;
