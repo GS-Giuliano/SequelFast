@@ -11,12 +11,14 @@
 #include <statistics.h>
 #include <users.h>
 #include <batch.h>
+#include <omarchytheme.h>
 
 extern QJsonArray connections;
 extern QSqlDatabase dbPreferences;
 extern QSqlDatabase dbMysql;
 
 extern QString currentTheme;
+extern bool currentThemeIsDark;
 
 extern QString actual_host;
 extern QString actual_schema;
@@ -214,47 +216,63 @@ void MainWindow::keepConnection()
 void MainWindow::changeTheme()
 {
     // qDebug() << "mudar tema: " << currentTheme;
-    QFile f(QString(":themes/%1/%2style.qss").arg(currentTheme).arg(currentTheme));
+    QString qss;
 
-    if (!f.exists()) {
-        printf("Unable to set stylesheet, file not found\n");
+    if (currentTheme == "omarchy") {
+        qss = OmarchyTheme::styleSheet();
+        if (!qss.isEmpty()) {
+            currentThemeIsDark = OmarchyTheme::isDark();
+        }
     }
-    else {
+
+    if (qss.isEmpty()) {
+        // Plain light/dark theme, or "omarchy" with no active Omarchy theme
+        // available: fall back to the bundled dark theme.
+        const QString themeFile = (currentTheme == "omarchy") ? "dark" : currentTheme;
+        QFile f(QString(":themes/%1/%2style.qss").arg(themeFile).arg(themeFile));
+
+        if (!f.exists()) {
+            printf("Unable to set stylesheet, file not found\n");
+            return;
+        }
+
         f.open(QFile::ReadOnly | QFile::Text);
         QTextStream ts(&f);
-        this->setStyleSheet(ts.readAll());
+        qss = ts.readAll();
+        currentThemeIsDark = (themeFile != "light");
+    }
 
-        for (const QJsonValue& val : colorThemes) {
-            QJsonObject obj = val.toObject();
-            if (obj["theme"].toString() == currentTheme) {
-                colors = obj["colors"].toArray();
-                break;
-            }
+    this->setStyleSheet(qss);
+
+    for (const QJsonValue& val : colorThemes) {
+        QJsonObject obj = val.toObject();
+        if (obj["theme"].toString() == currentTheme) {
+            colors = obj["colors"].toArray();
+            break;
         }
-        setStringPreference("theme", currentTheme);
+    }
+    setStringPreference("theme", currentTheme);
 
-        if (currentTheme == "dark")
-        {
-            QPixmap pixmap(10, 10);
-            pixmap.fill(Qt::darkGray); // cor de fundo
+    if (currentThemeIsDark)
+    {
+        QPixmap pixmap(10, 10);
+        pixmap.fill(Qt::darkGray); // cor de fundo
 
-            QPainter painter(&pixmap);
-            painter.setPen(Qt::black);
-            painter.drawPoint(5, 5); // ponto central
-            painter.end();
-            ui->mdiArea->setBackground(QBrush(pixmap));
-        }
-        else {
-            QPixmap pixmap(10, 10);
-            pixmap.fill(Qt::white); // cor de fundo
+        QPainter painter(&pixmap);
+        painter.setPen(Qt::black);
+        painter.drawPoint(5, 5); // ponto central
+        painter.end();
+        ui->mdiArea->setBackground(QBrush(pixmap));
+    }
+    else {
+        QPixmap pixmap(10, 10);
+        pixmap.fill(Qt::white); // cor de fundo
 
-            QPainter painter(&pixmap);
-            painter.setPen(Qt::gray);
-            painter.drawPoint(5, 5); // ponto central
-            painter.end();
-            ui->mdiArea->setBackground(QBrush(pixmap));
-        }
-
+        QPainter painter(&pixmap);
+        painter.setPen(Qt::gray);
+        painter.drawPoint(5, 5); // ponto central
+        painter.end();
+        ui->mdiArea->setBackground(QBrush(pixmap));
     }
 }
 
@@ -1249,13 +1267,20 @@ void MainWindow::on_actionCascade_triggered()
 
 void MainWindow::on_actionTheme_triggered()
 {
+    // Cycles: light -> dark -> omarchy (matches the active Omarchy system
+    // theme, when available) -> light.
     if (currentTheme == "light")
     {
         currentTheme = "dark";
     }
+    else if (currentTheme == "dark")
+    {
+        currentTheme = "omarchy";
+    }
     else {
         currentTheme = "light";
     }
+    ui->actionTheme->setChecked(currentTheme != "light");
     changeTheme();
     refresh_connections();
 }

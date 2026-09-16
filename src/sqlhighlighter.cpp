@@ -1,7 +1,7 @@
 #include "sqlhighlighter.h"
 #include "functions.h"
 
-extern QString currentTheme;
+extern bool currentThemeIsDark;
 
 SqlHighlighter::SqlHighlighter(QTextDocument *parent)
     : QSyntaxHighlighter(parent)
@@ -10,7 +10,7 @@ SqlHighlighter::SqlHighlighter(QTextDocument *parent)
 
     // Palavras-chave SQL (azul escuro e negrito)
     QTextCharFormat keywordFormat;
-    if (currentTheme == "light")
+    if (!currentThemeIsDark)
         keywordFormat.setForeground(Qt::darkBlue);
     else
         keywordFormat.setForeground(QBrush(QColor("#A0A0FF")));
@@ -35,7 +35,7 @@ SqlHighlighter::SqlHighlighter(QTextDocument *parent)
 
     // Funções SQL (laranja)
     QTextCharFormat functionFormat;
-    if (currentTheme == "light")
+    if (!currentThemeIsDark)
         functionFormat.setForeground(Qt::darkRed);
     else
         functionFormat.setForeground(Qt::red);
@@ -75,7 +75,7 @@ SqlHighlighter::SqlHighlighter(QTextDocument *parent)
 
     // Macros do tipo :nome ou :nome@tipo (azul claro)
     QTextCharFormat macroFormat;
-    if (currentTheme == "light")
+    if (!currentThemeIsDark)
         macroFormat.setForeground(QColor("#1E90FF")); // azul claro
     else
         macroFormat.setForeground(QColor("#87CEFA")); // azul mais claro no modo escuro
@@ -96,7 +96,7 @@ SqlHighlighter::SqlHighlighter(QTextDocument *parent)
 
     // Números (int e float)
     QTextCharFormat numberFormat;
-    if (currentTheme == "light")
+    if (!currentThemeIsDark)
         numberFormat.setForeground(QColor("#6A0DAD"));  // roxo escuro
     else
         numberFormat.setForeground(QColor("#9A3DDD"));  // roxo claro
@@ -113,7 +113,7 @@ SqlHighlighter::SqlHighlighter(QTextDocument *parent)
 
     // Comentários SQL iniciados por "--" (cinza)
     QTextCharFormat commentFormat;
-    if (currentTheme == "light")
+    if (!currentThemeIsDark)
         commentFormat.setForeground(Qt::darkGray);
     else
         commentFormat.setForeground(Qt::gray);

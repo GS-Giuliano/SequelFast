@@ -1882,6 +1882,7 @@ QListView,
 QTableView,
 QColumnView {
   background-color: #09131D;
+  alternate-background-color: #131E2B;
   border: 1px solid #253344;
   color: #DFE1E2;
   gridline-color: #253344;

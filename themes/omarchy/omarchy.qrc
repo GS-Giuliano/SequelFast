@@ -1,0 +1,6 @@
+
+<RCC>
+  <qresource prefix="themes/omarchy">
+    <file>omarchystyle.qss.tpl</file>
+  </qresource>
+</RCC>

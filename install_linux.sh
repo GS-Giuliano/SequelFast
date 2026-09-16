@@ -1,5 +1,6 @@
 #!/bin/bash
-sudo apt -y install libxcb-cursor0 libxcb-cursor-dev libgl1-mesa-dev
+# This package bundles all required Qt/system libraries, so no extra
+# packages need to be installed on the host system.
 mkdir -p ~/Applications/SequelFast
 cp -fR * ~/Applications/SequelFast
 mkdir -p ~/.local/share/applications

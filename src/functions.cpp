@@ -31,6 +31,20 @@ QJsonArray colorThemes = QJsonArray{
                        QJsonObject{{"name", "orange"}, {"rgb", "#754823"}},
                        QJsonObject{{"name", "grey"},   {"rgb", "#424242"}}
                    }}
+    },
+    QJsonObject{
+        {"theme", "omarchy"},
+        {"colors", QJsonArray{
+                       QJsonObject{{"name", "white"},  {"rgb", "#09131D"}},
+                       QJsonObject{{"name", "brown"},  {"rgb", "#63503E"}},
+                       QJsonObject{{"name", "red"},    {"rgb", "#612C2C"}},
+                       QJsonObject{{"name", "purple"}, {"rgb", "#55416B"}},
+                       QJsonObject{{"name", "blue"},   {"rgb", "#2F4A57"}},
+                       QJsonObject{{"name", "green"},  {"rgb", "#355535"}},
+                       QJsonObject{{"name", "yellow"}, {"rgb", "#6F642B"}},
+                       QJsonObject{{"name", "orange"}, {"rgb", "#754823"}},
+                       QJsonObject{{"name", "grey"},   {"rgb", "#424242"}}
+                   }}
     }
 };
 
@@ -41,6 +55,7 @@ QString dbPath = "";
 QString dbName = "preferences.db";
 
 QString currentTheme = "dark";
+bool currentThemeIsDark = true;
 QString actual_host = "";
 QString actual_schema = "";
 QString actual_table = "";

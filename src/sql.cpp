@@ -19,7 +19,7 @@
 extern QJsonArray connections;
 extern QSqlDatabase dbPreferences;
 extern QSqlDatabase dbMysql;
-extern QString currentTheme;
+extern bool currentThemeIsDark;
 extern int pref_sql_limit;
 extern int pref_table_row_height;
 extern int pref_table_font_size;
@@ -472,7 +472,7 @@ Sql::Sql(const QString& host, const QString& schema, const QString& table,
     QString style = "QTextEdit {background-color: " + getRgbFromColorName(sql_color) + "}";
     ui->textQuery->setStyleSheet(style);
 
-    if (currentTheme == "light")
+    if (!currentThemeIsDark)
         ui->textQuery->setTextColor(QColor("black"));
     else
         ui->textQuery->setTextColor(QColor("white"));

@@ -153,6 +153,15 @@ Unzip the package and run the install script:
 ```bash
 ./install_linux.sh
 ```
+Linux releases are fully self-contained (Qt and its dependencies are bundled), so no extra packages need to be installed first.
+
+### Omarchy
+`install_linux.sh` registers a standard `.desktop` entry and icon under `~/.local/share/applications` and `~/.local/share/icons`, so SequelFast shows up automatically in the Omarchy application menu after installing — no extra step needed.
+
+If it doesn't appear right away, refresh the menu:
+```bash
+omarchy menu refresh
+```
 
 ### Running the App
 ```bash

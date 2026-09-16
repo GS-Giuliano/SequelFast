@@ -1,4 +1,4 @@
-QT       += core gui sql charts
+QT       += core gui sql charts quickwidgets qml quick
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -17,11 +17,13 @@ SOURCES += \
     src/backup.cpp \
     src/batch.cpp \
 src/connection.cpp \
+src/connectionbackend.cpp \
 src/functions.cpp \
     src/macroformatdialog.cpp \
     src/macroinputdialog.cpp \
 src/main.cpp \
 src/mainwindow.cpp \
+src/omarchytheme.cpp \
     src/restore.cpp \
 src/sql.cpp \
 src/sqlhighlighter.cpp \
@@ -36,10 +38,12 @@ HEADERS += \
     src/backup.h \
     src/batch.h \
 src/connection.h \
+src/connectionbackend.h \
 src/functions.h \
     src/macroformatdialog.h \
     src/macroinputdialog.h \
 src/mainwindow.h \
+src/omarchytheme.h \
     src/restore.h \
 src/sql.h \
 src/sqlhighlighter.h \
@@ -53,7 +57,6 @@ src/users.h
 
 FORMS += \
     src/batch.ui \
-src/connection.ui \
 src/mainwindow.ui \
 src/sql.ui \
 src/statistics.ui \
@@ -75,10 +78,11 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
 
 RESOURCES += \
-    fontresources.qrc \
     icons.qrc \
+    qml/qml.qrc \
     themes/dark/darkstyle.qrc \
-    themes/light/lightstyle.qrc
+    themes/light/lightstyle.qrc \
+    themes/omarchy/omarchy.qrc
 
 # Ícone do executável no Windows
 win32 {
@@ -92,8 +96,6 @@ mac {
 }
 
 DISTFILES += \
-    fonts/Gilroy.otf \
-    fonts/PathwayExtreme.ttf \
     themes/dark/darkstyle.qss \
     themes/dark/rc/arrow_down.png \
     themes/dark/rc/arrow_down@2x.png \
@@ -514,4 +516,5 @@ DISTFILES += \
     themes/light/rc/window_undock_focus.png \
     themes/light/rc/window_undock_focus@2x.png \
     themes/light/rc/window_undock_pressed.png \
-    themes/light/rc/window_undock_pressed@2x.png
+    themes/light/rc/window_undock_pressed@2x.png \
+    themes/omarchy/omarchystyle.qss.tpl
