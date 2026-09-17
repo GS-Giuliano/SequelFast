@@ -1,25 +1,10 @@
 #pragma once
 
-#include <QAbstractItemModel>
-#include <QDebug>
 #include <QDialog>
-#include <QJsonArray>
-#include <QJsonDocument>
-#include <QJsonObject>
-#include <QJsonValue>
-#include <QLabel>
-#include <QLineEdit>
-#include <QMessageBox>
-#include <QSortFilterProxyModel>
-#include <QSqlDatabase>
-#include <QSqlError>
-#include <QSqlQuery>
-#include <QSqlQueryModel>
+#include <QString>
 
-
-namespace Ui {
-    class Statistics;
-}
+class QQuickWidget;
+class StatisticsBackend;
 
 class Statistics : public QDialog
 {
@@ -30,11 +15,6 @@ public:
     ~Statistics();
 
 private:
-    Ui::Statistics* ui;
-
-private slots:
-    void on_tableView_cellClicked(const QModelIndex& index);
-
+    StatisticsBackend* backend;
+    QQuickWidget* quickWidget;
 };
-
-

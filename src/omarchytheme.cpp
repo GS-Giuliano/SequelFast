@@ -15,11 +15,7 @@ bool g_isDark = true;
 
 QString omarchyColorsFilePath()
 {
-    QString stateHome = qEnvironmentVariable("XDG_STATE_HOME");
-    if (stateHome.isEmpty()) {
-        stateHome = QDir::homePath() + "/.local/state";
-    }
-    return stateHome + "/omarchy/current/theme/colors.toml";
+    return OmarchyTheme::currentStateDir() + "/theme/colors.toml";
 }
 
 // Omarchy normalizes every active theme into a flat colors.toml with plain
@@ -75,12 +71,21 @@ bool isDark()
     return g_isDark;
 }
 
-QString styleSheet()
+QString currentStateDir()
+{
+    QString stateHome = qEnvironmentVariable("XDG_STATE_HOME");
+    if (stateHome.isEmpty()) {
+        stateHome = QDir::homePath() + "/.local/state";
+    }
+    return stateHome + "/omarchy/current";
+}
+
+QMap<QString, QColor> tokens()
 {
     const QMap<QString, QColor> raw = parseOmarchyColors(omarchyColorsFilePath());
 
     if (!raw.contains("background") || !raw.contains("foreground") || !raw.contains("accent")) {
-        return QString();
+        return QMap<QString, QColor>();
     }
 
     const QColor background = raw.value("background");
@@ -106,14 +111,7 @@ QString styleSheet()
     const QColor selectionDisabled = blend(selection, background, 0.5);
     const QColor accentBright      = blend(accent, foreground, 0.3);
 
-    QFile templateFile(QStringLiteral(":/themes/omarchy/omarchystyle.qss.tpl"));
-    if (!templateFile.open(QFile::ReadOnly | QFile::Text)) {
-        return QString();
-    }
-
-    QString qss = QString::fromUtf8(templateFile.readAll());
-
-    const QMap<QString, QColor> tokens{
+    return QMap<QString, QColor>{
         {"background", background},
         {"foreground", foreground},
         {"accent", accent},
@@ -129,8 +127,23 @@ QString styleSheet()
         {"handle", handle},
         {"handleLight", handleLight},
     };
+}
 
-    for (auto it = tokens.constBegin(); it != tokens.constEnd(); ++it) {
+QString styleSheet()
+{
+    const QMap<QString, QColor> t = tokens();
+    if (t.isEmpty()) {
+        return QString();
+    }
+
+    QFile templateFile(QStringLiteral(":/themes/omarchy/omarchystyle.qss.tpl"));
+    if (!templateFile.open(QFile::ReadOnly | QFile::Text)) {
+        return QString();
+    }
+
+    QString qss = QString::fromUtf8(templateFile.readAll());
+
+    for (auto it = t.constBegin(); it != t.constEnd(); ++it) {
         qss.replace(QStringLiteral("{{%1}}").arg(it.key()), it.value().name(QColor::HexRgb));
     }
 

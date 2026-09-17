@@ -1,4 +1,8 @@
 # 0.2.3
+- Statistics dialog rewritten in QML with an Omarchy/quickshell-inspired card layout (replaces the old Qt Widgets form)
+- Omarchy theme colors are now exposed to QML dialogs as a real color palette (OmarchyPalette), instead of a hardcoded dark/light guess, so QtQuick screens track the exact active Omarchy theme like other Omarchy plugins do
+- The app now watches Omarchy's active theme and applies a system-wide theme switch live to every open window -- Qt Widgets and QML alike -- with no restart needed, matching how Omarchy's own quickshell-based plugins hot-reload
+- On Omarchy Linux, the app now defaults to the Omarchy theme automatically on first run, instead of the generic light theme
 - Query errors are now added as comment in query editor
 - Database connection improvements
 - Connection dialog rewritten in QML (replaces the old Qt Widgets form)

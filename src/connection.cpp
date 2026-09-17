@@ -1,12 +1,11 @@
 #include "connection.h"
 #include "connectionbackend.h"
+#include "omarchypalette.h"
 
 #include <QQuickWidget>
 #include <QQmlContext>
 #include <QVBoxLayout>
 #include <QUrl>
-
-extern bool currentThemeIsDark;
 
 Connection::Connection(QString selectedHost, QWidget* parent)
     : QDialog(parent)
@@ -17,7 +16,7 @@ Connection::Connection(QString selectedHost, QWidget* parent)
     setFixedSize(420, 420);
 
     quickWidget->rootContext()->setContextProperty("backend", backend);
-    quickWidget->rootContext()->setContextProperty("appTheme", currentThemeIsDark ? QStringLiteral("dark") : QStringLiteral("light"));
+    quickWidget->rootContext()->setContextProperty("omarchyPalette", new OmarchyPalette(this));
     quickWidget->setResizeMode(QQuickWidget::SizeRootObjectToView);
     quickWidget->setSource(QUrl(QStringLiteral("qrc:/qml/Connection.qml")));
 

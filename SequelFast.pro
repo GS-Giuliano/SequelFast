@@ -19,15 +19,19 @@ SOURCES += \
 src/connection.cpp \
 src/connectionbackend.cpp \
 src/functions.cpp \
+src/globalvariablesmodel.cpp \
     src/macroformatdialog.cpp \
     src/macroinputdialog.cpp \
 src/main.cpp \
 src/mainwindow.cpp \
+src/omarchypalette.cpp \
 src/omarchytheme.cpp \
+src/omarchythemewatcher.cpp \
     src/restore.cpp \
 src/sql.cpp \
 src/sqlhighlighter.cpp \
 src/statistics.cpp \
+src/statisticsbackend.cpp \
 src/structure.cpp \
     src/texteditcompleter.cpp \
 src/tunnelsqlmanager.cpp \
@@ -40,14 +44,18 @@ HEADERS += \
 src/connection.h \
 src/connectionbackend.h \
 src/functions.h \
+src/globalvariablesmodel.h \
     src/macroformatdialog.h \
     src/macroinputdialog.h \
 src/mainwindow.h \
+src/omarchypalette.h \
 src/omarchytheme.h \
+src/omarchythemewatcher.h \
     src/restore.h \
 src/sql.h \
 src/sqlhighlighter.h \
 src/statistics.h \
+src/statisticsbackend.h \
 src/structure.h \
     src/texteditcompleter.h \
 src/tunnelsqlmanager.h \
@@ -59,7 +67,6 @@ FORMS += \
     src/batch.ui \
 src/mainwindow.ui \
 src/sql.ui \
-src/statistics.ui \
 src/structure.ui \
 src/users.ui
 

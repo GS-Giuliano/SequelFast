@@ -7,12 +7,12 @@ Item {
     width: 420
     height: 420
 
-    readonly property bool dark: appTheme === "dark"
-    readonly property color bgColor: dark ? "#192028" : "#F4F4F4"
-    readonly property color fieldBgColor: dark ? "#253344" : "#FFFFFF"
-    readonly property color textColor: dark ? "#DFE1E2" : "#19232D"
-    readonly property color borderColor: dark ? "#346792" : "#9FCBFF"
-    readonly property color accentColor: dark ? "#1A72BB" : "#73C7FF"
+    readonly property bool dark: omarchyPalette.dark
+    readonly property color bgColor: omarchyPalette.background
+    readonly property color fieldBgColor: omarchyPalette.field
+    readonly property color textColor: omarchyPalette.foreground
+    readonly property color borderColor: omarchyPalette.selection
+    readonly property color accentColor: omarchyPalette.accent
 
     Rectangle {
         anchors.fill: parent

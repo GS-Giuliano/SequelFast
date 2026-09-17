@@ -11,6 +11,7 @@
 #include <statistics.h>
 #include <users.h>
 #include <batch.h>
+#include <omarchythemewatcher.h>
 #include <omarchytheme.h>
 
 extern QJsonArray connections;
@@ -85,9 +86,17 @@ MainWindow::MainWindow(QWidget* parent)
         currentTheme = getStringPreference("theme");
         if (currentTheme == "")
         {
-            currentTheme = "light";
+            // First run, no saved preference yet: if this is an Omarchy Linux
+            // system, default to matching its active system-wide theme
+            // instead of the generic light theme.
+            currentTheme = OmarchyTheme::isAvailable() ? "omarchy" : "light";
         }
         changeTheme();
+
+        // React immediately to the user switching the system-wide Omarchy
+        // theme (via omarchy-theme-set), the same way Omarchy's own
+        // quickshell-based shell plugins hot-reload without a restart.
+        connect(&OmarchyThemeWatcher::instance(), &OmarchyThemeWatcher::themeChanged, this, &MainWindow::changeTheme);
 
         ui->listViewConns->setContextMenuPolicy(Qt::CustomContextMenu);
         connect(ui->listViewConns, &QListView::customContextMenuRequested,
@@ -242,7 +251,11 @@ void MainWindow::changeTheme()
         currentThemeIsDark = (themeFile != "light");
     }
 
-    this->setStyleSheet(qss);
+    // Apply at the application level (not just this window) so every open
+    // window -- Users, Structure, Batch, Backup, Restore, and any window
+    // opened later -- restyles immediately, including on a live Omarchy
+    // theme switch.
+    qApp->setStyleSheet(qss);
 
     for (const QJsonValue& val : colorThemes) {
         QJsonObject obj = val.toObject();

@@ -1,5 +1,6 @@
 <RCC>
     <qresource prefix="/qml">
         <file>Connection.qml</file>
+        <file>Statistics.qml</file>
     </qresource>
 </RCC>
