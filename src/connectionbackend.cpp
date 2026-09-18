@@ -134,12 +134,14 @@ void ConnectionBackend::onConnect()
     dbMysql.setPassword(item["pass"].toVariant().toString());
 
     dbMysql.setConnectOptions(
-        "MYSQL_OPT_CONNECT_TIMEOUT=60;"
-        "MYSQL_OPT_READ_TIMEOUT=28800;"
-        "MYSQL_OPT_WRITE_TIMEOUT=28800;"
-        "CLIENT_INTERACTIVE=1;"
-        "MYSQL_OPT_RECONNECT=1;"
-        "CLIENT_COMPRESS=1;"
+        QString(
+            "MYSQL_OPT_CONNECT_TIMEOUT=60;"
+            "MYSQL_OPT_READ_TIMEOUT=28800;"
+            "MYSQL_OPT_WRITE_TIMEOUT=28800;"
+            "CLIENT_INTERACTIVE=1;"
+            "MYSQL_OPT_RECONNECT=1;"
+            "CLIENT_COMPRESS=1;"
+            ) + mysqlSslRelaxedOptions()
         );
 
     if (!dbMysql.open()) {

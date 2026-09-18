@@ -51,6 +51,7 @@ QString getRgbFromColorName(const QString& colorName);
 QStringList extractFieldsWithPrefix(const QStringList& fields, const QString& tableName, const QString& alias);
 QString extractCurrentQuery(const QString& text, int cursorPos);
 bool connectMySQL(const QString selectedHost, QObject* parent = nullptr, const QString prefix = "mysql_connection_");
+QString mysqlSslRelaxedOptions();
 QString generateCreateTableStatement(const QString& tableName, const QString& connectionName);
 QString generateColumnsCsv(const QString& tableName, const QString& connectionName);
 QString getUserName();

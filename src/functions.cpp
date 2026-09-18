@@ -621,6 +621,25 @@ QString extractCurrentQuery(const QString& text, int cursorPos)
     return query;
 }
 
+// Best-effort equivalent of the mysql/mariadb CLI's "--ssl=0" for a QMYSQL
+// connection. Qt's QMYSQL driver is built against MariaDB Connector/C on
+// this platform, and Qt's own connect-options parser deliberately excludes
+// MYSQL_OPT_SSL_MODE for MariaDB builds (only MySQL client library builds
+// get it) -- there is no supported way to force a fully plaintext
+// connection through QSqlDatabase::setConnectOptions() in that
+// configuration. This relaxes what MariaDB Connector/C *does* still expose
+// for MariaDB: skip server certificate verification and accept older TLS
+// protocol versions, which is what actually makes an old MariaDB server's
+// (e.g. MariaDB 5.x in Docker) broken/self-signed/legacy SSL setup fail a
+// modern client's handshake.
+QString mysqlSslRelaxedOptions()
+{
+    return QStringLiteral(
+        "MYSQL_OPT_SSL_VERIFY_SERVER_CERT=0;"
+        "MYSQL_OPT_TLS_VERSION=TLSv1.1,TLSv1.2,TLSv1.3;"
+        );
+}
+
 bool connectMySQL(const QString selectedHost, QObject* parent, const QString prefix)
 {
     QApplication::setOverrideCursor(Qt::WaitCursor);
@@ -673,6 +692,7 @@ bool connectMySQL(const QString selectedHost, QObject* parent, const QString pre
         dbMysql.setPort(item["port"].toVariant().toInt());
         dbMysql.setUserName(item["user"].toString());
         dbMysql.setPassword(item["pass"].toString());
+        dbMysql.setConnectOptions(mysqlSslRelaxedOptions());
         // qDebug() << "host" << item["host"].toString();
         // qDebug() << "schema" << item["schema"].toString();
         // qDebug() << "port" << item["port"].toVariant().toInt();
