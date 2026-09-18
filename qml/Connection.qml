@@ -209,13 +209,14 @@ Item {
         }
 
         CheckBox {
+            id: sharedCheckBox
             text: qsTr("Save shared favorites here")
             checked: backend.shared
             onToggled: backend.shared = checked
             contentItem: Label {
-                text: qsTr("Save shared favorites here")
+                text: sharedCheckBox.text
                 color: root.textColor
-                leftPadding: 24
+                leftPadding: sharedCheckBox.indicator.width + sharedCheckBox.spacing
                 verticalAlignment: Text.AlignVCenter
             }
         }
