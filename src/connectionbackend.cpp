@@ -33,6 +33,7 @@ ConnectionBackend::ConnectionBackend(QString selectedHost, QObject* parent)
     m_sshKeyFile = item["ssh_keyfile"].toString();
 
     m_shared = item["shared"].toString() == "1";
+    m_verifySsl = item["verify_ssl"].toString() == "1";
 
     m_colorName = item["color"].toString();
 
@@ -60,6 +61,7 @@ void ConnectionBackend::setSshUser(const QString& v) { if (m_sshUser != v) { m_s
 void ConnectionBackend::setSshPass(const QString& v) { if (m_sshPass != v) { m_sshPass = v; emit sshPassChanged(); } }
 void ConnectionBackend::setSshKeyFile(const QString& v) { if (m_sshKeyFile != v) { m_sshKeyFile = v; emit sshKeyFileChanged(); } }
 void ConnectionBackend::setShared(bool v) { if (m_shared != v) { m_shared = v; emit sharedChanged(); } }
+void ConnectionBackend::setVerifySsl(bool v) { if (m_verifySsl != v) { m_verifySsl = v; emit verifySslChanged(); } }
 
 void ConnectionBackend::setColorIndex(int v)
 {
@@ -79,10 +81,11 @@ void ConnectionBackend::saveConnection()
 
     QSqlQuery query(QSqlDatabase::database("pref_connection"));
 
-    QString updateSql = "UPDATE conns SET shared = :shared, name = :new_name, schema = :new_schema, color = :new_color, host = :new_host, user = :new_user, pass = :new_pass, port = :new_port, ssh_host = :new_sshhost, ssh_user = :new_sshuser, ssh_pass = :new_sshpass, ssh_port = :new_sshport, ssh_keyfile = :new_sshkey WHERE name = :name_to_update";
+    QString updateSql = "UPDATE conns SET shared = :shared, verify_ssl = :verify_ssl, name = :new_name, schema = :new_schema, color = :new_color, host = :new_host, user = :new_user, pass = :new_pass, port = :new_port, ssh_host = :new_sshhost, ssh_user = :new_sshuser, ssh_pass = :new_sshpass, ssh_port = :new_sshport, ssh_keyfile = :new_sshkey WHERE name = :name_to_update";
     query.prepare(updateSql);
     query.bindValue(":new_color", m_colorName);
     query.bindValue(":shared", m_shared ? 1 : 0);
+    query.bindValue(":verify_ssl", m_verifySsl ? 1 : 0);
     query.bindValue(":new_name", m_name);
     query.bindValue(":new_schema", m_schema);
     query.bindValue(":new_host", m_host);
@@ -141,7 +144,7 @@ void ConnectionBackend::onConnect()
             "CLIENT_INTERACTIVE=1;"
             "MYSQL_OPT_RECONNECT=1;"
             "CLIENT_COMPRESS=1;"
-            ) + mysqlSslRelaxedOptions()
+            ) + mysqlSslRelaxedOptions(m_verifySsl)
         );
 
     if (!dbMysql.open()) {

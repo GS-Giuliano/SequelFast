@@ -221,6 +221,19 @@ Item {
             }
         }
 
+        CheckBox {
+            id: verifySslCheckBox
+            text: qsTr("Verify server certificate (SSL)")
+            checked: backend.verifySsl
+            onToggled: backend.verifySsl = checked
+            contentItem: Label {
+                text: verifySslCheckBox.text
+                color: root.textColor
+                leftPadding: verifySslCheckBox.indicator.width + verifySslCheckBox.spacing
+                verticalAlignment: Text.AlignVCenter
+            }
+        }
+
         RowLayout {
             Layout.fillWidth: true
             spacing: 8

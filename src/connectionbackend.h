@@ -20,6 +20,7 @@ class ConnectionBackend : public QObject
     Q_PROPERTY(QString sshPass READ sshPass WRITE setSshPass NOTIFY sshPassChanged)
     Q_PROPERTY(QString sshKeyFile READ sshKeyFile WRITE setSshKeyFile NOTIFY sshKeyFileChanged)
     Q_PROPERTY(bool shared READ shared WRITE setShared NOTIFY sharedChanged)
+    Q_PROPERTY(bool verifySsl READ verifySsl WRITE setVerifySsl NOTIFY verifySslChanged)
     Q_PROPERTY(int colorIndex READ colorIndex WRITE setColorIndex NOTIFY colorIndexChanged)
     Q_PROPERTY(QVariantList colorList READ colorList CONSTANT)
 
@@ -62,6 +63,9 @@ public:
     bool shared() const { return m_shared; }
     void setShared(bool v);
 
+    bool verifySsl() const { return m_verifySsl; }
+    void setVerifySsl(bool v);
+
     int colorIndex() const { return m_colorIndex; }
     void setColorIndex(int v);
 
@@ -86,6 +90,7 @@ signals:
     void sshPassChanged();
     void sshKeyFileChanged();
     void sharedChanged();
+    void verifySslChanged();
     void colorIndexChanged();
 
     void accepted();
@@ -111,6 +116,7 @@ private:
     QString m_sshPass;
     QString m_sshKeyFile;
     bool m_shared = false;
+    bool m_verifySsl = false;
     int m_colorIndex = 0;
     QVariantList m_colorList;
 };

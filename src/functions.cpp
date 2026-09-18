@@ -119,6 +119,12 @@ bool openPreferences()
         dbPreferences.close();
     }
     else {
+        // Migration for installs from before "Verify server certificate"
+        // existed: CREATE TABLE IF NOT EXISTS above won't add the column to
+        // an already-existing table, so add it here; ignore the "duplicate
+        // column" error this throws once the column is already there.
+        query.exec("ALTER TABLE conns ADD COLUMN verify_ssl INT DEFAULT 0");
+
         if (!query.exec("SELECT COUNT(id) ttl FROM conns")) {
             qCritical() << "Erro ao consultar dados:" << query.lastError().text();
         }
@@ -200,6 +206,7 @@ bool openPreferences()
             QJsonObject obj;
             obj["name"] = query.value("name").toString();
             obj["shared"] = query.value("shared").toString();
+            obj["verify_ssl"] = query.value("verify_ssl").toString();
             obj["color"] = query.value("color").toString();
             obj["host"] = query.value("host").toString();
             obj["port"] = query.value("port").toString();
@@ -628,16 +635,18 @@ QString extractCurrentQuery(const QString& text, int cursorPos)
 // get it) -- there is no supported way to force a fully plaintext
 // connection through QSqlDatabase::setConnectOptions() in that
 // configuration. This relaxes what MariaDB Connector/C *does* still expose
-// for MariaDB: skip server certificate verification and accept older TLS
-// protocol versions, which is what actually makes an old MariaDB server's
-// (e.g. MariaDB 5.x in Docker) broken/self-signed/legacy SSL setup fail a
-// modern client's handshake.
-QString mysqlSslRelaxedOptions()
+// for MariaDB -- accepting older TLS protocol versions, and (unless the
+// connection opts in via "Verify server certificate") skipping server
+// certificate verification -- which is what actually makes an old MariaDB
+// server's (e.g. MariaDB 5.x in Docker) broken/self-signed/legacy SSL setup
+// fail a modern client's handshake. The connection stays encrypted either
+// way; verifyServerCert only controls whether the server's certificate is
+// authenticated.
+QString mysqlSslRelaxedOptions(bool verifyServerCert)
 {
-    return QStringLiteral(
-        "MYSQL_OPT_SSL_VERIFY_SERVER_CERT=0;"
-        "MYSQL_OPT_TLS_VERSION=TLSv1.1,TLSv1.2,TLSv1.3;"
-        );
+    return QStringLiteral("MYSQL_OPT_SSL_VERIFY_SERVER_CERT=%1;"
+                           "MYSQL_OPT_TLS_VERSION=TLSv1.1,TLSv1.2,TLSv1.3;")
+        .arg(verifyServerCert ? "1" : "0");
 }
 
 bool connectMySQL(const QString selectedHost, QObject* parent, const QString prefix)
@@ -692,7 +701,7 @@ bool connectMySQL(const QString selectedHost, QObject* parent, const QString pre
         dbMysql.setPort(item["port"].toVariant().toInt());
         dbMysql.setUserName(item["user"].toString());
         dbMysql.setPassword(item["pass"].toString());
-        dbMysql.setConnectOptions(mysqlSslRelaxedOptions());
+        dbMysql.setConnectOptions(mysqlSslRelaxedOptions(item["verify_ssl"].toString() == "1"));
         // qDebug() << "host" << item["host"].toString();
         // qDebug() << "schema" << item["schema"].toString();
         // qDebug() << "port" << item["port"].toVariant().toInt();
