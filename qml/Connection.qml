@@ -4,8 +4,8 @@ import QtQuick.Layouts
 
 Item {
     id: root
-    width: 420
-    height: 420
+    width: 480
+    height: 560
 
     readonly property bool dark: omarchyPalette.dark
     readonly property color bgColor: omarchyPalette.background

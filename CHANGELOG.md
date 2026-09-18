@@ -3,6 +3,7 @@
 - Omarchy theme colors are now exposed to QML dialogs as a real color palette (OmarchyPalette), instead of a hardcoded dark/light guess, so QtQuick screens track the exact active Omarchy theme like other Omarchy plugins do
 - The app now watches Omarchy's active theme and applies a system-wide theme switch live to every open window -- Qt Widgets and QML alike -- with no restart needed, matching how Omarchy's own quickshell-based plugins hot-reload
 - On Omarchy Linux, the app now defaults to the Omarchy theme automatically on first run, instead of the generic light theme
+- Fixed the Connection dialog being too small (420x420), which clipped the tabs, fields and action buttons past the window edge; it now opens at 480x560 and can be resized down to 460x520
 - Query errors are now added as comment in query editor
 - Database connection improvements
 - Connection dialog rewritten in QML (replaces the old Qt Widgets form)

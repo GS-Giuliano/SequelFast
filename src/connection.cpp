@@ -13,7 +13,11 @@ Connection::Connection(QString selectedHost, QWidget* parent)
     , quickWidget(new QQuickWidget(this))
 {
     setWindowTitle(tr("Connection"));
-    setFixedSize(420, 420);
+    // 420x420 was too tight for the Name/tabs/fields/color-swatches/checkbox/
+    // buttons column, clipping and misaligning the bottom rows; give it more
+    // room and let the user resize instead of locking the dialog's size.
+    resize(480, 560);
+    setMinimumSize(460, 520);
 
     quickWidget->rootContext()->setContextProperty("backend", backend);
     quickWidget->rootContext()->setContextProperty("omarchyPalette", new OmarchyPalette(this));
